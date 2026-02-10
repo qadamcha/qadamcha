@@ -1,0 +1,44 @@
+import 'package:equatable/equatable.dart';
+
+class ContentEntity extends Equatable {
+  final String id;
+  final String title;
+  final String type; // 'video', 'audio', etc.
+  final String category;
+  final String videoId; // bunny.net video id or similar
+  final String? streamUrl;
+  final String? thumbnailUrl;
+  final int duration;
+  final int views;
+  final int likes;
+  final bool isFeatured;
+
+  const ContentEntity({
+    required this.id,
+    required this.title,
+    required this.type,
+    required this.category,
+    required this.videoId,
+    this.streamUrl,
+    this.thumbnailUrl,
+    required this.duration,
+    required this.views,
+    required this.likes,
+    required this.isFeatured,
+  });
+
+  @override
+  List<Object?> get props => [
+        id,
+        title,
+        type,
+        category,
+        videoId,
+        streamUrl,
+        thumbnailUrl,
+        duration,
+        views,
+        likes,
+        isFeatured,
+      ];
+}

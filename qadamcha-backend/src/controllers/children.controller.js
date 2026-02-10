@@ -1,0 +1,186 @@
+const { Child, Activity } = require('../models');
+const { ERRORS, SUCCESS } = require('../config/constants');
+
+module.exports = {
+
+    // GET /children - Bolalar ro'yxati
+    async getAll(request, reply) {
+        const { userId } = request.user;
+
+        const children = await Child.find({
+            parentId: userId,
+            isActive: true
+        }).sort({ createdAt: -1 });
+
+        // Har bir bola uchun bugungi statistika
+        const today = new Date().toISOString().split('T')[0];
+        const childrenWithStats = await Promise.all(
+            children.map(async (child) => {
+                const stats = await Activity.getDailyStats(child._id, today);
+                return {
+                    ...child.toObject(),
+                    todayUsage: stats.totalDuration,
+                    remainingTime: Math.max(0, child.dailyLimit * 60 - stats.totalDuration)
+                };
+            })
+        );
+
+        return { success: true, children: childrenWithStats };
+    },
+
+    // GET /children/:id - Bitta bolani olish
+    async getOne(request, reply) {
+        const { userId } = request.user;
+        const { id } = request.params;
+
+        const child = await Child.findOne({
+            _id: id,
+            parentId: userId,
+            isActive: true
+        });
+
+        if (!child) {
+            return reply.status(404).send({
+                success: false,
+                message: ERRORS.NOT_FOUND
+            });
+        }
+
+        // Haftalik statistika
+        const weeklyStats = await Activity.getWeeklyStats(child._id);
+
+        return {
+            success: true,
+            child,
+            weeklyStats
+        };
+    },
+
+    // POST /children - Yangi bola qo'shish
+    async create(request, reply) {
+        const { userId } = request.user;
+        const { name, age, gender, dailyLimit } = request.body;
+
+        // Bola soni chegarasi (5 ta)
+        const childCount = await Child.countDocuments({ parentId: userId, isActive: true });
+        if (childCount >= 5) {
+            return reply.status(400).send({
+                success: false,
+                message: 'Maksimal 5 ta bola qo\'shish mumkin'
+            });
+        }
+
+        const child = await Child.create({
+            parentId: userId,
+            name,
+            age,
+            gender,
+            dailyLimit: dailyLimit || 60
+        });
+
+        return reply.status(201).send({
+            success: true,
+            message: 'Bola qo\'shildi',
+            child
+        });
+    },
+
+    // PUT /children/:id - Bola ma'lumotlarini yangilash
+    async update(request, reply) {
+        const { userId } = request.user;
+        const { id } = request.params;
+        const updates = request.body;
+
+        const child = await Child.findOneAndUpdate(
+            { _id: id, parentId: userId, isActive: true },
+            { $set: updates },
+            { new: true, runValidators: true }
+        );
+
+        if (!child) {
+            return reply.status(404).send({
+                success: false,
+                message: ERRORS.NOT_FOUND
+            });
+        }
+
+        return { success: true, message: SUCCESS.UPDATED, child };
+    },
+
+    // DELETE /children/:id - Bolani o'chirish (soft delete)
+    async delete(request, reply) {
+        const { userId } = request.user;
+        const { id } = request.params;
+
+        const child = await Child.findOneAndUpdate(
+            { _id: id, parentId: userId },
+            { isActive: false },
+            { new: true }
+        );
+
+        if (!child) {
+            return reply.status(404).send({
+                success: false,
+                message: ERRORS.NOT_FOUND
+            });
+        }
+
+        return { success: true, message: SUCCESS.DELETED };
+    },
+
+    // POST /children/:id/limit - Vaqt limitini o'zgartirish
+    async setLimit(request, reply) {
+        const { userId } = request.user;
+        const { id } = request.params;
+        const { dailyLimit, weekdayLimit, weekendLimit } = request.body;
+
+        const update = {};
+        if (dailyLimit) update.dailyLimit = dailyLimit;
+        if (weekdayLimit) update.weekdayLimit = weekdayLimit;
+        if (weekendLimit) update.weekendLimit = weekendLimit;
+
+        const child = await Child.findOneAndUpdate(
+            { _id: id, parentId: userId, isActive: true },
+            { $set: update },
+            { new: true }
+        );
+
+        if (!child) {
+            return reply.status(404).send({
+                success: false,
+                message: ERRORS.NOT_FOUND
+            });
+        }
+
+        return {
+            success: true,
+            message: 'Vaqt limiti yangilandi',
+            child
+        };
+    },
+
+    // GET /children/:id/activities - Bola faollik tarixi
+    async getActivities(request, reply) {
+        const { userId } = request.user;
+        const { id } = request.params;
+        const { date, limit = 50 } = request.query;
+
+        // Bola ota-onaga tegishliligini tekshirish
+        const child = await Child.findOne({ _id: id, parentId: userId });
+        if (!child) {
+            return reply.status(404).send({
+                success: false,
+                message: ERRORS.NOT_FOUND
+            });
+        }
+
+        const query = { childId: id };
+        if (date) query.date = date;
+
+        const activities = await Activity.find(query)
+            .sort({ createdAt: -1 })
+            .limit(parseInt(limit));
+
+        return { success: true, activities };
+    }
+};

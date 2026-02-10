@@ -1,0 +1,58 @@
+# =========================
+# Qadamcha Project .gitignore
+# =========================
+
+# --- Global ---
+node_modules/
+*.log
+.env
+.env.*
+
+# --- Backend Debug Scripts ---
+qadamcha-backend/audit_*.js
+qadamcha-backend/check_*.js
+qadamcha-backend/debug_*.js
+qadamcha-backend/fix_*.js
+qadamcha-backend/search_*.js
+qadamcha-backend/upload_content.js
+qadamcha-backend/logs/
+!qadamcha-backend/logs/.gitkeep
+qadamcha-backend/.pm2/
+
+# --- Flutter App ---
+qadamcha-app/.dart_tool/
+qadamcha-app/.packages
+qadamcha-app/build/
+qadamcha-app/.flutter-plugins
+qadamcha-app/.flutter-plugins-dependencies
+qadamcha-app/android/.gradle/
+qadamcha-app/android/app/build/
+qadamcha-app/android/local.properties
+qadamcha-app/ios/Pods/
+qadamcha-app/ios/.symlinks/
+qadamcha-app/pubspec.lock
+
+# --- Log/Debug Files ---
+**/analyze_log*.txt
+**/build_log*.txt
+**/gradle_log*.txt
+**/gradle_error*.txt
+
+# --- IDE ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*.iml
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Keys & Secrets ---
+*.pem
+*.key
+*.jks
+*.keystore
+secrets/
