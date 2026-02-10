@@ -2,7 +2,7 @@
 class ApiConstants {
   // For real phone: use computer's local IP (same WiFi network required)
   // For Android Emulator: use 10.0.2.2
-  static const String baseUrl = 'http://192.168.0.112:3000/api/v1';
+  static const String baseUrl = 'http://192.168.0.100:3000/api/v1';
   static const Duration connectTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);
 }

@@ -21,8 +21,8 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final message = await remoteDataSource.sendOtp(phone);
       return Right(message);
-    } on NetworkException {
-      return const Left(NetworkFailure());
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message, e.statusCode));
     } catch (e) {
@@ -35,8 +35,8 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final result = await remoteDataSource.verifyOtp(phone, code);
       return Right(result);
-    } on NetworkException {
-      return const Left(NetworkFailure());
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message, e.statusCode));
     } catch (e) {
@@ -53,8 +53,8 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final user = await remoteDataSource.register(phone, name, pin);
       return Right(user.toEntity());
-    } on NetworkException {
-      return const Left(NetworkFailure());
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message, e.statusCode));
     } catch (e) {
@@ -85,8 +85,8 @@ class AuthRepositoryImpl implements AuthRepository {
       await localDataSource.setLoggedIn(true);
       
       return Right((user.toEntity(), tokens));
-    } on NetworkException {
-      return const Left(NetworkFailure());
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on UnauthorizedException catch (e) {
       return Left(AuthFailure(e.message));
     } on ServerException catch (e) {
@@ -155,8 +155,8 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final message = await remoteDataSource.resetPin(phone, newPin);
       return Right(message);
-    } on NetworkException {
-      return const Left(NetworkFailure());
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message, e.statusCode));
     } catch (e) {
@@ -169,8 +169,8 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await remoteDataSource.verifyPin(pin);
       return const Right(null);
-    } on NetworkException {
-      return const Left(NetworkFailure());
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message, e.statusCode));
     } catch (e) {

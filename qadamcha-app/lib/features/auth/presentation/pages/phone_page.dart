@@ -49,8 +49,8 @@ class _PhonePageState extends State<PhonePage> {
         } else if (state.status == AuthStatus.error) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.errorMessage ?? 'Xatolik yuz berdi'),
-              backgroundColor: AppColors.error,
+              content: Text('${state.errorMessage} [TEST]'),
+              backgroundColor: Colors.green,
             ),
           );
         }
