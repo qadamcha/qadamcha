@@ -1,0 +1,256 @@
+2026-02-10 04:47:34: 🔄 Connecting to Redis...
+2026-02-10 04:47:35: 🔄 Connecting to Redis...
+2026-02-10 04:47:35: 🔄 Connecting to Redis...
+2026-02-10 04:47:35: 🔄 Connecting to Redis...
+2026-02-10 04:47:35: ✅ Redis connected successfully
+2026-02-10 04:47:35: ✅ Redis connected successfully
+2026-02-10 04:47:35: ✅ Redis connected successfully
+2026-02-10 04:47:35: 🔄 Connecting to Redis...
+2026-02-10 04:47:36: ✅ Redis connected successfully
+2026-02-10 04:47:36: 🔄 Connecting to Redis...
+2026-02-10 04:47:36: ✅ Redis connected successfully
+2026-02-10 04:47:36: 🔄 Connecting to Redis...
+2026-02-10 04:47:36: ✅ Redis connected successfully
+2026-02-10 04:47:36: 🔄 Connecting to Redis...
+2026-02-10 04:47:36: ✅ Redis connected successfully
+2026-02-10 04:47:36: 🔄 Connecting to Redis...
+2026-02-10 04:47:36: ✅ Redis connected successfully
+2026-02-10 04:47:37: 🔄 Connecting to Redis...
+2026-02-10 04:47:37: ✅ Redis connected successfully
+2026-02-10 04:47:37: 🔄 Connecting to Redis...
+2026-02-10 04:47:37: ✅ Redis connected successfully
+2026-02-10 04:47:37: 🔄 Connecting to Redis...
+2026-02-10 04:47:37: ✅ Redis connected successfully
+2026-02-10 04:47:37: 🔄 Connecting to Redis...
+2026-02-10 04:47:37: ✅ Redis connected successfully
+2026-02-10 04:47:37: 🔄 Connecting to Redis...
+2026-02-10 04:47:37: ✅ Redis connected successfully
+2026-02-10 04:47:37: 🔄 Connecting to Redis...
+2026-02-10 04:47:38: ✅ Redis connected successfully
+2026-02-10 04:47:38: 🔄 Connecting to Redis...
+2026-02-10 04:47:38: ✅ Redis connected successfully
+2026-02-10 04:47:38: ✅ Redis connected successfully
+2026-02-10 04:47:38: ✅ MongoDB connected successfully
+2026-02-10 04:47:38: ✅ MongoDB connected successfully
+2026-02-10 04:47:38: ✅ MongoDB connected successfully
+2026-02-10 04:47:38: ✅ MongoDB connected successfully
+2026-02-10 04:47:38: ✅ MongoDB connected successfully
+2026-02-10 04:47:39: ✅ MongoDB connected successfully
+2026-02-10 04:47:38: {"level":30,"time":1770680858985,"pid":38668,"hostname":"DESKTOP-MUA7GVO","msg":"📝 Logger middleware initialized"}
+2026-02-10 04:47:39: {"level":30,"time":1770680859080,"pid":40204,"hostname":"DESKTOP-MUA7GVO","msg":"📝 Logger middleware initialized"}
+2026-02-10 04:47:39: {"level":30,"time":1770680859353,"pid":38668,"hostname":"DESKTOP-MUA7GVO","msg":"📚 Swagger documentation available at /docs"}
+2026-02-10 04:47:39: {"level":30,"time":1770680859161,"pid":26820,"hostname":"DESKTOP-MUA7GVO","msg":"📝 Logger middleware initialized"}
+2026-02-10 04:47:39: ✅ MongoDB connected successfully
+2026-02-10 04:47:39: {"level":30,"time":1770680859216,"pid":36492,"hostname":"DESKTOP-MUA7GVO","msg":"📝 Logger middleware initialized"}
+2026-02-10 04:47:39: {"level":30,"time":1770680859218,"pid":33248,"hostname":"DESKTOP-MUA7GVO","msg":"📝 Logger middleware initialized"}
+2026-02-10 04:47:39: {"level":30,"time":1770680859450,"pid":40204,"hostname":"DESKTOP-MUA7GVO","msg":"📚 Swagger documentation available at /docs"}
+2026-02-10 04:47:39: ✅ MongoDB connected successfully
+2026-02-10 04:47:39: {"level":30,"time":1770680859541,"pid":26820,"hostname":"DESKTOP-MUA7GVO","msg":"📚 Swagger documentation available at /docs"}
+2026-02-10 04:47:39: {"level":30,"time":1770680859609,"pid":36492,"hostname":"DESKTOP-MUA7GVO","msg":"📚 Swagger documentation available at /docs"}
+2026-02-10 04:47:39: {"level":30,"time":1770680859618,"pid":33248,"hostname":"DESKTOP-MUA7GVO","msg":"📚 Swagger documentation available at /docs"}
+2026-02-10 04:47:39: {"level":30,"time":1770680859439,"pid":16416,"hostname":"DESKTOP-MUA7GVO","msg":"📝 Logger middleware initialized"}
+2026-02-10 04:47:39: ✅ MongoDB connected successfully
+2026-02-10 04:47:39: ✅ MongoDB connected successfully
+2026-02-10 04:47:39: {"level":30,"time":1770680859849,"pid":16416,"hostname":"DESKTOP-MUA7GVO","msg":"📚 Swagger documentation available at /docs"}
+2026-02-10 04:47:39: {"level":30,"time":1770680859739,"pid":33720,"hostname":"DESKTOP-MUA7GVO","msg":"📝 Logger middleware initialized"}
+2026-02-10 04:47:39: ✅ MongoDB connected successfully
+2026-02-10 04:47:39: {"level":30,"time":1770680859877,"pid":22452,"hostname":"DESKTOP-MUA7GVO","msg":"📝 Logger middleware initialized"}
+2026-02-10 04:47:40: {"level":30,"time":1770680860154,"pid":33720,"hostname":"DESKTOP-MUA7GVO","msg":"📚 Swagger documentation available at /docs"}
+2026-02-10 04:47:40: ✅ MongoDB connected successfully
+2026-02-10 04:47:40: ✅ MongoDB connected successfully
+2026-02-10 04:47:40: {"level":30,"time":1770680860314,"pid":22452,"hostname":"DESKTOP-MUA7GVO","msg":"📚 Swagger documentation available at /docs"}
+2026-02-10 04:47:40: {"level":30,"time":1770680860077,"pid":18048,"hostname":"DESKTOP-MUA7GVO","msg":"📝 Logger middleware initialized"}
+2026-02-10 04:47:40: {"level":30,"time":1770680860203,"pid":31200,"hostname":"DESKTOP-MUA7GVO","msg":"📝 Logger middleware initialized"}
+2026-02-10 04:47:40: ✅ Gemini AI initialized (gemini-3.0-flash-preview)
+2026-02-10 04:47:40: {"level":30,"time":1770680860499,"pid":38668,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://127.0.0.1:3000"}
+2026-02-10 04:47:40: {"level":30,"time":1770680860500,"pid":38668,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://192.168.0.112:3000"}
+2026-02-10 04:47:40: {"level":30,"time":1770680860500,"pid":38668,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.31.0.1:3000"}
+2026-02-10 04:47:40: {"level":30,"time":1770680860500,"pid":38668,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.27.32.1:3000"}
+2026-02-10 04:47:40: 
+🚀 Qadamcha Backend running on port 3000
+2026-02-10 04:47:40: 📝 Environment: production
+2026-02-10 04:47:40: 🔗 Health Check: http://localhost:3000/health
+2026-02-10 04:47:40: 📚 API Docs: http://localhost:3000/docs
+
+2026-02-10 04:47:40: ✅ MongoDB connected successfully
+2026-02-10 04:47:40: {"level":30,"time":1770680860544,"pid":18048,"hostname":"DESKTOP-MUA7GVO","msg":"📚 Swagger documentation available at /docs"}
+2026-02-10 04:47:40: ✅ Gemini AI initialized (gemini-3.0-flash-preview)
+2026-02-10 04:47:40: {"level":30,"time":1770680860587,"pid":40204,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://127.0.0.1:3000"}
+2026-02-10 04:47:40: {"level":30,"time":1770680860588,"pid":40204,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://192.168.0.112:3000"}
+2026-02-10 04:47:40: {"level":30,"time":1770680860588,"pid":40204,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.31.0.1:3000"}
+2026-02-10 04:47:40: {"level":30,"time":1770680860588,"pid":40204,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.27.32.1:3000"}
+2026-02-10 04:47:40: 
+🚀 Qadamcha Backend running on port 3000
+2026-02-10 04:47:40: 📝 Environment: production
+2026-02-10 04:47:40: 🔗 Health Check: http://localhost:3000/health
+2026-02-10 04:47:40: 📚 API Docs: http://localhost:3000/docs
+
+2026-02-10 04:47:40: {"level":30,"time":1770680860683,"pid":31200,"hostname":"DESKTOP-MUA7GVO","msg":"📚 Swagger documentation available at /docs"}
+2026-02-10 04:47:40: {"level":30,"time":1770680860400,"pid":3164,"hostname":"DESKTOP-MUA7GVO","msg":"📝 Logger middleware initialized"}
+2026-02-10 04:47:40: ✅ Gemini AI initialized (gemini-3.0-flash-preview)
+2026-02-10 04:47:40: ✅ Gemini AI initialized (gemini-3.0-flash-preview)
+2026-02-10 04:47:40: ✅ MongoDB connected successfully
+2026-02-10 04:47:40: ✅ Gemini AI initialized (gemini-3.0-flash-preview)
+2026-02-10 04:47:40: {"level":30,"time":1770680860762,"pid":26820,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://127.0.0.1:3000"}
+2026-02-10 04:47:40: {"level":30,"time":1770680860776,"pid":26820,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://192.168.0.112:3000"}
+2026-02-10 04:47:40: {"level":30,"time":1770680860777,"pid":26820,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.31.0.1:3000"}
+2026-02-10 04:47:40: {"level":30,"time":1770680860777,"pid":26820,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.27.32.1:3000"}
+2026-02-10 04:47:40: 
+🚀 Qadamcha Backend running on port 3000
+2026-02-10 04:47:40: 📝 Environment: production
+2026-02-10 04:47:40: 🔗 Health Check: http://localhost:3000/health
+2026-02-10 04:47:40: 📚 API Docs: http://localhost:3000/docs
+
+2026-02-10 04:47:40: {"level":30,"time":1770680860784,"pid":33248,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://127.0.0.1:3000"}
+2026-02-10 04:47:40: {"level":30,"time":1770680860785,"pid":33248,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://192.168.0.112:3000"}
+2026-02-10 04:47:40: {"level":30,"time":1770680860785,"pid":33248,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.31.0.1:3000"}
+2026-02-10 04:47:40: {"level":30,"time":1770680860785,"pid":33248,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.27.32.1:3000"}
+2026-02-10 04:47:40: 
+🚀 Qadamcha Backend running on port 3000
+2026-02-10 04:47:40: 📝 Environment: production
+2026-02-10 04:47:40: 🔗 Health Check: http://localhost:3000/health
+2026-02-10 04:47:40: 📚 API Docs: http://localhost:3000/docs
+
+2026-02-10 04:47:40: {"level":30,"time":1770680860811,"pid":36492,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://127.0.0.1:3000"}
+2026-02-10 04:47:40: {"level":30,"time":1770680860812,"pid":36492,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://192.168.0.112:3000"}
+2026-02-10 04:47:40: {"level":30,"time":1770680860812,"pid":36492,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.31.0.1:3000"}
+2026-02-10 04:47:40: {"level":30,"time":1770680860812,"pid":36492,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.27.32.1:3000"}
+2026-02-10 04:47:40: 
+🚀 Qadamcha Backend running on port 3000
+2026-02-10 04:47:40: 📝 Environment: production
+2026-02-10 04:47:40: 🔗 Health Check: http://localhost:3000/health
+2026-02-10 04:47:40: 📚 API Docs: http://localhost:3000/docs
+
+2026-02-10 04:47:40: ✅ MongoDB connected successfully
+2026-02-10 04:47:40: {"level":30,"time":1770680860924,"pid":3164,"hostname":"DESKTOP-MUA7GVO","msg":"📚 Swagger documentation available at /docs"}
+2026-02-10 04:47:40: {"level":30,"time":1770680860700,"pid":21940,"hostname":"DESKTOP-MUA7GVO","msg":"📝 Logger middleware initialized"}
+2026-02-10 04:47:40: {"level":30,"time":1770680860761,"pid":32816,"hostname":"DESKTOP-MUA7GVO","msg":"📝 Logger middleware initialized"}
+2026-02-10 04:47:40: ✅ Gemini AI initialized (gemini-3.0-flash-preview)
+2026-02-10 04:47:41: {"level":30,"time":1770680861067,"pid":16416,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://127.0.0.1:3000"}
+2026-02-10 04:47:41: {"level":30,"time":1770680861067,"pid":16416,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://192.168.0.112:3000"}
+2026-02-10 04:47:41: {"level":30,"time":1770680861067,"pid":16416,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.31.0.1:3000"}
+2026-02-10 04:47:41: {"level":30,"time":1770680861067,"pid":16416,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.27.32.1:3000"}
+2026-02-10 04:47:41: 
+🚀 Qadamcha Backend running on port 3000
+2026-02-10 04:47:41: 📝 Environment: production
+2026-02-10 04:47:41: 🔗 Health Check: http://localhost:3000/health
+2026-02-10 04:47:41: 📚 API Docs: http://localhost:3000/docs
+
+2026-02-10 04:47:41: {"level":30,"time":1770680861171,"pid":21940,"hostname":"DESKTOP-MUA7GVO","msg":"📚 Swagger documentation available at /docs"}
+2026-02-10 04:47:41: {"level":30,"time":1770680861217,"pid":32816,"hostname":"DESKTOP-MUA7GVO","msg":"📚 Swagger documentation available at /docs"}
+2026-02-10 04:47:41: {"level":30,"time":1770680861022,"pid":34224,"hostname":"DESKTOP-MUA7GVO","msg":"📝 Logger middleware initialized"}
+2026-02-10 04:47:41: ✅ Gemini AI initialized (gemini-3.0-flash-preview)
+2026-02-10 04:47:41: {"level":30,"time":1770680861397,"pid":33720,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://127.0.0.1:3000"}
+2026-02-10 04:47:41: {"level":30,"time":1770680861397,"pid":33720,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://192.168.0.112:3000"}
+2026-02-10 04:47:41: {"level":30,"time":1770680861397,"pid":33720,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.31.0.1:3000"}
+2026-02-10 04:47:41: {"level":30,"time":1770680861397,"pid":33720,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.27.32.1:3000"}
+2026-02-10 04:47:41: 
+🚀 Qadamcha Backend running on port 3000
+2026-02-10 04:47:41: 📝 Environment: production
+2026-02-10 04:47:41: 🔗 Health Check: http://localhost:3000/health
+2026-02-10 04:47:41: 📚 API Docs: http://localhost:3000/docs
+
+2026-02-10 04:47:41: {"level":30,"time":1770680861177,"pid":19672,"hostname":"DESKTOP-MUA7GVO","msg":"📝 Logger middleware initialized"}
+2026-02-10 04:47:41: {"level":30,"time":1770680861466,"pid":34224,"hostname":"DESKTOP-MUA7GVO","msg":"📚 Swagger documentation available at /docs"}
+2026-02-10 04:47:41: ✅ Gemini AI initialized (gemini-3.0-flash-preview)
+2026-02-10 04:47:41: {"level":30,"time":1770680861548,"pid":22452,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://127.0.0.1:3000"}
+2026-02-10 04:47:41: {"level":30,"time":1770680861548,"pid":22452,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://192.168.0.112:3000"}
+2026-02-10 04:47:41: {"level":30,"time":1770680861548,"pid":22452,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.31.0.1:3000"}
+2026-02-10 04:47:41: {"level":30,"time":1770680861548,"pid":22452,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.27.32.1:3000"}
+2026-02-10 04:47:41: 
+🚀 Qadamcha Backend running on port 3000
+2026-02-10 04:47:41: 📝 Environment: production
+2026-02-10 04:47:41: 🔗 Health Check: http://localhost:3000/health
+2026-02-10 04:47:41: 📚 API Docs: http://localhost:3000/docs
+
+2026-02-10 04:47:41: {"level":30,"time":1770680861310,"pid":40420,"hostname":"DESKTOP-MUA7GVO","msg":"📝 Logger middleware initialized"}
+2026-02-10 04:47:41: {"level":30,"time":1770680861631,"pid":19672,"hostname":"DESKTOP-MUA7GVO","msg":"📚 Swagger documentation available at /docs"}
+2026-02-10 04:47:41: ✅ Gemini AI initialized (gemini-3.0-flash-preview)
+2026-02-10 04:47:41: {"level":30,"time":1770680861747,"pid":40420,"hostname":"DESKTOP-MUA7GVO","msg":"📚 Swagger documentation available at /docs"}
+2026-02-10 04:47:41: {"level":30,"time":1770680861756,"pid":18048,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://127.0.0.1:3000"}
+2026-02-10 04:47:41: {"level":30,"time":1770680861756,"pid":18048,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://192.168.0.112:3000"}
+2026-02-10 04:47:41: {"level":30,"time":1770680861756,"pid":18048,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.31.0.1:3000"}
+2026-02-10 04:47:41: {"level":30,"time":1770680861757,"pid":18048,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.27.32.1:3000"}
+2026-02-10 04:47:41: 
+🚀 Qadamcha Backend running on port 3000
+2026-02-10 04:47:41: 📝 Environment: production
+2026-02-10 04:47:41: 🔗 Health Check: http://localhost:3000/health
+2026-02-10 04:47:41: 📚 API Docs: http://localhost:3000/docs
+
+2026-02-10 04:47:41: ✅ Gemini AI initialized (gemini-3.0-flash-preview)
+2026-02-10 04:47:41: {"level":30,"time":1770680861905,"pid":31200,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://127.0.0.1:3000"}
+2026-02-10 04:47:41: {"level":30,"time":1770680861905,"pid":31200,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://192.168.0.112:3000"}
+2026-02-10 04:47:41: {"level":30,"time":1770680861906,"pid":31200,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.31.0.1:3000"}
+2026-02-10 04:47:41: {"level":30,"time":1770680861906,"pid":31200,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.27.32.1:3000"}
+2026-02-10 04:47:41: 
+🚀 Qadamcha Backend running on port 3000
+2026-02-10 04:47:41: 📝 Environment: production
+2026-02-10 04:47:41: 🔗 Health Check: http://localhost:3000/health
+2026-02-10 04:47:41: 📚 API Docs: http://localhost:3000/docs
+
+2026-02-10 04:47:41: ✅ Gemini AI initialized (gemini-3.0-flash-preview)
+2026-02-10 04:47:42: {"level":30,"time":1770680862066,"pid":3164,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://127.0.0.1:3000"}
+2026-02-10 04:47:42: {"level":30,"time":1770680862067,"pid":3164,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://192.168.0.112:3000"}
+2026-02-10 04:47:42: {"level":30,"time":1770680862067,"pid":3164,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.31.0.1:3000"}
+2026-02-10 04:47:42: {"level":30,"time":1770680862067,"pid":3164,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.27.32.1:3000"}
+2026-02-10 04:47:42: 
+🚀 Qadamcha Backend running on port 3000
+2026-02-10 04:47:42: 📝 Environment: production
+2026-02-10 04:47:42: 🔗 Health Check: http://localhost:3000/health
+2026-02-10 04:47:42: 📚 API Docs: http://localhost:3000/docs
+
+2026-02-10 04:47:42: ✅ Gemini AI initialized (gemini-3.0-flash-preview)
+2026-02-10 04:47:42: {"level":30,"time":1770680862276,"pid":21940,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://127.0.0.1:3000"}
+2026-02-10 04:47:42: {"level":30,"time":1770680862276,"pid":21940,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://192.168.0.112:3000"}
+2026-02-10 04:47:42: {"level":30,"time":1770680862276,"pid":21940,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.31.0.1:3000"}
+2026-02-10 04:47:42: {"level":30,"time":1770680862277,"pid":21940,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.27.32.1:3000"}
+2026-02-10 04:47:42: 
+🚀 Qadamcha Backend running on port 3000
+2026-02-10 04:47:42: 📝 Environment: production
+2026-02-10 04:47:42: 🔗 Health Check: http://localhost:3000/health
+2026-02-10 04:47:42: 📚 API Docs: http://localhost:3000/docs
+
+2026-02-10 04:47:42: ✅ Gemini AI initialized (gemini-3.0-flash-preview)
+2026-02-10 04:47:42: {"level":30,"time":1770680862372,"pid":32816,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://127.0.0.1:3000"}
+2026-02-10 04:47:42: {"level":30,"time":1770680862372,"pid":32816,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://192.168.0.112:3000"}
+2026-02-10 04:47:42: {"level":30,"time":1770680862373,"pid":32816,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.31.0.1:3000"}
+2026-02-10 04:47:42: {"level":30,"time":1770680862373,"pid":32816,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.27.32.1:3000"}
+2026-02-10 04:47:42: 
+🚀 Qadamcha Backend running on port 3000
+2026-02-10 04:47:42: 📝 Environment: production
+2026-02-10 04:47:42: 🔗 Health Check: http://localhost:3000/health
+2026-02-10 04:47:42: 📚 API Docs: http://localhost:3000/docs
+
+2026-02-10 04:47:42: ✅ Gemini AI initialized (gemini-3.0-flash-preview)
+2026-02-10 04:47:42: {"level":30,"time":1770680862544,"pid":34224,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://127.0.0.1:3000"}
+2026-02-10 04:47:42: {"level":30,"time":1770680862544,"pid":34224,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://192.168.0.112:3000"}
+2026-02-10 04:47:42: {"level":30,"time":1770680862544,"pid":34224,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.31.0.1:3000"}
+2026-02-10 04:47:42: {"level":30,"time":1770680862544,"pid":34224,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.27.32.1:3000"}
+2026-02-10 04:47:42: 
+🚀 Qadamcha Backend running on port 3000
+2026-02-10 04:47:42: 📝 Environment: production
+2026-02-10 04:47:42: 🔗 Health Check: http://localhost:3000/health
+2026-02-10 04:47:42: 📚 API Docs: http://localhost:3000/docs
+
+2026-02-10 04:47:42: ✅ Gemini AI initialized (gemini-3.0-flash-preview)
+2026-02-10 04:47:42: {"level":30,"time":1770680862648,"pid":19672,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://127.0.0.1:3000"}
+2026-02-10 04:47:42: {"level":30,"time":1770680862648,"pid":19672,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://192.168.0.112:3000"}
+2026-02-10 04:47:42: {"level":30,"time":1770680862648,"pid":19672,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.31.0.1:3000"}
+2026-02-10 04:47:42: {"level":30,"time":1770680862648,"pid":19672,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.27.32.1:3000"}
+2026-02-10 04:47:42: 
+🚀 Qadamcha Backend running on port 3000
+2026-02-10 04:47:42: 📝 Environment: production
+2026-02-10 04:47:42: 🔗 Health Check: http://localhost:3000/health
+2026-02-10 04:47:42: 📚 API Docs: http://localhost:3000/docs
+
+2026-02-10 04:47:42: ✅ Gemini AI initialized (gemini-3.0-flash-preview)
+2026-02-10 04:47:42: {"level":30,"time":1770680862775,"pid":40420,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://127.0.0.1:3000"}
+2026-02-10 04:47:42: {"level":30,"time":1770680862775,"pid":40420,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://192.168.0.112:3000"}
+2026-02-10 04:47:42: {"level":30,"time":1770680862776,"pid":40420,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.31.0.1:3000"}
+2026-02-10 04:47:42: {"level":30,"time":1770680862776,"pid":40420,"hostname":"DESKTOP-MUA7GVO","msg":"Server listening at http://172.27.32.1:3000"}
+2026-02-10 04:47:42: 
+🚀 Qadamcha Backend running on port 3000
+2026-02-10 04:47:42: 📝 Environment: production
+2026-02-10 04:47:42: 🔗 Health Check: http://localhost:3000/health
+2026-02-10 04:47:42: 📚 API Docs: http://localhost:3000/docs
+

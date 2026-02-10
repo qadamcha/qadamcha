@@ -1,0 +1,326 @@
+﻿Running Gradle task 'assembleRelease'...                        
+flutter : Invalid depfile: C:\Users\TROLL\Des
+ktop\All\qadamcha\qadamcha-app\.dart_tool\flu
+tter_build\d0e8113ed5953cb33eebc016637eecc4\k
+ernel_snapshot_program.d
+At line:1 char:1
++ flutter build apk 2>&1 | Out-File 
+-Encoding utf8 build_log_utf8.txt
++ ~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified:  
+   (Invalid depfile...pshot_program.d:Strin  
+  g) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandE 
+   rror
+ 
+Invalid depfile: C:\Users\TROLL\Desktop\All\q
+adamcha\qadamcha-app\.dart_tool\flutter_build
+\d0e8113ed5953cb33eebc016637eecc4\kernel_snap
+shot_program.d
+Invalid depfile: C:\Users\TROLL\Desktop\All\q
+adamcha\qadamcha-app\.dart_tool\flutter_build
+\d0e8113ed5953cb33eebc016637eecc4\kernel_snap
+shot_program.d
+Invalid depfile: C:\Users\TROLL\Desktop\All\q
+adamcha\qadamcha-app\.dart_tool\flutter_build
+\d0e8113ed5953cb33eebc016637eecc4\kernel_snap
+shot_program.d
+Invalid depfile: C:\Users\TROLL\Desktop\All\q
+adamcha\qadamcha-app\.dart_tool\flutter_build
+\d0e8113ed5953cb33eebc016637eecc4\kernel_snap
+shot_program.d
+Invalid depfile: C:\Users\TROLL\Desktop\All\q
+adamcha\qadamcha-app\.dart_tool\flutter_build
+\d0e8113ed5953cb33eebc016637eecc4\kernel_snap
+shot_program.d
+Invalid depfile: C:\Users\TROLL\Desktop\All\q
+adamcha\qadamcha-app\.dart_tool\flutter_build
+\d0e8113ed5953cb33eebc016637eecc4\kernel_snap
+shot_program.d
+Invalid depfile: C:\Users\TROLL\Desktop\All\q
+adamcha\qadamcha-app\.dart_tool\flutter_build
+\d0e8113ed5953cb33eebc016637eecc4\kernel_snap
+shot_program.d
+Invalid depfile: C:\Users\TROLL\Desktop\All\q
+adamcha\qadamcha-app\.dart_tool\flutter_build
+\d0e8113ed5953cb33eebc016637eecc4\kernel_snap
+shot_program.d
+Invalid depfile: C:\Users\TROLL\Desktop\All\q
+adamcha\qadamcha-app\.dart_tool\flutter_build
+\d0e8113ed5953cb33eebc016637eecc4\kernel_snap
+shot_program.d
+Invalid depfile: C:\Users\TROLL\Desktop\All\q
+adamcha\qadamcha-app\.dart_tool\flutter_build
+\d0e8113ed5953cb33eebc016637eecc4\kernel_snap
+shot_program.d
+Invalid depfile: C:\Users\TROLL\Desktop\All\q
+adamcha\qadamcha-app\.dart_tool\flutter_build
+\d0e8113ed5953cb33eebc016637eecc4\kernel_snap
+shot_program.d
+Error: Couldn't resolve the package 
+'qadamcha' in 'package:qadamcha/core/theme/ap
+p_colors.dart'.
+Error: Couldn't resolve the package 
+'qadamcha' in 'package:qadamcha/core/widgets/
+gradient_button.dart'.
+Error: Couldn't resolve the package 
+'qadamcha' in 'package:qadamcha/features/auth
+/presentation/bloc/auth_bloc.dart'.
+Error: Couldn't resolve the package 
+'qadamcha' in 'package:qadamcha/features/home
+/presentation/pages/home_page.dart'.
+lib/features/auth/presentation/pages/role_sel
+ection_page.dart:3:8: Error: Not found: 
+'package:qadamcha/core/theme/app_colors.dart'
+import 'package:qadamcha/core/theme/app_color
+s.dart';
+       ^
+lib/features/auth/presentation/pages/role_sel
+ection_page.dart:4:8: Error: Not found: 'pack
+age:qadamcha/core/widgets/gradient_button.dar
+t'
+import 'package:qadamcha/core/widgets/gradien
+t_button.dart';
+       ^
+lib/features/auth/presentation/pages/role_sel
+ection_page.dart:5:8: Error: Not found: 'pack
+age:qadamcha/features/auth/presentation/bloc/
+auth_bloc.dart'
+import 'package:qadamcha/features/auth/presen
+tation/bloc/auth_bloc.dart';
+       ^
+lib/features/auth/presentation/pages/role_sel
+ection_page.dart:7:8: Error: Not found: 'pack
+age:qadamcha/features/home/presentation/pages
+/home_page.dart'
+import 'package:qadamcha/features/home/presen
+tation/pages/home_page.dart';
+       ^
+lib/features/auth/presentation/pages/role_sel
+ection_page.dart:29:26: Error: Not a 
+constant expression.
+                  color: 
+AppColors.textPrimary,
+                         ^^^^^^^^^
+lib/features/auth/presentation/pages/role_sel
+ection_page.dart:39:26: Error: Not a 
+constant expression.
+                  color: 
+AppColors.textSecondary,
+                         ^^^^^^^^^
+lib/features/auth/presentation/pages/role_sel
+ection_page.dart:49:24: Error: The getter 
+'AppColors' isn't defined for the type 
+'RoleSelectionPage'.
+ - 'RoleSelectionPage' is from 'package:qadam
+cha_app/features/auth/presentation/pages/role
+_selection_page.dart' ('lib/features/auth/pre
+sentation/pages/role_selection_page.dart').
+Try correcting the name to the name of an 
+existing getter, or defining a getter or 
+field named 'AppColors'.
+                color: AppColors.primary,
+                       ^^^^^^^^^
+lib/features/auth/presentation/pages/role_sel
+ection_page.dart:58:24: Error: The getter 
+'AppColors' isn't defined for the type 
+'RoleSelectionPage'.
+ - 'RoleSelectionPage' is from 'package:qadam
+cha_app/features/auth/presentation/pages/role
+_selection_page.dart' ('lib/features/auth/pre
+sentation/pages/role_selection_page.dart').
+Try correcting the name to the name of an 
+existing getter, or defining a getter or 
+field named 'AppColors'.
+                color: AppColors.secondary,
+                       ^^^^^^^^^
+lib/features/auth/presentation/pages/role_sel
+ection_page.dart:122:30: Error: The getter 
+'AppColors' isn't defined for the type 
+'RoleSelectionPage'.
+ - 'RoleSelectionPage' is from 'package:qadam
+cha_app/features/auth/presentation/pages/role
+_selection_page.dart' ('lib/features/auth/pre
+sentation/pages/role_selection_page.dart').
+Try correcting the name to the name of an 
+existing getter, or defining a getter or 
+field named 'AppColors'.
+                      color: 
+AppColors.textPrimary,
+                             ^^^^^^^^^
+lib/features/auth/presentation/pages/role_sel
+ection_page.dart:131:30: Error: The getter 
+'AppColors' isn't defined for the type 
+'RoleSelectionPage'.
+ - 'RoleSelectionPage' is from 'package:qadam
+cha_app/features/auth/presentation/pages/role
+_selection_page.dart' ('lib/features/auth/pre
+sentation/pages/role_selection_page.dart').
+Try correcting the name to the name of an 
+existing getter, or defining a getter or 
+field named 'AppColors'.
+                      color: 
+AppColors.textSecondary,
+                             ^^^^^^^^^
+lib/features/auth/presentation/pages/role_sel
+ection_page.dart:162:47: Error: Not a 
+constant expression.
+      MaterialPageRoute(builder: (_) => 
+const HomePage()),
+                                             
+ ^^^^^^^^
+lib/features/auth/presentation/pages/role_sel
+ection_page.dart:181:26: Error: 'AuthBloc' 
+isn't a type.
+     return BlocListener<AuthBloc, 
+AuthState>(
+                         ^^^^^^^^
+lib/features/auth/presentation/pages/role_sel
+ection_page.dart:181:36: Error: 'AuthState' 
+isn't a type.
+     return BlocListener<AuthBloc, 
+AuthState>(
+                                   ^^^^^^^^^
+lib/features/auth/presentation/pages/role_sel
+ection_page.dart:187:53: Error: Not a 
+constant expression.
+            MaterialPageRoute(builder: (_) 
+=> const HomePage()),
+                                             
+       ^^^^^^^^
+lib/features/auth/presentation/pages/role_sel
+ection_page.dart:183:19: Error: The getter 
+'status' isn't defined for the type 
+'Object?'.
+ - 'Object' is from 'dart:core'.
+Try correcting the name to the name of an 
+existing getter, or defining a getter or 
+field named 'status'.
+        if (state.status == 
+AuthStatus.pinVerified) {
+                  ^^^^^^
+lib/features/auth/presentation/pages/role_sel
+ection_page.dart:183:29: Error: The getter 
+'AuthStatus' isn't defined for the type 
+'_PinVerificationDialogState'.
+ - '_PinVerificationDialogState' is from 'pac
+kage:qadamcha_app/features/auth/presentation/
+pages/role_selection_page.dart' ('lib/feature
+s/auth/presentation/pages/role_selection_page
+.dart').
+Try correcting the name to the name of an 
+existing getter, or defining a getter or 
+field named 'AuthStatus'.
+        if (state.status == 
+AuthStatus.pinVerified) {
+                            ^^^^^^^^^^
+lib/features/auth/presentation/pages/role_sel
+ection_page.dart:189:26: Error: The getter 
+'status' isn't defined for the type 
+'Object?'.
+ - 'Object' is from 'dart:core'.
+Try correcting the name to the name of an 
+existing getter, or defining a getter or 
+field named 'status'.
+        } else if (state.status == 
+AuthStatus.error) {
+                         ^^^^^^
+lib/features/auth/presentation/pages/role_sel
+ection_page.dart:189:36: Error: The getter 
+'AuthStatus' isn't defined for the type 
+'_PinVerificationDialogState'.
+ - '_PinVerificationDialogState' is from 'pac
+kage:qadamcha_app/features/auth/presentation/
+pages/role_selection_page.dart' ('lib/feature
+s/auth/presentation/pages/role_selection_page
+.dart').
+Try correcting the name to the name of an 
+existing getter, or defining a getter or 
+field named 'AuthStatus'.
+        } else if (state.status == 
+AuthStatus.error) {
+                                   ^^^^^^^^^^
+lib/features/auth/presentation/pages/role_sel
+ection_page.dart:192:28: Error: The getter 
+'errorMessage' isn't defined for the type 
+'Object?'.
+ - 'Object' is from 'dart:core'.
+Try correcting the name to the name of an 
+existing getter, or defining a getter or 
+field named 'errorMessage'.
+            _error = state.errorMessage ?? 
+'Xatolik yuz berdi';
+                           ^^^^^^^^^^^^
+lib/features/auth/presentation/pages/role_sel
+ection_page.dart:256:18: Error: 'AuthBloc' 
+isn't a type.
+    context.read<AuthBloc>().add(AuthVerifyPi
+nEvent(pin));
+                 ^^^^^^^^
+lib/features/auth/presentation/pages/role_sel
+ection_page.dart:256:34: Error: The method 
+'AuthVerifyPinEvent' isn't defined for the 
+type '_PinVerificationDialogState'.
+ - '_PinVerificationDialogState' is from 'pac
+kage:qadamcha_app/features/auth/presentation/
+pages/role_selection_page.dart' ('lib/feature
+s/auth/presentation/pages/role_selection_page
+.dart').
+Try correcting the name to the name of an 
+existing method, or defining a method named 
+'AuthVerifyPinEvent'.
+    context.read<AuthBloc>().add(AuthVerifyPi
+nEvent(pin));
+                                 
+^^^^^^^^^^^^^^^^^^
+Unhandled exception:
+FileSystemException(uri=org-dartlang-untransl
+atable-uri:package%3Aqadamcha%2Fcore%2Ftheme%
+2Fapp_colors.dart; 
+message=StandardFileSystem only supports 
+file:* and data:* URIs)
+#0      StandardFileSystem.entityForUri (pack
+age:front_end/src/api_prototype/standard_file
+_system.dart:45)
+#1      asFileUri 
+(package:vm/kernel_front_end.dart:1008)
+#2      writeDepfile 
+(package:vm/kernel_front_end.dart:1171)
+<asynchronous suspension>
+#3      FrontendCompiler.compile (package:fro
+ntend_server/frontend_server.dart:738)
+<asynchronous suspension>
+#4      starter 
+(package:frontend_server/starter.dart:102)
+<asynchronous suspension>
+#5      main (file:///C:/b/s/w/ir/x/w/sdk/pkg
+/frontend_server/bin/frontend_server_starter.
+dart:13)
+<asynchronous suspension>
+
+Target kernel_snapshot_program failed: 
+Exception
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task 
+':app:compileFlutterBuildRelease'.
+> Process 'command 'C:\Users\TROLL\Downloads\
+flutter_windows_3.38.9-stable\flutter\bin\flu
+tter.bat'' finished with non-zero exit value 
+1
+
+* Try:
+> Run with --stacktrace option to get the 
+stack trace.
+> Run with --info or --debug option to get 
+more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 30s
+Running Gradle task 'assembleRelease'...                           31.2s
+Gradle task assembleRelease failed with exit 
+code 1
