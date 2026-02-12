@@ -35,8 +35,9 @@ module.exports = {
                 JWT_SECRET: { envKey: 'JWT_SECRET', minLen: 32 },
                 MONGODB_URI: { envKey: 'MONGODB_URI', minLen: 10 },
                 REDIS_URL: { envKey: 'REDIS_URL', minLen: 10 },
-                ESKIZ_EMAIL: { envKey: 'ESKIZ_EMAIL', minLen: 3 },
-                ESKIZ_PASSWORD: { envKey: 'ESKIZ_PASSWORD', minLen: 3 },
+                // ESKIZ — ixtiyoriy (hali ruxsat olinmagan bo'lishi mumkin)
+                // ESKIZ_EMAIL: { envKey: 'ESKIZ_EMAIL', minLen: 3 },
+                // ESKIZ_PASSWORD: { envKey: 'ESKIZ_PASSWORD', minLen: 3 },
                 BUNNY_LIBRARY_ID: { envKey: 'BUNNY_STREAM_LIBRARY_ID', minLen: 1 },
                 BUNNY_API_KEY: { envKey: 'BUNNY_STREAM_API_KEY', minLen: 10 },
                 ALLOWED_ORIGINS: { envKey: 'ALLOWED_ORIGINS', minLen: 1 },
