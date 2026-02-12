@@ -25,12 +25,13 @@ const connectRedis = () => {
         redis = new Redis(config.REDIS_URL, {
             maxRetriesPerRequest: 3,
             lazyConnect: true,
+            connectTimeout: 15000,
             retryStrategy: (times) => {
-                if (times > 3) {
-                    fallbackToMock('Redis ulanishda xatolik (3 urinishdan keyin)');
+                if (times > 5) {
+                    fallbackToMock('Redis ulanishda xatolik (5 urinishdan keyin)');
                     return null;
                 }
-                return Math.min(times * 50, 2000);
+                return Math.min(times * 200, 3000);
             }
         });
 

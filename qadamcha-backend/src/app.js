@@ -18,7 +18,7 @@ const registerPlugins = async () => {
     // CORS
     await fastify.register(require('@fastify/cors'), {
         origin: config.NODE_ENV === 'production'
-            ? (config.ALLOWED_ORIGINS ? config.ALLOWED_ORIGINS.split(',') : false)
+            ? (config.ALLOWED_ORIGINS === '*' ? true : (config.ALLOWED_ORIGINS ? config.ALLOWED_ORIGINS.split(',') : false))
             : true,
         credentials: true
     });

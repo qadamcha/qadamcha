@@ -39,7 +39,7 @@ module.exports = {
                 ESKIZ_PASSWORD: { envKey: 'ESKIZ_PASSWORD', minLen: 3 },
                 BUNNY_LIBRARY_ID: { envKey: 'BUNNY_STREAM_LIBRARY_ID', minLen: 1 },
                 BUNNY_API_KEY: { envKey: 'BUNNY_STREAM_API_KEY', minLen: 10 },
-                ALLOWED_ORIGINS: { envKey: 'ALLOWED_ORIGINS', minLen: 4 },
+                ALLOWED_ORIGINS: { envKey: 'ALLOWED_ORIGINS', minLen: 1 },
             };
 
             const missing = [];
