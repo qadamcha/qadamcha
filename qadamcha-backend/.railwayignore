@@ -1,0 +1,9 @@
+node_modules/
+logs/
+tests/
+*.test.js
+jest.config.js
+.env
+.env.local
+ecosystem.config.js
+docker-compose.yml

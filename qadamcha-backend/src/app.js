@@ -192,10 +192,11 @@ const start = async () => {
             host: '0.0.0.0'
         });
 
+        const publicUrl = config.PUBLIC_URL;
         console.log(`\n🚀 Qadamcha Backend running on port ${config.PORT}`);
         console.log(`📝 Environment: ${config.NODE_ENV}`);
-        console.log(`🔗 Health Check: http://localhost:${config.PORT}/health`);
-        console.log(`📚 API Docs: http://localhost:${config.PORT}/docs\n`);
+        console.log(`🔗 Health Check: ${publicUrl}/health`);
+        console.log(`📚 API Docs: ${publicUrl}/docs\n`);
 
     } catch (err) {
         fastify.log.error(err);

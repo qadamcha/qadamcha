@@ -5,6 +5,17 @@ module.exports = {
     PORT: process.env.PORT || 3000,
     NODE_ENV: process.env.NODE_ENV || 'development',
 
+    // Railway (avtomatik beriladi)
+    RAILWAY_PUBLIC_DOMAIN: process.env.RAILWAY_PUBLIC_DOMAIN || null,
+
+    // Public URL (Railway yoki custom domain)
+    get PUBLIC_URL() {
+        if (this.NODE_ENV === 'production' && this.RAILWAY_PUBLIC_DOMAIN) {
+            return `https://${this.RAILWAY_PUBLIC_DOMAIN}`;
+        }
+        return `http://localhost:${this.PORT}`;
+    },
+
     // Database
     MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/qadamcha',
     REDIS_URL: process.env.REDIS_URL || 'redis://localhost:6379',

@@ -4,10 +4,18 @@
  */
 
 const packageJson = require('../../package.json');
+const config = require('../config/env');
 
 /**
  * Swagger options
  */
+const servers = config.NODE_ENV === 'production'
+    ? [{ url: config.PUBLIC_URL, description: 'Production server' }]
+    : [
+        { url: `http://localhost:${config.PORT}`, description: 'Development server' },
+        { url: 'https://api.qadamcha.uz', description: 'Production server' }
+    ];
+
 const swaggerOptions = {
     openapi: {
         info: {
@@ -19,16 +27,7 @@ const swaggerOptions = {
                 email: 'support@qadamcha.uz'
             }
         },
-        servers: [
-            {
-                url: `http://localhost:${process.env.PORT || 3000}`,
-                description: 'Development server'
-            },
-            {
-                url: 'https://api.qadamcha.uz',
-                description: 'Production server'
-            }
-        ],
+        servers,
         tags: [
             { name: 'Auth', description: 'Autentifikatsiya endpointlari' },
             { name: 'Children', description: 'Bolalarni boshqarish' },
