@@ -9,16 +9,38 @@ module.exports = {
     MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/qadamcha',
     REDIS_URL: process.env.REDIS_URL || 'redis://localhost:6379',
 
+    // CORS
+    ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS || null,
+
     // JWT
     JWT_SECRET: process.env.JWT_SECRET || 'dev-only-secret-do-not-use-in-production',
     JWT_ACCESS_EXPIRES: '15m',
     JWT_REFRESH_EXPIRES: '30d',
 
-    // Security: Ensure strong JWT secret in production
+    // Security: Validate all critical configs in production
     validateSecurity() {
         if (this.NODE_ENV === 'production') {
-            if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
-                throw new Error('Production JWT_SECRET must be at least 32 characters!');
+            const required = {
+                JWT_SECRET: { envKey: 'JWT_SECRET', minLen: 32 },
+                MONGODB_URI: { envKey: 'MONGODB_URI', minLen: 10 },
+                REDIS_URL: { envKey: 'REDIS_URL', minLen: 10 },
+                ESKIZ_EMAIL: { envKey: 'ESKIZ_EMAIL', minLen: 3 },
+                ESKIZ_PASSWORD: { envKey: 'ESKIZ_PASSWORD', minLen: 3 },
+                BUNNY_LIBRARY_ID: { envKey: 'BUNNY_STREAM_LIBRARY_ID', minLen: 1 },
+                BUNNY_API_KEY: { envKey: 'BUNNY_STREAM_API_KEY', minLen: 10 },
+                ALLOWED_ORIGINS: { envKey: 'ALLOWED_ORIGINS', minLen: 4 },
+            };
+
+            const missing = [];
+            for (const [name, { envKey, minLen }] of Object.entries(required)) {
+                const val = process.env[envKey];
+                if (!val || val.length < minLen) {
+                    missing.push(name);
+                }
+            }
+
+            if (missing.length > 0) {
+                throw new Error(`Production da quyidagi env o'zgaruvchilar kerak: ${missing.join(', ')}`);
             }
         }
     },
@@ -39,6 +61,7 @@ module.exports = {
     // App Settings
     OTP_EXPIRES: 5 * 60, // 5 daqiqa (sekundlarda)
     MAX_DEVICES: 3,      // Maksimal qurilma soni
+    TEST_PHONE: process.env.TEST_PHONE || null, // Faqat development uchun
 
     // Subscription Plans (UZS)
     PLANS: {

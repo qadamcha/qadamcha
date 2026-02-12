@@ -11,6 +11,19 @@ const ActivitySchema = Type.Object({
     ])
 });
 
+// Write endpointlar uchun rate limit
+const writeRateLimit = {
+    config: {
+        rateLimit: { max: 30, timeWindow: '1 minute' }
+    }
+};
+
+const likeRateLimit = {
+    config: {
+        rateLimit: { max: 10, timeWindow: '1 minute' }
+    }
+};
+
 module.exports = async function (fastify) {
 
     // GET /content - Ochiq endpoint (autentifikatsiyasiz)
@@ -33,11 +46,13 @@ module.exports = async function (fastify) {
     // POST /content/:id/activity (autentifikatsiya bilan)
     fastify.post('/:id/activity', {
         preHandler: [fastify.authenticate],
-        schema: { body: ActivitySchema }
+        schema: { body: ActivitySchema },
+        ...writeRateLimit
     }, contentController.recordActivity);
 
     // POST /content/:id/like (autentifikatsiya bilan)
     fastify.post('/:id/like', {
-        preHandler: [fastify.authenticate]
+        preHandler: [fastify.authenticate],
+        ...likeRateLimit
     }, contentController.like);
 };

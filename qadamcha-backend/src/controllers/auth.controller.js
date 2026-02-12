@@ -11,9 +11,10 @@ module.exports = {
         const { phone } = request.body;
         const redis = this.redis;
 
-        // Rate limit check
+        // Rate limit check (test phone faqat development da bypass)
         const attemptsKey = `${REDIS_KEYS.OTP_ATTEMPTS}${phone}`;
-        if (phone !== '+998998878079') {
+        const isTestBypass = config.NODE_ENV !== 'production' && phone === config.TEST_PHONE;
+        if (!isTestBypass) {
             const attempts = await redis.get(attemptsKey);
 
             if (attempts && parseInt(attempts) >= 3) {
@@ -331,16 +332,23 @@ module.exports = {
 
     // POST /auth/logout
     async logout(request, reply) {
-        const { deviceId } = request.user;
+        const { userId, deviceId } = request.user;
 
-        await Device.updateOne(
-            { deviceId },
+        const result = await Device.updateOne(
+            { deviceId, userId },
             {
                 refreshToken: null,
                 isActive: false,
                 lastSeen: new Date()
             }
         );
+
+        if (result.matchedCount === 0) {
+            return reply.status(403).send({
+                success: false,
+                message: ERRORS.FORBIDDEN
+            });
+        }
 
         return {
             success: true,

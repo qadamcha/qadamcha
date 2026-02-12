@@ -75,8 +75,15 @@ MAVZULAR:
 
             prompt += `\n\nOta-ona savoli: ${message}`;
 
-            // AI javob olish
-            const result = await this.model.generateContent(prompt);
+            // AI javob olish (10 soniya timeout bilan)
+            const AI_TIMEOUT = 10000;
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('AI_TIMEOUT')), AI_TIMEOUT)
+            );
+            const result = await Promise.race([
+                this.model.generateContent(prompt),
+                timeoutPromise
+            ]);
             const response = result.response;
             const text = response.text();
 
@@ -89,7 +96,13 @@ MAVZULAR:
         } catch (error) {
             console.error('Gemini AI xatosi:', error.message);
 
-            // Rate limit yoki boshqa xatolar
+            if (error.message === 'AI_TIMEOUT') {
+                return {
+                    success: false,
+                    message: 'AI javobi juda uzoq davom etdi. Qayta urinib ko\'ring.'
+                };
+            }
+
             if (error.message.includes('quota')) {
                 return {
                     success: false,

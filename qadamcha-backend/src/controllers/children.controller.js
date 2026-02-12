@@ -89,7 +89,22 @@ module.exports = {
     async update(request, reply) {
         const { userId } = request.user;
         const { id } = request.params;
-        const updates = request.body;
+
+        // Faqat ruxsat etilgan fieldlar (IDOR himoyasi)
+        const ALLOWED_FIELDS = ['name', 'age', 'gender', 'avatar', 'dailyLimit', 'weekdayLimit', 'weekendLimit'];
+        const updates = {};
+        for (const field of ALLOWED_FIELDS) {
+            if (request.body[field] !== undefined) {
+                updates[field] = request.body[field];
+            }
+        }
+
+        if (Object.keys(updates).length === 0) {
+            return reply.status(400).send({
+                success: false,
+                message: 'Yangilanadigan ma\'lumot topilmadi'
+            });
+        }
 
         const child = await Child.findOneAndUpdate(
             { _id: id, parentId: userId, isActive: true },

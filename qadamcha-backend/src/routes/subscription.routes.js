@@ -39,6 +39,7 @@ module.exports = async function (fastify) {
 
     // POST /subscription/activate
     fastify.post('/activate', {
+        preHandler: [fastify.authenticate],
         schema: { body: ActivateSchema }
     }, subscriptionController.activate);
 

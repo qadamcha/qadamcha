@@ -128,7 +128,22 @@ module.exports = {
 
         const updates = {};
         if (deviceName) updates.deviceName = deviceName;
-        if (childId) updates.childId = childId;
+
+        // childId bo'lsa — ownership tekshirish
+        if (childId) {
+            const child = await Child.findOne({
+                _id: childId,
+                parentId: userId,
+                isActive: true
+            });
+            if (!child) {
+                return reply.status(403).send({
+                    success: false,
+                    message: ERRORS.FORBIDDEN
+                });
+            }
+            updates.childId = childId;
+        }
 
         const device = await Device.findOneAndUpdate(
             { _id: id, userId, isActive: true },

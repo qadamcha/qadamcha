@@ -43,44 +43,62 @@ const VerifyPinSchema = Type.Object({
     pin: Type.String({ minLength: 4, maxLength: 6, pattern: '^[0-9]+$' })
 });
 
+// Auth endpointlar uchun qattiq rate limitlar
+const authRateLimit = {
+    config: {
+        rateLimit: { max: 5, timeWindow: '1 minute' }
+    }
+};
+
+const otpRateLimit = {
+    config: {
+        rateLimit: { max: 3, timeWindow: '1 minute' }
+    }
+};
+
 module.exports = async function (fastify) {
 
     // POST /auth/send-otp - OTP yuborish
     fastify.post('/send-otp', {
-        schema: {
-            body: PhoneSchema
-        }
+        schema: { body: PhoneSchema },
+        ...otpRateLimit
     }, authController.sendOtp);
 
     // POST /auth/verify-otp - OTP tekshirish
     fastify.post('/verify-otp', {
-        schema: { body: OtpVerifySchema }
+        schema: { body: OtpVerifySchema },
+        ...otpRateLimit
     }, authController.verifyOtp);
 
     // POST /auth/register - Ro'yxatdan o'tish
     fastify.post('/register', {
-        schema: { body: RegisterSchema }
+        schema: { body: RegisterSchema },
+        ...authRateLimit
     }, authController.register);
 
     // POST /auth/reset-pin - PIN tiklash
     fastify.post('/reset-pin', {
-        schema: { body: ResetPinSchema }
+        schema: { body: ResetPinSchema },
+        ...authRateLimit
     }, authController.resetPin);
 
     // POST /auth/login - Kirish
     fastify.post('/login', {
-        schema: { body: LoginSchema }
+        schema: { body: LoginSchema },
+        ...authRateLimit
     }, authController.login);
 
     // POST /auth/refresh - Token yangilash
     fastify.post('/refresh', {
-        schema: { body: RefreshSchema }
+        schema: { body: RefreshSchema },
+        ...authRateLimit
     }, authController.refresh);
 
     // POST /auth/verify-pin - PIN tekshirish (faqat token borlar uchun)
     fastify.post('/verify-pin', {
         schema: { body: VerifyPinSchema },
-        preHandler: [fastify.authenticate]
+        preHandler: [fastify.authenticate],
+        ...authRateLimit
     }, authController.verifyPin);
 
     // POST /auth/logout - Chiqish

@@ -17,7 +17,9 @@ const { API_PREFIX } = require('./config/constants');
 const registerPlugins = async () => {
     // CORS
     await fastify.register(require('@fastify/cors'), {
-        origin: true,
+        origin: config.NODE_ENV === 'production'
+            ? (config.ALLOWED_ORIGINS ? config.ALLOWED_ORIGINS.split(',') : false)
+            : true,
         credentials: true
     });
 
@@ -49,7 +51,7 @@ fastify.decorate('authenticate', async (request, reply) => {
     try {
         await request.jwtVerify();
     } catch (err) {
-        reply.status(401).send({
+        return reply.status(401).send({
             success: false,
             message: 'Autentifikatsiya talab qilinadi'
         });

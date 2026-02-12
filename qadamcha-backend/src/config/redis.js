@@ -2,16 +2,33 @@ const Redis = require('ioredis');
 const config = require('./env');
 
 let redis = null;
+let isMocked = false;
+
+const fallbackToMock = (reason) => {
+    if (isMocked) return;
+
+    // Production da mock ruxsat etilmaydi — crash qilsin
+    if (config.NODE_ENV === 'production') {
+        console.error(`❌ CRITICAL: ${reason}. Production da Redis MAJBURIY!`);
+        process.exit(1);
+    }
+
+    console.warn(`⚠️ ${reason}. Mock Redis ishga tushmoqda...`);
+    const RedisMock = require('ioredis-mock');
+    redis = new RedisMock();
+    isMocked = true;
+};
 
 const connectRedis = () => {
     try {
         console.log('🔄 Connecting to Redis...');
         redis = new Redis(config.REDIS_URL, {
             maxRetriesPerRequest: 3,
+            lazyConnect: true,
             retryStrategy: (times) => {
                 if (times > 3) {
-                    console.warn('⚠️ Redis ulanishda xatolik. Mock Redis ishlatilmoqda.');
-                    return null; // Stop retrying
+                    fallbackToMock('Redis ulanishda xatolik (3 urinishdan keyin)');
+                    return null;
                 }
                 return Math.min(times * 50, 2000);
             }
@@ -23,19 +40,20 @@ const connectRedis = () => {
 
         redis.on('error', (err) => {
             console.warn('⚠️ Redis error:', err.message);
-            // Fallback to mock if not already mocked
-            if (err.message.includes('ECONNREFUSED') && !(redis instanceof require('ioredis-mock'))) {
-                console.warn('⚠️ Redis local topilmadi. Mock Redis ishga tushmoqda...');
-                const RedisMock = require('ioredis-mock');
-                redis = new RedisMock();
+            if (err.message.includes('ECONNREFUSED') || err.message.includes('ENOTFOUND')) {
+                fallbackToMock('Redis local topilmadi');
             }
+        });
+
+        // Ulanishni sinab ko'rish
+        redis.connect().catch(() => {
+            fallbackToMock('Redis connect() muvaffaqiyatsiz');
         });
 
         return redis;
     } catch (error) {
         console.warn('⚠️ Redis connection failed, using Mock:', error.message);
-        const RedisMock = require('ioredis-mock');
-        redis = new RedisMock();
+        fallbackToMock('Redis yaratishda xato');
         return redis;
     }
 };
@@ -47,4 +65,4 @@ const getRedis = () => {
     return redis;
 };
 
-module.exports = { connectRedis, getRedis, instance: getRedis() };
+module.exports = { connectRedis, getRedis };

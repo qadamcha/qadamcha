@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const { Subscription, User } = require('../models');
 const config = require('../config/env');
 const { ERRORS, SUCCESS } = require('../config/constants');
@@ -88,6 +89,7 @@ module.exports = {
 
     // POST /subscription/activate - Obunani faollashtirish (to'lovdan keyin)
     async activate(request, reply) {
+        const { userId } = request.user;
         const { orderId, transactionId, paymentMethod } = request.body;
 
         const subscription = await Subscription.findById(orderId);
@@ -99,6 +101,14 @@ module.exports = {
             });
         }
 
+        // Ownership tekshiruvi
+        if (subscription.userId.toString() !== userId) {
+            return reply.status(403).send({
+                success: false,
+                message: ERRORS.FORBIDDEN
+            });
+        }
+
         if (subscription.status === 'active') {
             return {
                 success: true,
@@ -106,18 +116,44 @@ module.exports = {
             };
         }
 
-        // Obunani faollashtirish
-        subscription.status = 'active';
-        subscription.transactionId = transactionId;
-        subscription.paymentMethod = paymentMethod;
-        subscription.startDate = new Date();
+        // transactionId takroriy ishlatilmaganini tekshirish
+        const existingTx = await Subscription.findOne({
+            transactionId,
+            status: 'active'
+        });
+        if (existingTx) {
+            return reply.status(400).send({
+                success: false,
+                message: 'Bu to\'lov allaqachon ishlatilgan'
+            });
+        }
 
-        // End date ni qayta hisoblash
-        const planData = config.PLANS[subscription.plan];
-        subscription.endDate = new Date();
-        subscription.endDate.setDate(subscription.endDate.getDate() + planData.days);
+        // Obunani faollashtirish — transaction bilan (to'lov + obuna atomik)
+        const session = await mongoose.startSession();
+        session.startTransaction();
 
-        await subscription.save();
+        try {
+            subscription.status = 'active';
+            subscription.transactionId = transactionId;
+            subscription.paymentMethod = paymentMethod;
+            subscription.startDate = new Date();
+
+            const planData = config.PLANS[subscription.plan];
+            subscription.endDate = new Date();
+            subscription.endDate.setDate(subscription.endDate.getDate() + planData.days);
+
+            await subscription.save({ session });
+            await session.commitTransaction();
+        } catch (err) {
+            await session.abortTransaction();
+            request.log.error('Subscription activation failed:', err);
+            return reply.status(500).send({
+                success: false,
+                message: 'Obunani faollashtirishda xatolik yuz berdi'
+            });
+        } finally {
+            session.endSession();
+        }
 
         return {
             success: true,

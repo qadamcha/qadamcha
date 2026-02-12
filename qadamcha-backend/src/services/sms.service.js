@@ -56,40 +56,41 @@ class SmsService {
 
     // OTP yuborish
     async sendOtp(phone, code) {
-        const token = await this.getToken();
-
-        // Terminalda kodni ko'rsatish (development uchun)
-        console.log('\n' + '='.repeat(50));
-        console.log('📱 OTP CODE FOR', phone);
-        console.log('🔐 CODE:', code);
-        console.log('📋 MODE:', this.isProduction ? 'PRODUCTION' : 'DEVELOPMENT');
-        console.log('='.repeat(50) + '\n');
-
-        // Xabar tanlash
-        let message;
-        if (this.isProduction) {
-            // Production: haqiqiy OTP xabari
-            message = `Qadamcha: Tasdiqlash kodingiz: ${code}. 5 daqiqa amal qiladi.`;
-        } else {
-            // Development: test xabari (Eskiz test mode uchun)
-            message = 'Bu Eskiz dan test';
+        // Terminalda kodni ko'rsatish (faqat development)
+        if (!this.isProduction) {
+            console.log('\n' + '='.repeat(50));
+            console.log('📱 OTP CODE FOR', phone);
+            console.log('🔐 CODE:', code);
+            console.log('='.repeat(50) + '\n');
         }
+
+        let token;
+        try {
+            token = await this.getToken();
+        } catch (err) {
+            console.error('❌ Eskiz token olishda xato:', err.message);
+            if (!this.isProduction) {
+                return { success: true, messageId: 'dev-mode-no-token', note: 'Token olinmadi — terminalda OTP ni ko\'ring' };
+            }
+            return { success: false, error: 'SMS xizmati vaqtincha ishlamayapti' };
+        }
+
+        const message = this.isProduction
+            ? `Qadamcha: Tasdiqlash kodingiz: ${code}. 5 daqiqa amal qiladi.`
+            : 'Bu Eskiz dan test';
 
         const formData = new FormData();
         formData.append('mobile_phone', this.formatPhone(phone));
         formData.append('message', message);
 
-        // Production da sender nickname qo'shish
         if (this.isProduction) {
-            formData.append('from', '4546'); // Yoki ro'yxatdan o'tgan nickname
+            formData.append('from', '4546');
         }
 
         try {
             const response = await fetch(`${this.baseUrl}/message/sms/send`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
+                headers: { 'Authorization': `Bearer ${token}` },
                 body: formData
             });
 
@@ -97,33 +98,22 @@ class SmsService {
 
             if (data.status === 'waiting' || data.id) {
                 console.log('✅ SMS yuborildi:', data.id);
-                return {
-                    success: true,
-                    messageId: data.id
-                };
+                return { success: true, messageId: data.id };
             }
 
-            // Dev mode da xato bo'lsa ham davom etamiz
             if (!this.isProduction) {
                 console.warn('⚠️ SMS (dev mode):', data.message || 'Test message sent');
-                return {
-                    success: true,
-                    messageId: 'dev-mode',
-                    note: 'Development mode - check terminal for OTP'
-                };
+                return { success: true, messageId: 'dev-mode', note: 'Development mode - terminalda OTP ni ko\'ring' };
             }
 
-            throw new Error(data.message || 'SMS yuborishda xato');
+            console.error('❌ SMS yuborilmadi:', data.message);
+            return { success: false, error: 'SMS yuborib bo\'lmadi. Keyinroq urinib ko\'ring.' };
         } catch (error) {
+            console.error('❌ SMS xatosi:', error.message);
             if (!this.isProduction) {
-                console.warn('⚠️ SMS xatosi (dev mode davom etadi):', error.message);
-                return {
-                    success: true,
-                    messageId: 'dev-mode-error',
-                    note: 'Development mode - check terminal for OTP'
-                };
+                return { success: true, messageId: 'dev-mode-error', note: 'Development mode - terminalda OTP ni ko\'ring' };
             }
-            throw error;
+            return { success: false, error: 'SMS xizmati vaqtincha ishlamayapti' };
         }
     }
 
