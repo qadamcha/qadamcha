@@ -1,5 +1,15 @@
 # Qadamcha — Developer Setup
 
+## Kerakli toollar
+- Node.js: v22.x (22.20.0 da tekshirilgan)
+- Flutter: 3.38.x (3.38.9 da tekshirilgan)
+- Dart: 3.10.x
+- Gradle: 8.13
+- Android Gradle Plugin: 8.11.1
+- Kotlin: 2.2.20
+- compileSdk: 36
+- Java: 1.8+
+
 ## 1. Backend (qadamcha-backend)
 
 ```bash
