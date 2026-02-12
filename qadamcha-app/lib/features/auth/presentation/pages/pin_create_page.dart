@@ -118,6 +118,8 @@ class _PinCreatePageState extends State<PinCreatePage> {
               backgroundColor: AppColors.success,
             ),
           );
+          // State ni tozalash — LoginPage error ko'rsatmasligi uchun
+          context.read<AuthBloc>().add(ResetAuthEvent());
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(

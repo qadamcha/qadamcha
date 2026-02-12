@@ -106,7 +106,10 @@ class _OtpPageState extends State<OtpPage> {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state.status == AuthStatus.otpVerified) {
-          if (state.isNewUser) {
+          final isNew = state.isNewUser;
+          // State ni tozalash — keyingi sahifada eski state qolmasligi uchun
+          context.read<AuthBloc>().add(ResetAuthEvent());
+          if (isNew) {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
