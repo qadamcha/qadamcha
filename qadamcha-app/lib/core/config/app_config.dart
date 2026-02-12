@@ -2,13 +2,23 @@ import 'dart:io' show Platform;
 
 /// Dinamik konfiguratsiya - build vaqtida --dart-define orqali beriladi.
 ///
-/// Ishlatish:
+/// Ishlatish (production — Railway):
+///   flutter run --dart-define=ENV=production
+///
+/// Ishlatish (development — local backend):
+///   flutter run
 ///   flutter run --dart-define=API_HOST=192.168.0.105
 ///   flutter run --dart-define=API_HOST=192.168.0.105 --dart-define=API_PORT=3001
 ///
-/// Default: Android emulator uchun 10.0.2.2, iOS simulator uchun localhost.
+/// Default: production da Railway URL, development da local emulator.
 class AppConfig {
   AppConfig._();
+
+  // --dart-define=ENV=production
+  static const String _env = String.fromEnvironment(
+    'ENV',
+    defaultValue: 'development',
+  );
 
   // --dart-define=API_HOST=x.x.x.x
   static const String _apiHost = String.fromEnvironment(
@@ -22,14 +32,19 @@ class AppConfig {
     defaultValue: '3000',
   );
 
-  /// Backend host — dart-define bilan berilmasa platforma bo'yicha default.
+  /// Production rejimmi?
+  static bool get isProduction => _env == 'production';
+
+  /// Backend host — production da Railway, dev da local.
   static String get apiHost {
     if (_apiHost.isNotEmpty) return _apiHost;
-    // Android emulator 10.0.2.2 orqali host mashinaga ulanadi
-    // iOS simulator localhost orqali ulanadi
+    if (isProduction) return 'qadamcha-production.up.railway.app';
     return Platform.isAndroid ? '10.0.2.2' : 'localhost';
   }
 
   /// To'liq API base URL
-  static String get baseUrl => 'http://$apiHost:$_apiPort/api/v1';
+  static String get baseUrl {
+    if (isProduction) return 'https://$apiHost/api/v1';
+    return 'http://$apiHost:$_apiPort/api/v1';
+  }
 }
