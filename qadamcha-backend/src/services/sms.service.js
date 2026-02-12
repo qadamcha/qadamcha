@@ -56,12 +56,22 @@ class SmsService {
 
     // OTP yuborish
     async sendOtp(phone, code) {
-        // Terminalda kodni ko'rsatish (faqat development)
-        if (!this.isProduction) {
+        // Terminalda kodni ko'rsatish (development yoki Eskiz sozlanmagan bo'lsa)
+        const eskizConfigured = config.ESKIZ_EMAIL && config.ESKIZ_PASSWORD
+            && config.ESKIZ_EMAIL !== 'your_email@gmail.com'
+            && config.ESKIZ_PASSWORD !== 'your_eskiz_api_password';
+
+        if (!this.isProduction || !eskizConfigured) {
             console.log('\n' + '='.repeat(50));
             console.log('📱 OTP CODE FOR', phone);
             console.log('🔐 CODE:', code);
             console.log('='.repeat(50) + '\n');
+        }
+
+        // Eskiz sozlanmagan bo'lsa — faqat logga chiqarib qaytarish
+        if (!eskizConfigured) {
+            console.warn('⚠️ Eskiz sozlanmagan — OTP faqat logda ko\'rinadi');
+            return { success: true, messageId: 'no-eskiz', note: 'Eskiz sozlanmagan — logda OTP ni ko\'ring' };
         }
 
         let token;
