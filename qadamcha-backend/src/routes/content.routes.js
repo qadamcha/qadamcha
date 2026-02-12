@@ -11,18 +11,9 @@ const ActivitySchema = Type.Object({
     ])
 });
 
-// Write endpointlar uchun rate limit
-const writeRateLimit = {
-    config: {
-        rateLimit: { max: 30, timeWindow: '1 minute' }
-    }
-};
-
-const likeRateLimit = {
-    config: {
-        rateLimit: { max: 10, timeWindow: '1 minute' }
-    }
-};
+// Rate limitlar (test uchun o'chirilgan, keyinroq qattiqlashtirish kerak)
+const writeRateLimit = {};
+const likeRateLimit = {};
 
 module.exports = async function (fastify) {
 
