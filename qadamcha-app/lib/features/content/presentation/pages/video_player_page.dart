@@ -31,7 +31,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   Future<void> _initializePlayer() async {
     _videoPlayerController = VideoPlayerController.networkUrl(
       Uri.parse(widget.streamUrl),
-      httpHeaders: const {'Referer': 'http://localhost:4000/'},
+      httpHeaders: const {'Referer': 'https://qadamcha.uz/'},
     );
     await _videoPlayerController.initialize();
 

@@ -1,0 +1,34 @@
+# Environment variables (NEVER commit secrets!)
+.env
+.env.local
+.env.production
+
+# Node.js
+node_modules/
+npm-debug.log*
+
+# Flutter / Dart
+qadamcha-app/build/
+qadamcha-app/.dart_tool/
+qadamcha-app/.packages
+qadamcha-app/.flutter-plugins
+qadamcha-app/.flutter-plugins-dependencies
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+nul
+
+# Logs
+*.log
+logs/
+
+# Claude
+.claude/

@@ -1,8 +1,10 @@
+import 'package:qadamcha_app/core/config/app_config.dart';
+
 // API Configuration
 class ApiConstants {
-  // For real phone: use computer's local IP (same WiFi network required)
-  // For Android Emulator: use 10.0.2.2
-  static const String baseUrl = 'http://192.168.0.100:3000/api/v1';
+  /// Dinamik API URL — `--dart-define=API_HOST=x.x.x.x` orqali o'zgartiriladi.
+  /// Default: Android emulator → 10.0.2.2, iOS → localhost.
+  static String get baseUrl => AppConfig.baseUrl;
   static const Duration connectTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);
 }

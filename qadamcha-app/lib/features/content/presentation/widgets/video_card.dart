@@ -43,7 +43,7 @@ class VideoCard extends StatelessWidget {
                         ? Image.network(
                             content.thumbnailUrl!,
                             fit: BoxFit.cover,
-                            headers: const {'Referer': 'http://localhost:4000/'},
+                            headers: const {'Referer': 'https://qadamcha.uz/'},
                             errorBuilder: (context, error, stackTrace) => Container(
                               color: AppColors.primary.withOpacity(0.1),
                               child: Icon(Icons.broken_image, color: AppColors.textSecondary, size: 32.sp),
