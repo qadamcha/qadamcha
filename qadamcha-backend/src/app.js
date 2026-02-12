@@ -1,4 +1,5 @@
 const fastify = require('fastify')({
+    trustProxy: true,
     logger: {
         level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
         transport: process.env.NODE_ENV !== 'production' ? {

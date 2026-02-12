@@ -52,7 +52,7 @@ const authRateLimit = {
 
 const otpRateLimit = {
     config: {
-        rateLimit: { max: 3, timeWindow: '1 minute' }
+        rateLimit: { max: 10, timeWindow: '1 minute' }
     }
 };
 
