@@ -35,16 +35,16 @@ const registerPlugins = async () => {
         sign: { expiresIn: config.JWT_ACCESS_EXPIRES }
     });
 
-    // Rate Limiting
-    await fastify.register(require('@fastify/rate-limit'), {
-        max: 100,
-        timeWindow: '1 minute',
-        errorResponseBuilder: (req, context) => ({
-            success: false,
-            message: 'Juda ko\'p so\'rovlar. Keyinroq urinib ko\'ring.',
-            retryAfter: context.after
-        })
-    });
+    // Rate Limiting (test tugagach yoqish kerak)
+    // await fastify.register(require('@fastify/rate-limit'), {
+    //     max: 100,
+    //     timeWindow: '1 minute',
+    //     errorResponseBuilder: (req, context) => ({
+    //         success: false,
+    //         message: 'Juda ko\'p so\'rovlar. Keyinroq urinib ko\'ring.',
+    //         retryAfter: context.after
+    //     })
+    // });
 };
 
 // Authentication Decorator
