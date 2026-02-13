@@ -39,8 +39,7 @@ const userSchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
-// Indexes
-userSchema.index({ phone: 1 });
+// Indexes (phone index already created by unique: true)
 userSchema.index({ parentId: 1 });
 userSchema.index({ createdAt: -1 });
 

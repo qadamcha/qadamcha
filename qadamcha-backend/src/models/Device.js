@@ -59,10 +59,9 @@ const deviceSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// Indexes
+// Indexes (deviceId index already created by unique: true)
 deviceSchema.index({ userId: 1 });
 deviceSchema.index({ familyCode: 1 });
-deviceSchema.index({ deviceId: 1 }, { unique: true });
 deviceSchema.index({ userId: 1, isActive: 1 });
 
 // 6 xonali oila kodi generatsiya (crypto-secure + uniqueness check)
