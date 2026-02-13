@@ -10,12 +10,10 @@ const contentSchema = new mongoose.Schema({
     type: {
         type: String,
         enum: ['cartoon', 'game', 'story', 'quest'],
-        required: true,
-        index: true
+        required: true
     },
     category: {
-        type: String,
-        index: true
+        type: String
     },
     description: {
         type: String,

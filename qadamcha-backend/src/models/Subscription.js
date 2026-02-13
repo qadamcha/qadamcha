@@ -4,8 +4,7 @@ const subscriptionSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true,
-        index: true
+        required: true
     },
     plan: {
         type: String,
@@ -23,8 +22,7 @@ const subscriptionSchema = new mongoose.Schema({
     },
     endDate: {
         type: Date,
-        required: true,
-        index: true
+        required: true
     },
     maxDevices: {
         type: Number,

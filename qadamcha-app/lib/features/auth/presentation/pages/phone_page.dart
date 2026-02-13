@@ -38,6 +38,11 @@ class _PhonePageState extends State<PhonePage> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
+      // Faqat OTP yuborish bilan bog'liq statelarni eshitish
+      listenWhen: (previous, current) =>
+          current.status == AuthStatus.otpSent ||
+          (current.status == AuthStatus.error &&
+              previous.status == AuthStatus.loading),
       listener: (context, state) {
         if (state.status == AuthStatus.otpSent) {
           Navigator.push(
@@ -49,8 +54,8 @@ class _PhonePageState extends State<PhonePage> {
         } else if (state.status == AuthStatus.error) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('${state.errorMessage} [TEST]'),
-              backgroundColor: Colors.green,
+              content: Text(state.errorMessage ?? 'Xatolik yuz berdi'),
+              backgroundColor: AppColors.error,
             ),
           );
         }

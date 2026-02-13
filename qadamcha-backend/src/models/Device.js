@@ -4,8 +4,7 @@ const deviceSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true,
-        index: true
+        required: true
     },
     childId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -14,8 +13,7 @@ const deviceSchema = new mongoose.Schema({
     deviceId: {
         type: String,
         required: [true, 'Device ID majburiy'],
-        unique: true,
-        index: true
+        unique: true
     },
     deviceName: {
         type: String,
@@ -34,8 +32,7 @@ const deviceSchema = new mongoose.Schema({
 
     // Oila kodi (qurilma ulash uchun)
     familyCode: {
-        type: String,
-        index: true
+        type: String
     },
     familyCodeExpires: Date,
 

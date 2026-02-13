@@ -4,8 +4,7 @@ const childSchema = new mongoose.Schema({
     parentId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: [true, 'Ota-ona ID majburiy'],
-        index: true
+        required: [true, 'Ota-ona ID majburiy']
     },
     name: {
         type: String,

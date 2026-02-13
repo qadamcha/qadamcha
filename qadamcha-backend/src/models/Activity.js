@@ -4,8 +4,7 @@ const activitySchema = new mongoose.Schema({
     childId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Child',
-        required: true,
-        index: true
+        required: true
     },
     contentId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -22,8 +21,7 @@ const activitySchema = new mongoose.Schema({
         default: 0 // sekundlarda
     },
     date: {
-        type: String,  // "2026-02-09" format
-        index: true
+        type: String  // "2026-02-09" format
     },
     startedAt: Date,
     endedAt: Date,

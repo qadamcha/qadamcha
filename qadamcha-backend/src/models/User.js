@@ -5,8 +5,7 @@ const userSchema = new mongoose.Schema({
     phone: {
         type: String,
         required: [true, 'Telefon raqam majburiy'],
-        unique: true,
-        index: true
+        unique: true
     },
     pin: {
         type: String,
@@ -26,8 +25,7 @@ const userSchema = new mongoose.Schema({
     },
     parentId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        index: true
+        ref: 'User'
     },
     avatar: String,
     isActive: {
