@@ -12,16 +12,25 @@ module.exports = {
             isActive: true
         }).sort({ createdAt: -1 });
 
-        // Har bir bola uchun bugungi statistika
+        // Har bir bola uchun bugungi statistika (xatolik bo'lsa graceful fallback)
         const today = new Date().toISOString().split('T')[0];
         const childrenWithStats = await Promise.all(
             children.map(async (child) => {
-                const stats = await Activity.getDailyStats(child._id, today);
-                return {
-                    ...child.toObject(),
-                    todayUsage: stats.totalDuration,
-                    remainingTime: Math.max(0, child.dailyLimit * 60 - stats.totalDuration)
-                };
+                try {
+                    const stats = await Activity.getDailyStats(child._id, today);
+                    return {
+                        ...child.toObject(),
+                        todayUsage: stats.totalDuration,
+                        remainingTime: Math.max(0, child.dailyLimit * 60 - stats.totalDuration)
+                    };
+                } catch (err) {
+                    request.log.error(`Stats error for child ${child._id}:`, err);
+                    return {
+                        ...child.toObject(),
+                        todayUsage: 0,
+                        remainingTime: child.dailyLimit * 60
+                    };
+                }
             })
         );
 
@@ -180,6 +189,17 @@ module.exports = {
         const { id } = request.params;
         const { date, limit = 50 } = request.query;
 
+        // Limit validation (max 500)
+        const parsedLimit = Math.min(500, Math.max(1, parseInt(limit) || 50));
+
+        // Date format validation
+        if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+            return reply.status(400).send({
+                success: false,
+                message: 'Sana formati noto\'g\'ri (YYYY-MM-DD)'
+            });
+        }
+
         // Bola ota-onaga tegishliligini tekshirish
         const child = await Child.findOne({ _id: id, parentId: userId });
         if (!child) {
@@ -194,7 +214,7 @@ module.exports = {
 
         const activities = await Activity.find(query)
             .sort({ createdAt: -1 })
-            .limit(parseInt(limit));
+            .limit(parsedLimit);
 
         return { success: true, activities };
     }

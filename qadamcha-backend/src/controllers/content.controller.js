@@ -120,9 +120,8 @@ module.exports = {
             });
         }
 
-        // Ko'rishlar sonini oshirish
-        content.views += 1;
-        await content.save();
+        // Ko'rishlar sonini atomic oshirish (race condition oldini olish)
+        await Content.updateOne({ _id: id }, { $inc: { views: 1 } });
 
         // Streaming URL qo'shish
         let streamUrl = null;
@@ -195,6 +194,14 @@ module.exports = {
         const { id } = request.params;
         const { childId, duration, action } = request.body;
         const { userId } = request.user;
+
+        // Duration validation (0-86400 sekund = 24 soat)
+        if (duration !== undefined && (typeof duration !== 'number' || duration < 0 || duration > 86400)) {
+            return reply.status(400).send({
+                success: false,
+                message: 'Duration 0-86400 sekund orasida bo\'lishi kerak'
+            });
+        }
 
         // Child ownership tekshiruvi
         const child = await Child.findOne({

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 
 const deviceSchema = new mongoose.Schema({
     userId: {
@@ -64,9 +65,18 @@ deviceSchema.index({ familyCode: 1 });
 deviceSchema.index({ deviceId: 1 }, { unique: true });
 deviceSchema.index({ userId: 1, isActive: 1 });
 
-// 6 xonali oila kodi generatsiya
-deviceSchema.statics.generateFamilyCode = function () {
-    return Math.floor(100000 + Math.random() * 900000).toString();
+// 6 xonali oila kodi generatsiya (crypto-secure + uniqueness check)
+deviceSchema.statics.generateFamilyCode = async function () {
+    const maxAttempts = 5;
+    for (let i = 0; i < maxAttempts; i++) {
+        const code = (crypto.randomInt(100000, 999999)).toString();
+        const existing = await this.findOne({
+            familyCode: code,
+            familyCodeExpires: { $gt: new Date() }
+        });
+        if (!existing) return code;
+    }
+    throw new Error('Oila kodi generatsiya qilib bo\'lmadi');
 };
 
 module.exports = mongoose.model('Device', deviceSchema);

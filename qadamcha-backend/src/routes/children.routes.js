@@ -11,6 +11,19 @@ const ChildSchema = Type.Object({
     dailyLimit: Type.Optional(Type.Integer({ minimum: 5, maximum: 480 }))
 });
 
+const UpdateChildSchema = Type.Object({
+    name: Type.Optional(Type.String({ minLength: 2, maxLength: 30 })),
+    age: Type.Optional(Type.Integer({ minimum: 1, maximum: 18 })),
+    gender: Type.Optional(Type.Union([
+        Type.Literal('male'),
+        Type.Literal('female')
+    ])),
+    avatar: Type.Optional(Type.String({ maxLength: 500 })),
+    dailyLimit: Type.Optional(Type.Integer({ minimum: 5, maximum: 480 })),
+    weekdayLimit: Type.Optional(Type.Integer({ minimum: 5, maximum: 480 })),
+    weekendLimit: Type.Optional(Type.Integer({ minimum: 5, maximum: 480 }))
+});
+
 const LimitSchema = Type.Object({
     dailyLimit: Type.Optional(Type.Integer({ minimum: 5, maximum: 480 })),
     weekdayLimit: Type.Optional(Type.Integer({ minimum: 5, maximum: 480 })),
@@ -34,7 +47,9 @@ module.exports = async function (fastify) {
     }, childrenController.create);
 
     // PUT /children/:id
-    fastify.put('/:id', childrenController.update);
+    fastify.put('/:id', {
+        schema: { body: UpdateChildSchema }
+    }, childrenController.update);
 
     // DELETE /children/:id
     fastify.delete('/:id', childrenController.delete);

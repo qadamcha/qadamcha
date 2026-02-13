@@ -31,8 +31,8 @@ module.exports = {
             });
         }
 
-        // Yangi oila kodi
-        const familyCode = Device.generateFamilyCode();
+        // Yangi oila kodi (crypto-secure)
+        const familyCode = await Device.generateFamilyCode();
         const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 daqiqa
 
         device.familyCode = familyCode;
@@ -190,10 +190,17 @@ module.exports = {
     async heartbeat(request, reply) {
         const { deviceId } = request.user;
 
-        await Device.updateOne(
+        const result = await Device.updateOne(
             { deviceId, isActive: true },
             { lastSeen: new Date() }
         );
+
+        if (result.matchedCount === 0) {
+            return reply.status(404).send({
+                success: false,
+                message: 'Qurilma topilmadi yoki faol emas'
+            });
+        }
 
         return { success: true };
     }

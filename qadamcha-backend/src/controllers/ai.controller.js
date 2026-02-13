@@ -43,7 +43,15 @@ module.exports = {
     async getTips(request, reply) {
         const { age } = request.query;
 
-        const tips = aiService.getQuickTips(parseInt(age) || 5);
+        const parsedAge = parseInt(age);
+        if (isNaN(parsedAge) || parsedAge < 1 || parsedAge > 18) {
+            return reply.status(400).send({
+                success: false,
+                message: 'Yosh 1-18 orasida bo\'lishi kerak'
+            });
+        }
+
+        const tips = aiService.getQuickTips(parsedAge);
 
         return {
             success: true,
