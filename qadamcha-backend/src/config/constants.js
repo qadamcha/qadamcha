@@ -16,6 +16,7 @@ const REDIS_KEYS = {
     SESSION: 'session:',
     ESKIZ_TOKEN: 'eskiz:token',
     CACHE: 'cache:',
+    BLACKLIST: 'blacklist:',
 };
 
 // User Roles

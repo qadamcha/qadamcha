@@ -168,7 +168,13 @@ class _AuthInterceptor extends Interceptor {
           if (response.statusCode == 200) {
             final newToken = response.data['accessToken'];
             await _storage.write(key: StorageKeys.accessToken, value: newToken);
-            
+
+            // Refresh token rotation — yangi refresh token saqlash
+            final newRefreshToken = response.data['refreshToken'];
+            if (newRefreshToken != null) {
+              await _storage.write(key: StorageKeys.refreshToken, value: newRefreshToken);
+            }
+
             // Asl so'rovni qaytadan yuborish
             err.requestOptions.headers['Authorization'] = 'Bearer $newToken';
             final cloneRequest = await _dio.fetch(err.requestOptions);

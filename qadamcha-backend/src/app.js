@@ -14,13 +14,22 @@ const connectDB = require('./config/database');
 const { connectRedis } = require('./config/redis');
 const { API_PREFIX } = require('./config/constants');
 
+// Sentry — eng tepada init qilish
+const { initSentry, sentryErrorHandler } = require('./plugins/sentry.plugin');
+initSentry();
+
 // Register Plugins
 const registerPlugins = async () => {
-    // CORS
+    // CORS — production da faqat ruxsat etilgan originlar
+    const corsOrigin = (() => {
+        if (config.NODE_ENV !== 'production') return true;
+        const origins = config.ALLOWED_ORIGINS;
+        if (!origins || origins === '*') return false; // Production da * rad etiladi
+        return origins.split(',').map(o => o.trim());
+    })();
+
     await fastify.register(require('@fastify/cors'), {
-        origin: config.NODE_ENV === 'production'
-            ? (config.ALLOWED_ORIGINS === '*' ? true : (config.ALLOWED_ORIGINS ? config.ALLOWED_ORIGINS.split(',') : false))
-            : true,
+        origin: corsOrigin,
         credentials: true
     });
 
@@ -35,9 +44,9 @@ const registerPlugins = async () => {
         sign: { expiresIn: config.JWT_ACCESS_EXPIRES }
     });
 
-    // Rate Limiting (test uchun yuqori limit, keyinroq qattiqlashtirish kerak)
+    // Rate Limiting — global 100/min
     await fastify.register(require('@fastify/rate-limit'), {
-        max: 10000,
+        max: 100,
         timeWindow: '1 minute',
         errorResponseBuilder: (req, context) => ({
             success: false,
@@ -47,10 +56,23 @@ const registerPlugins = async () => {
     });
 };
 
-// Authentication Decorator
+// Authentication Decorator — blacklist tekshirish bilan
+const blacklistService = require('./services/blacklist.service');
+
 fastify.decorate('authenticate', async (request, reply) => {
     try {
         await request.jwtVerify();
+
+        // Token blacklist da bormi tekshirish
+        if (request.user.jti) {
+            const isBlacklisted = await blacklistService.isBlacklisted(request.user.jti);
+            if (isBlacklisted) {
+                return reply.status(401).send({
+                    success: false,
+                    message: 'Token bekor qilingan'
+                });
+            }
+        }
     } catch (err) {
         return reply.status(401).send({
             success: false,
@@ -124,10 +146,12 @@ const registerRoutes = async () => {
     fastify.register(require('./routes'), { prefix: API_PREFIX });
 };
 
-// Error Handler
-// Error Handler
+// Error Handler — Sentry bilan
 fastify.setErrorHandler((error, request, reply) => {
     fastify.log.error(error);
+
+    // Sentry ga yuborish
+    sentryErrorHandler(error, request);
 
     // Rate Limit handling
     if (error.statusCode === 429 || error.message?.includes('Juda ko\'p so\'rovlar')) {
@@ -169,6 +193,14 @@ const start = async () => {
         // Configure services with Redis
         const smsService = require('./services/sms.service');
         smsService.setRedis(redis);
+        blacklistService.setRedis(redis);
+
+        const cacheService = require('./services/cache.service');
+        cacheService.setRedis(redis);
+
+        // Initialize notification service
+        const notificationService = require('./services/notification.service');
+        notificationService.init();
 
         // Register plugins and routes
         await registerPlugins();

@@ -1,13 +1,15 @@
 const mongoose = require('mongoose');
 const { Content, Activity, Child } = require('../models');
 const videoService = require('../services/video.service');
+const cacheService = require('../services/cache.service');
+const notificationService = require('../services/notification.service');
 const { ERRORS, CONTENT_TYPES } = require('../config/constants');
 
 const VALID_CONTENT_TYPES = Object.values(CONTENT_TYPES);
 
 module.exports = {
 
-    // GET /content - Barcha kontentlar (filtrlash bilan)
+    // GET /content - Barcha kontentlar (filtrlash bilan) — cached
     async getAll(request, reply) {
         const { type, category, age, page = 1, limit = 20 } = request.query;
 
@@ -24,6 +26,11 @@ module.exports = {
         }
         const parsedPage = Math.max(1, parseInt(page) || 1);
         const parsedLimit = Math.min(100, Math.max(1, parseInt(limit) || 20));
+
+        // Cache tekshirish
+        const cacheKey = `content:list:${type || ''}:${category || ''}:${parsedAge || ''}:${parsedPage}:${parsedLimit}`;
+        const cached = await cacheService.get(cacheKey);
+        if (cached) return cached;
 
         const query = { isActive: true };
 
@@ -50,7 +57,7 @@ module.exports = {
             streamUrl: videoService.getStreamUrl(content.videoId)
         }));
 
-        return {
+        const result = {
             success: true,
             contents: contentsWithUrls,
             pagination: {
@@ -60,11 +67,18 @@ module.exports = {
                 pages: Math.ceil(total / parsedLimit)
             }
         };
+
+        await cacheService.set(cacheKey, result, cacheService.TTL.CONTENT_LIST);
+        return result;
     },
 
-    // GET /content/featured - Tavsiya etilgan kontentlar
+    // GET /content/featured - Tavsiya etilgan kontentlar — cached
     async getFeatured(request, reply) {
         const { age } = request.query;
+
+        const cacheKey = `content:featured:${age || ''}`;
+        const cached = await cacheService.get(cacheKey);
+        if (cached) return cached;
 
         const query = { isActive: true, isFeatured: true };
 
@@ -87,11 +101,17 @@ module.exports = {
             streamUrl: videoService.getStreamUrl(content.videoId)
         }));
 
-        return { success: true, contents: contentsWithUrls };
+        const result = { success: true, contents: contentsWithUrls };
+        await cacheService.set(cacheKey, result, cacheService.TTL.FEATURED);
+        return result;
     },
 
-    // GET /content/categories - Kategoriyalar ro'yxati
+    // GET /content/categories - Kategoriyalar ro'yxati — cached
     async getCategories(request, reply) {
+        const cacheKey = 'content:categories';
+        const cached = await cacheService.get(cacheKey);
+        if (cached) return cached;
+
         const categories = await Content.aggregate([
             { $match: { isActive: true } },
             {
@@ -104,7 +124,9 @@ module.exports = {
             { $sort: { count: -1 } }
         ]);
 
-        return { success: true, categories };
+        const result = { success: true, categories };
+        await cacheService.set(cacheKey, result, cacheService.TTL.CATEGORIES);
+        return result;
     },
 
     // GET /content/:id - Bitta kontentni olish
@@ -277,6 +299,23 @@ module.exports = {
 
                     await session.commitTransaction();
                     session.endSession();
+
+                    // Push notification: vaqt limiti 80% ga yetganda
+                    try {
+                        const updatedChild = await Child.findById(childId);
+                        if (updatedChild && updatedChild.dailyLimit > 0) {
+                            const usedSeconds = updatedChild.todayUsage || 0;
+                            const limitSeconds = updatedChild.dailyLimit * 60;
+                            const percentUsed = Math.round((usedSeconds / limitSeconds) * 100);
+                            if (percentUsed >= 80 && percentUsed < 100) {
+                                notificationService.notifyTimeLimitApproaching(
+                                    userId, updatedChild.name, percentUsed
+                                ).catch(() => {});
+                            }
+                        }
+                    } catch (_notifErr) {
+                        // Notification xatosi — asosiy flowni to'xtatmaymiz
+                    }
                 } catch (txErr) {
                     await session.abortTransaction();
                     session.endSession();

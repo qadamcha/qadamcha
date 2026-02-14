@@ -21,7 +21,13 @@ module.exports = {
     REDIS_URL: process.env.REDIS_URL || 'redis://localhost:6379',
 
     // CORS
-    ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS || null,
+    ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS || 'http://localhost:3000',
+
+    // Sentry
+    SENTRY_DSN: process.env.SENTRY_DSN || null,
+
+    // Firebase (Push Notifications)
+    FIREBASE_SERVICE_ACCOUNT: process.env.FIREBASE_SERVICE_ACCOUNT || null,
 
     // JWT
     JWT_SECRET: process.env.JWT_SECRET || 'dev-only-secret-do-not-use-in-production',

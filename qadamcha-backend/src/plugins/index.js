@@ -4,7 +4,11 @@
  */
 
 const { registerSwagger } = require('./swagger.plugin');
+const { initSentry, captureException, sentryErrorHandler } = require('./sentry.plugin');
 
 module.exports = {
-    registerSwagger
+    registerSwagger,
+    initSentry,
+    captureException,
+    sentryErrorHandler,
 };

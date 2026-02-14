@@ -41,6 +41,13 @@ const deviceSchema = new mongoose.Schema({
     refreshToken: String,
     fcmToken: String, // Firebase Cloud Messaging
 
+    // Refresh Token Rotation
+    tokenFamily: String,
+    refreshTokenVersion: {
+        type: Number,
+        default: 0
+    },
+
     // Status
     isActive: {
         type: Boolean,

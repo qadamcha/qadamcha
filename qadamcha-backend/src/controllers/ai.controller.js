@@ -1,4 +1,5 @@
 const aiService = require('../services/ai.service');
+const cacheService = require('../services/cache.service');
 const { Child } = require('../models');
 const { ERRORS } = require('../config/constants');
 
@@ -39,7 +40,7 @@ module.exports = {
         return result;
     },
 
-    // GET /ai/tips - Tez maslahatlar
+    // GET /ai/tips - Tez maslahatlar — cached
     async getTips(request, reply) {
         const { age } = request.query;
 
@@ -51,12 +52,20 @@ module.exports = {
             });
         }
 
+        // Cache tekshirish
+        const cacheKey = `ai:tips:${parsedAge}`;
+        const cached = await cacheService.get(cacheKey);
+        if (cached) return cached;
+
         const tips = aiService.getQuickTips(parsedAge);
 
-        return {
+        const result = {
             success: true,
             tips
         };
+
+        await cacheService.set(cacheKey, result, cacheService.TTL.AI_TIPS);
+        return result;
     },
 
     // GET /ai/status - AI holati

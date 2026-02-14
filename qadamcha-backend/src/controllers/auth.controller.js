@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const { User, Device } = require('../models');
 const smsService = require('../services/sms.service');
+const blacklistService = require('../services/blacklist.service');
 const config = require('../config/env');
 const { REDIS_KEYS, ERRORS, SUCCESS } = require('../config/constants');
 
@@ -209,12 +210,16 @@ module.exports = {
             });
         }
 
-        // Generate tokens
+        // Generate tokens with JTI
+        const jti = crypto.randomUUID();
+        const tokenFamily = crypto.randomUUID();
+
         const accessToken = await reply.jwtSign(
             {
                 userId: user._id.toString(),
                 role: user.role,
-                deviceId
+                deviceId,
+                jti
             },
             { expiresIn: config.JWT_ACCESS_EXPIRES }
         );
@@ -223,13 +228,17 @@ module.exports = {
             {
                 userId: user._id.toString(),
                 deviceId,
-                type: 'refresh'
+                type: 'refresh',
+                tokenFamily,
+                version: 0
             },
             { expiresIn: config.JWT_REFRESH_EXPIRES }
         );
 
-        // Update device
+        // Update device with token family
         device.refreshToken = refreshToken;
+        device.tokenFamily = tokenFamily;
+        device.refreshTokenVersion = 0;
         device.lastSeen = new Date();
         await device.save();
 
@@ -246,7 +255,7 @@ module.exports = {
         };
     },
 
-    // POST /auth/refresh
+    // POST /auth/refresh — Token Rotation
     async refresh(request, reply) {
         const { refreshToken } = request.body;
 
@@ -267,6 +276,13 @@ module.exports = {
             });
 
             if (!device) {
+                // Reuse detection — eski token ishlatilgan, sessiyani bekor qilish
+                if (decoded.tokenFamily) {
+                    await Device.updateOne(
+                        { tokenFamily: decoded.tokenFamily },
+                        { refreshToken: null, isActive: false }
+                    );
+                }
                 return reply.status(401).send({
                     success: false,
                     message: ERRORS.TOKEN_INVALID
@@ -281,18 +297,41 @@ module.exports = {
                 });
             }
 
+            // Yangi JTI va access token
+            const newJti = crypto.randomUUID();
             const accessToken = await reply.jwtSign(
                 {
                     userId: user._id.toString(),
                     role: user.role,
-                    deviceId: decoded.deviceId
+                    deviceId: decoded.deviceId,
+                    jti: newJti
                 },
                 { expiresIn: config.JWT_ACCESS_EXPIRES }
             );
 
+            // Yangi refresh token (rotation)
+            const newVersion = (decoded.version || 0) + 1;
+            const newRefreshToken = await reply.jwtSign(
+                {
+                    userId: user._id.toString(),
+                    deviceId: decoded.deviceId,
+                    type: 'refresh',
+                    tokenFamily: device.tokenFamily,
+                    version: newVersion
+                },
+                { expiresIn: config.JWT_REFRESH_EXPIRES }
+            );
+
+            // Device da yangi refresh token saqlash
+            device.refreshToken = newRefreshToken;
+            device.refreshTokenVersion = newVersion;
+            device.lastSeen = new Date();
+            await device.save();
+
             return {
                 success: true,
-                accessToken
+                accessToken,
+                refreshToken: newRefreshToken
             };
 
         } catch (err) {
@@ -332,7 +371,15 @@ module.exports = {
 
     // POST /auth/logout
     async logout(request, reply) {
-        const { userId, deviceId } = request.user;
+        const { userId, deviceId, jti, exp } = request.user;
+
+        // Access token ni blacklist ga qo'shish
+        if (jti && exp) {
+            const ttl = exp - Math.floor(Date.now() / 1000);
+            if (ttl > 0) {
+                await blacklistService.add(jti, ttl);
+            }
+        }
 
         const result = await Device.updateOne(
             { deviceId, userId },
