@@ -8,4 +8,5 @@ module.exports = {
     Subscription: require('./Subscription'),
     Content: require('./Content'),
     Activity: require('./Activity'),
+    ContentLike: require('./ContentLike'),
 };

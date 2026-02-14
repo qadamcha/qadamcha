@@ -1,5 +1,4 @@
-const mongoose = require('mongoose');
-const { Content, Activity, Child } = require('../models');
+const { Content, Activity, Child, ContentLike } = require('../models');
 const videoService = require('../services/video.service');
 const cacheService = require('../services/cache.service');
 const notificationService = require('../services/notification.service');
@@ -260,66 +259,50 @@ module.exports = {
                     duration: 0
                 });
             } else if (action === 'end' || action === 'update') {
-                // Activity + Child atomic update (transaction)
-                const session = await mongoose.startSession();
-                session.startTransaction();
+                // Activity va Child ni ketma-ket yangilash (Atlas free tier uchun transaction siz)
+                const updated = await Activity.findOneAndUpdate(
+                    {
+                        childId,
+                        contentId: content._id,
+                        date: today,
+                        endedAt: null
+                    },
+                    {
+                        $inc: { duration },
+                        $set: action === 'end' ? { endedAt: new Date() } : {}
+                    }
+                );
 
+                if (!updated) {
+                    return reply.status(404).send({
+                        success: false,
+                        message: 'Faol sessiya topilmadi'
+                    });
+                }
+
+                await Child.updateOne(
+                    { _id: childId },
+                    {
+                        $inc: { todayUsage: duration },
+                        $set: { lastActive: new Date(), lastUsageDate: today }
+                    }
+                );
+
+                // Push notification: vaqt limiti 80% ga yetganda
                 try {
-                    const updated = await Activity.findOneAndUpdate(
-                        {
-                            childId,
-                            contentId: content._id,
-                            date: today,
-                            endedAt: null
-                        },
-                        {
-                            $inc: { duration },
-                            $set: action === 'end' ? { endedAt: new Date() } : {}
-                        },
-                        { session }
-                    );
-
-                    if (!updated) {
-                        await session.abortTransaction();
-                        session.endSession();
-                        return reply.status(404).send({
-                            success: false,
-                            message: 'Faol sessiya topilmadi'
-                        });
-                    }
-
-                    await Child.updateOne(
-                        { _id: childId },
-                        {
-                            $inc: { todayUsage: duration },
-                            $set: { lastActive: new Date(), lastUsageDate: today }
-                        },
-                        { session }
-                    );
-
-                    await session.commitTransaction();
-                    session.endSession();
-
-                    // Push notification: vaqt limiti 80% ga yetganda
-                    try {
-                        const updatedChild = await Child.findById(childId);
-                        if (updatedChild && updatedChild.dailyLimit > 0) {
-                            const usedSeconds = updatedChild.todayUsage || 0;
-                            const limitSeconds = updatedChild.dailyLimit * 60;
-                            const percentUsed = Math.round((usedSeconds / limitSeconds) * 100);
-                            if (percentUsed >= 80 && percentUsed < 100) {
-                                notificationService.notifyTimeLimitApproaching(
-                                    userId, updatedChild.name, percentUsed
-                                ).catch(() => {});
-                            }
+                    const updatedChild = await Child.findById(childId);
+                    if (updatedChild && updatedChild.dailyLimit > 0) {
+                        const usedSeconds = updatedChild.todayUsage || 0;
+                        const limitSeconds = updatedChild.dailyLimit * 60;
+                        const percentUsed = Math.round((usedSeconds / limitSeconds) * 100);
+                        if (percentUsed >= 80 && percentUsed < 100) {
+                            notificationService.notifyTimeLimitApproaching(
+                                userId, updatedChild.name, percentUsed
+                            ).catch(() => {});
                         }
-                    } catch (_notifErr) {
-                        // Notification xatosi — asosiy flowni to'xtatmaymiz
                     }
-                } catch (txErr) {
-                    await session.abortTransaction();
-                    session.endSession();
-                    throw txErr;
+                } catch (_notifErr) {
+                    // Notification xatosi — asosiy flowni to'xtatmaymiz
                 }
             }
         } catch (err) {
@@ -333,16 +316,12 @@ module.exports = {
         return { success: true };
     },
 
-    // POST /content/:id/like - Like qo'shish
+    // POST /content/:id/like - Like/unlike toggle
     async like(request, reply) {
         const { id } = request.params;
+        const { userId } = request.user;
 
-        const content = await Content.findByIdAndUpdate(
-            id,
-            { $inc: { likes: 1 } },
-            { new: true }
-        );
-
+        const content = await Content.findOne({ _id: id, isActive: true });
         if (!content) {
             return reply.status(404).send({
                 success: false,
@@ -350,6 +329,21 @@ module.exports = {
             });
         }
 
-        return { success: true, likes: content.likes };
+        // Like mavjudligini tekshirish
+        const existingLike = await ContentLike.findOne({ userId, contentId: id });
+
+        if (existingLike) {
+            // Unlike — like ni olib tashlash
+            await ContentLike.deleteOne({ _id: existingLike._id });
+            await Content.updateOne({ _id: id }, { $inc: { likes: -1 } });
+            const updated = await Content.findById(id);
+            return { success: true, liked: false, likes: updated.likes };
+        }
+
+        // Like qo'shish
+        await ContentLike.create({ userId, contentId: id });
+        await Content.updateOne({ _id: id }, { $inc: { likes: 1 } });
+        const updated = await Content.findById(id);
+        return { success: true, liked: true, likes: updated.likes };
     }
 };

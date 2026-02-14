@@ -159,9 +159,9 @@ module.exports = {
         const { dailyLimit, weekdayLimit, weekendLimit } = request.body;
 
         const update = {};
-        if (dailyLimit) update.dailyLimit = dailyLimit;
-        if (weekdayLimit) update.weekdayLimit = weekdayLimit;
-        if (weekendLimit) update.weekendLimit = weekendLimit;
+        if (dailyLimit !== undefined) update.dailyLimit = dailyLimit;
+        if (weekdayLimit !== undefined) update.weekdayLimit = weekdayLimit;
+        if (weekendLimit !== undefined) update.weekendLimit = weekendLimit;
 
         const child = await Child.findOneAndUpdate(
             { _id: id, parentId: userId, isActive: true },

@@ -1,4 +1,3 @@
-const mongoose = require('mongoose');
 const { Subscription, User } = require('../models');
 const config = require('../config/env');
 const { ERRORS, SUCCESS } = require('../config/constants');
@@ -128,10 +127,7 @@ module.exports = {
             });
         }
 
-        // Obunani faollashtirish — transaction bilan (to'lov + obuna atomik)
-        const session = await mongoose.startSession();
-        session.startTransaction();
-
+        // Obunani faollashtirish (Atlas free tier uchun transaction siz)
         try {
             subscription.status = 'active';
             subscription.transactionId = transactionId;
@@ -142,17 +138,13 @@ module.exports = {
             subscription.endDate = new Date();
             subscription.endDate.setDate(subscription.endDate.getDate() + planData.days);
 
-            await subscription.save({ session });
-            await session.commitTransaction();
+            await subscription.save();
         } catch (err) {
-            await session.abortTransaction();
             request.log.error('Subscription activation failed:', err);
             return reply.status(500).send({
                 success: false,
                 message: 'Obunani faollashtirishda xatolik yuz berdi'
             });
-        } finally {
-            session.endSession();
         }
 
         return {

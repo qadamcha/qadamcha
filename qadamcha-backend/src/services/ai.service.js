@@ -153,7 +153,7 @@ MAVZULAR:
     getStatus() {
         return {
             configured: this.isConfigured,
-            model: this.isConfigured ? 'gemini-pro' : null
+            model: this.isConfigured ? 'gemini-3.0-flash-preview' : null
         };
     }
 }

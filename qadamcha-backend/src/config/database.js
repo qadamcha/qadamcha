@@ -6,8 +6,8 @@ const connectDB = async () => {
         mongoose.set('strictQuery', false);
 
         await mongoose.connect(config.MONGODB_URI, {
-            maxPoolSize: config.NODE_ENV === 'production' ? 50 : 100,
-            minPoolSize: config.NODE_ENV === 'production' ? 5 : 10,
+            maxPoolSize: config.NODE_ENV === 'production' ? 100 : 10,
+            minPoolSize: config.NODE_ENV === 'production' ? 10 : 2,
             serverSelectionTimeoutMS: 5000,
             socketTimeoutMS: 45000,
         });

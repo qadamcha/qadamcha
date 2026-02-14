@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const fetch = require('node-fetch');
 const FormData = require('form-data');
 const config = require('../config/env');
@@ -49,9 +50,9 @@ class SmsService {
         throw new Error('Eskiz token olishda xato: ' + JSON.stringify(data));
     }
 
-    // 6 xonali tasodifiy kod
+    // 6 xonali kriptografik xavfsiz kod
     generateOtp() {
-        return Math.floor(100000 + Math.random() * 900000).toString();
+        return crypto.randomInt(100000, 999999).toString();
     }
 
     // OTP yuborish
