@@ -2,6 +2,9 @@ module.exports = async function (fastify) {
     // Auth Routes
     fastify.register(require('./auth.routes'), { prefix: '/auth' });
 
+    // User Routes
+    fastify.register(require('./user.routes'), { prefix: '/user' });
+
     // Children Routes
     fastify.register(require('./children.routes'), { prefix: '/children' });
 

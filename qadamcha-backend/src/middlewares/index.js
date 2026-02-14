@@ -4,6 +4,7 @@
  */
 
 const { registerLogger } = require('./logger.middleware');
+const { registerAuth } = require('./auth.middleware');
 const {
     validatePhone,
     validatePin,
@@ -17,6 +18,9 @@ const {
 module.exports = {
     // Logger
     registerLogger,
+
+    // Auth
+    registerAuth,
 
     // Validators
     validatePhone,

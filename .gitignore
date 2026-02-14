@@ -31,6 +31,10 @@ qadamcha-app/windows/flutter/ephemeral/.plugin_symlinks/
 # Android local properties
 qadamcha-app/android/local.properties
 
+# iOS Flutter generated configs
+qadamcha-app/ios/Flutter/Generated.xcconfig
+qadamcha-app/ios/Flutter/flutter_export_environment.sh
+
 # IDE
 .idea/
 .vscode/

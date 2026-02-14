@@ -56,30 +56,9 @@ const registerPlugins = async () => {
     });
 };
 
-// Authentication Decorator — blacklist tekshirish bilan
-const blacklistService = require('./services/blacklist.service');
-
-fastify.decorate('authenticate', async (request, reply) => {
-    try {
-        await request.jwtVerify();
-
-        // Token blacklist da bormi tekshirish
-        if (request.user.jti) {
-            const isBlacklisted = await blacklistService.isBlacklisted(request.user.jti);
-            if (isBlacklisted) {
-                return reply.status(401).send({
-                    success: false,
-                    message: 'Token bekor qilingan'
-                });
-            }
-        }
-    } catch (err) {
-        return reply.status(401).send({
-            success: false,
-            message: 'Autentifikatsiya talab qilinadi'
-        });
-    }
-});
+// Authentication Middleware — alohida fayldan
+const { registerAuth } = require('./middlewares/auth.middleware');
+registerAuth(fastify);
 
 // Register Routes
 const registerRoutes = async () => {

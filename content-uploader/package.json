@@ -8,6 +8,7 @@
         "dev": "node server.js"
     },
     "dependencies": {
+        "cors": "^2.8.5",
         "dotenv": "16.6.1",
         "express": "4.22.1",
         "mongoose": "8.22.1"

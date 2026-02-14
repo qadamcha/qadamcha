@@ -30,6 +30,22 @@ services:
     volumes:
       - redis_data:/data
 
+  backend:
+    build: .
+    container_name: qadamcha_backend
+    restart: always
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      - mongodb
+      - redis
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/qadamcha
+      - REDIS_URL=redis://redis:6379
+
 volumes:
   mongodb_data:
   redis_data:
+
