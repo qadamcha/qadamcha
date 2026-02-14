@@ -29,7 +29,7 @@ class _ContentPageState extends State<ContentPage> {
 
   final _ages = ['0-3 yosh', '3-6 yosh', '6-9 yosh', '9-12 yosh'];
   final _languages = ["O'zbekcha", 'Ruscha', 'Inglizcha'];
-  final _types = ['Ertak', "Ta'limiy", "Qo'shiq", 'Komediya'];
+  final _types = ['Ertak', "Ta'limiy", 'Komediya'];
 
   @override
   void initState() {

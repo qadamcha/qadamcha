@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../injection.dart';
 import '../../../child/presentation/bloc/child_bloc.dart';
+import '../../../ai_chat/presentation/bloc/ai_chat_bloc.dart';
 import '../../../ai_chat/presentation/pages/ai_chat_page.dart';
 import 'parent_home_page.dart';
 import 'guides_page.dart';
@@ -20,20 +22,31 @@ class MainNavigationPage extends StatefulWidget {
 
 class _MainNavigationPageState extends State<MainNavigationPage> {
   int _currentIndex = 0;
-  
-  final List<Widget> _pages = const [
-    ParentHomePage(),
-    GuidesPage(),
-    AiChatPage(),
-    StoriesPage(),
-    MonitoringPage(),
-  ];
+  late final AiChatBloc _aiChatBloc;
+
+  late final List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
-    // Load children on start
+    _aiChatBloc = sl<AiChatBloc>();
+    _pages = [
+      const ParentHomePage(),
+      const GuidesPage(),
+      BlocProvider.value(
+        value: _aiChatBloc,
+        child: const AiChatPage(),
+      ),
+      const StoriesPage(),
+      const MonitoringPage(),
+    ];
     context.read<ChildBloc>().add(LoadChildrenEvent());
+  }
+
+  @override
+  void dispose() {
+    _aiChatBloc.close();
+    super.dispose();
   }
 
   @override

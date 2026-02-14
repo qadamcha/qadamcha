@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../bloc/ai_chat_bloc.dart';
+import '../bloc/ai_chat_event.dart';
+import '../bloc/ai_chat_state.dart';
 
-/// AI Maslahatchi sahifasi — full_architecture.html dizaynida
-/// Chat interfeysi: header + xabarlar + input
+/// AI Maslahatchi sahifasi — real backend bilan ishlaydi
 class AiChatPage extends StatefulWidget {
   const AiChatPage({super.key});
 
@@ -14,14 +16,12 @@ class AiChatPage extends StatefulWidget {
 class _AiChatPageState extends State<AiChatPage> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final List<_ChatMessage> _messages = [
-    _ChatMessage(
-      text: 'Assalomu alaykum! Qanday savol bor? 😊',
-      isUser: false,
-      timestamp: DateTime.now(),
-    ),
-  ];
-  bool _isTyping = false;
+
+  @override
+  void initState() {
+    super.initState();
+    context.read<AiChatBloc>().add(const CheckAiStatusEvent());
+  }
 
   @override
   void dispose() {
@@ -32,51 +32,15 @@ class _AiChatPageState extends State<AiChatPage> {
 
   void _sendMessage() {
     final text = _controller.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty || text.length < 3) return;
 
-    setState(() {
-      _messages.add(_ChatMessage(
-        text: text,
-        isUser: true,
-        timestamp: DateTime.now(),
-      ));
-      _isTyping = true;
-    });
+    context.read<AiChatBloc>().add(SendMessageEvent(message: text));
     _controller.clear();
     _scrollToBottom();
-
-    // Simulate AI response
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _isTyping = false;
-          _messages.add(_ChatMessage(
-            text: _getAiResponse(text),
-            isUser: false,
-            timestamp: DateTime.now(),
-          ));
-        });
-        _scrollToBottom();
-      }
-    });
-  }
-
-  String _getAiResponse(String query) {
-    final queries = query.toLowerCase();
-
-    if (queries.contains('ekran') || queries.contains('vaqt') || queries.contains('telefon')) {
-      return 'Yaxshi savol!\n\n⏰ Kuniga 1 soat limit\n✅ Foydali kontent\n🏃 Sport bilan almashtiring';
-    }
-
-    if (queries.contains('multfilm') || queries.contains('kontent')) {
-      return '🎬 Yosh bo\'yicha kontent:\n\n• 0-3 yosh: Ranglar, shakllar\n• 3-6 yosh: Qisqa hikoyalar\n• 6+ yosh: Ta\'limiy seriallar';
-    }
-
-    return '🤔 Yaxshi savol!\n\nBu haqida batafsil ma\'lumot berish uchun savol berishingiz mumkin:\n\n• Ekran vaqti qancha bo\'lishi kerak?\n• Qanday multfilmlar foydali?\n• Bolam qanday rivojlanmoqda?';
   }
 
   void _scrollToBottom() {
-    Future.delayed(const Duration(milliseconds: 100), () {
+    Future.delayed(const Duration(milliseconds: 150), () {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
@@ -94,61 +58,70 @@ class _AiChatPageState extends State<AiChatPage> {
       body: SafeArea(
         child: Column(
           children: [
-            // Custom header matching HTML design
             _buildHeader(),
-
-            // Chat messages
             Expanded(
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: EdgeInsets.all(16.w),
-                itemCount: _messages.length + (_isTyping ? 1 : 0),
-                itemBuilder: (context, index) {
-                  if (index == _messages.length && _isTyping) {
-                    return _buildTypingIndicator();
+              child: BlocConsumer<AiChatBloc, AiChatState>(
+                listener: (context, state) {
+                  if (state.status == AiChatStatus.loaded ||
+                      state.status == AiChatStatus.error) {
+                    _scrollToBottom();
                   }
-                  return _buildMessageBubble(_messages[index]);
+                },
+                builder: (context, state) {
+                  return ListView.builder(
+                    controller: _scrollController,
+                    padding: EdgeInsets.all(16.w),
+                    itemCount: state.messages.length +
+                        (state.status == AiChatStatus.loading ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index == state.messages.length &&
+                          state.status == AiChatStatus.loading) {
+                        return _buildTypingIndicator();
+                      }
+                      return _buildMessageBubble(state.messages[index]);
+                    },
+                  );
                 },
               ),
             ),
 
-            // Quick Suggestions
-            if (_messages.length == 1)
-              Container(
-                height: 46.h,
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
+            // Tez savollar — faqat birinchi xabar bo'lganda
+            BlocBuilder<AiChatBloc, AiChatState>(
+              builder: (context, state) {
+                if (state.messages.length > 1) return const SizedBox.shrink();
+                return Column(
                   children: [
-                    _buildSuggestionChip(
-                      '📱 Ekran vaqti',
-                      () {
-                        _controller.text = 'Bolam uchun ekran vaqti qancha bo\'lishi kerak?';
-                        _sendMessage();
-                      },
+                    Container(
+                      height: 46.h,
+                      padding: EdgeInsets.symmetric(horizontal: 16.w),
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          _buildSuggestionChip(
+                            '📱 Ekran vaqti',
+                            'Bolam uchun ekran vaqti qancha bo\'lishi kerak?',
+                          ),
+                          _buildSuggestionChip(
+                            '😴 Uyqu rejimi',
+                            'Bolam uchun to\'g\'ri uyqu rejimini qanday shakllantiraman?',
+                          ),
+                          _buildSuggestionChip(
+                            '🧠 Rivojlanish',
+                            'Bolamning aqliy rivojlanishini qanday rag\'batlantiraman?',
+                          ),
+                          _buildSuggestionChip(
+                            '🥦 Ovqatlanish',
+                            'Bolam sog\'lom ovqatlanishi uchun qanday maslahat berasiz?',
+                          ),
+                        ],
+                      ),
                     ),
-                    _buildSuggestionChip(
-                      '🎬 Multfilmlar',
-                      () {
-                        _controller.text = 'Qaysi multfilmlar bolam uchun foydali?';
-                        _sendMessage();
-                      },
-                    ),
-                    _buildSuggestionChip(
-                      '📊 Rivojlanish',
-                      () {
-                        _controller.text = 'Bolam qanday rivojlanmoqda?';
-                        _sendMessage();
-                      },
-                    ),
+                    SizedBox(height: 8.h),
                   ],
-                ),
-              ),
+                );
+              },
+            ),
 
-            if (_messages.length == 1)
-              SizedBox(height: 8.h),
-
-            // Input area — matching HTML design
             _buildInputArea(),
           ],
         ),
@@ -156,7 +129,6 @@ class _AiChatPageState extends State<AiChatPage> {
     );
   }
 
-  /// Header: white bg, border-bottom, back button, robot avatar, title + status
   Widget _buildHeader() {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 10.h),
@@ -168,7 +140,6 @@ class _AiChatPageState extends State<AiChatPage> {
       ),
       child: Row(
         children: [
-          // Robot avatar — purple gradient
           Container(
             width: 38.w,
             height: 38.w,
@@ -185,7 +156,6 @@ class _AiChatPageState extends State<AiChatPage> {
             ),
           ),
           SizedBox(width: 10.w),
-          // Title and status
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,16 +169,41 @@ class _AiChatPageState extends State<AiChatPage> {
                     fontFamily: 'Nunito',
                   ),
                 ),
-                Text(
-                  '✅ Online',
-                  style: TextStyle(
-                    fontSize: 11.sp,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF22C55E),
-                    fontFamily: 'Nunito',
-                  ),
+                BlocBuilder<AiChatBloc, AiChatState>(
+                  builder: (context, state) {
+                    return Text(
+                      state.isAiOnline ? '✅ Online' : '⏳ Tekshirilmoqda...',
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w600,
+                        color: state.isAiOnline
+                            ? const Color(0xFF22C55E)
+                            : const Color(0xFFEAB308),
+                        fontFamily: 'Nunito',
+                      ),
+                    );
+                  },
                 ),
               ],
+            ),
+          ),
+          // Chat tozalash tugmasi
+          GestureDetector(
+            onTap: () {
+              context.read<AiChatBloc>().add(const ClearChatEvent());
+            },
+            child: Container(
+              width: 36.w,
+              height: 36.w,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF3F4F6),
+                borderRadius: BorderRadius.circular(10.r),
+              ),
+              child: Icon(
+                Icons.refresh_rounded,
+                size: 20.sp,
+                color: const Color(0xFF6B7280),
+              ),
             ),
           ),
         ],
@@ -216,15 +211,14 @@ class _AiChatPageState extends State<AiChatPage> {
     );
   }
 
-  /// Message bubble with avatar circle for bot messages
-  Widget _buildMessageBubble(_ChatMessage message) {
+  Widget _buildMessageBubble(ChatMessage message) {
     if (message.isUser) {
-      // User message — right aligned, blue gradient
       return Align(
         alignment: Alignment.centerRight,
         child: Container(
           margin: EdgeInsets.only(bottom: 12.h, left: 60.w),
-          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
+          constraints:
+              BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
           padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
@@ -252,13 +246,11 @@ class _AiChatPageState extends State<AiChatPage> {
       );
     }
 
-    // Bot message — left aligned with small avatar
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          // Small bot avatar
           Container(
             width: 26.w,
             height: 26.w,
@@ -275,10 +267,10 @@ class _AiChatPageState extends State<AiChatPage> {
             ),
           ),
           SizedBox(width: 6.w),
-          // Message bubble
           Flexible(
             child: Container(
-              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+              constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.75),
               padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -312,7 +304,6 @@ class _AiChatPageState extends State<AiChatPage> {
     );
   }
 
-  /// Typing indicator with bot avatar
   Widget _buildTypingIndicator() {
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
@@ -364,7 +355,6 @@ class _AiChatPageState extends State<AiChatPage> {
     );
   }
 
-  /// Input area: white bg, border-top, gray pill input, blue gradient send button
   Widget _buildInputArea() {
     return Container(
       padding: EdgeInsets.fromLTRB(18.w, 12.h, 18.w, 18.h),
@@ -412,35 +402,52 @@ class _AiChatPageState extends State<AiChatPage> {
             ),
           ),
           SizedBox(width: 8.w),
-          // Send button — blue gradient rounded square
-          GestureDetector(
-            onTap: _sendMessage,
-            child: Container(
-              width: 40.w,
-              height: 40.w,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF2D6A9F), Color(0xFF4A90D9)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+          BlocBuilder<AiChatBloc, AiChatState>(
+            builder: (context, state) {
+              final isLoading = state.status == AiChatStatus.loading;
+              return GestureDetector(
+                onTap: isLoading ? null : _sendMessage,
+                child: Container(
+                  width: 40.w,
+                  height: 40.w,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: isLoading
+                          ? [const Color(0xFF9CA3AF), const Color(0xFFBBBBBB)]
+                          : [const Color(0xFF2D6A9F), const Color(0xFF4A90D9)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: isLoading
+                      ? Padding(
+                          padding: EdgeInsets.all(10.w),
+                          child: const CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Icon(
+                          Icons.send_rounded,
+                          color: Colors.white,
+                          size: 20.sp,
+                        ),
                 ),
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              child: Icon(
-                Icons.send_rounded,
-                color: Colors.white,
-                size: 20.sp,
-              ),
-            ),
+              );
+            },
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSuggestionChip(String label, VoidCallback onTap) {
+  Widget _buildSuggestionChip(String label, String message) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        _controller.text = message;
+        _sendMessage();
+      },
       child: Container(
         margin: EdgeInsets.only(right: 8.w),
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
@@ -468,18 +475,6 @@ class _AiChatPageState extends State<AiChatPage> {
       ),
     );
   }
-}
-
-class _ChatMessage {
-  final String text;
-  final bool isUser;
-  final DateTime timestamp;
-
-  const _ChatMessage({
-    required this.text,
-    required this.isUser,
-    required this.timestamp,
-  });
 }
 
 class _Dot extends StatefulWidget {
@@ -525,7 +520,8 @@ class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
         width: 8.w,
         height: 8.w,
         decoration: BoxDecoration(
-          color: const Color(0xFF7C4DFF).withOpacity(0.3 + _animation.value * 0.7),
+          color:
+              const Color(0xFF7C4DFF).withOpacity(0.3 + _animation.value * 0.7),
           shape: BoxShape.circle,
         ),
       ),
