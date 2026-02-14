@@ -1,12 +1,12 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/custom_keypad.dart';
 import '../bloc/auth_bloc.dart';
-import '../../../home/presentation/pages/home_page.dart';
+import 'role_selection_page.dart';
+import 'pin_reset_page.dart';
+import 'phone_page.dart';
 
 /// Login Page - matching full_architecture.html design  
 /// Avatar with gradient, personal greeting, dot indicators, custom keypad
@@ -29,22 +29,8 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     super.initState();
     _getDeviceId();
-    _loadUserName();
-  }
-
-  Future<void> _loadUserName() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final userJson = prefs.getString('cached_user');
-      if (userJson != null) {
-        final userData = jsonDecode(userJson) as Map<String, dynamic>;
-        if (mounted) {
-          setState(() {
-            _userName = userData['name'] as String?;
-          });
-        }
-      }
-    } catch (_) {}
+    // TODO: Get user name from state/storage
+    _userName = null; // Will be fetched from bloc
   }
 
   Future<void> _getDeviceId() async {
@@ -98,7 +84,7 @@ class _LoginPageState extends State<LoginPage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => const _ResetPinFlowPage(),
+        builder: (_) => const PinResetPage(),
       ),
     );
   }
@@ -106,20 +92,17 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
+      listenWhen: (prev, curr) =>
+          curr.status == AuthStatus.authenticated ||
+          curr.status == AuthStatus.error,
       listener: (context, state) {
         if (state.status == AuthStatus.authenticated) {
           Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(builder: (_) => const HomePage()),
+            MaterialPageRoute(builder: (_) => const RoleSelectionPage()),
             (route) => false,
           );
         } else if (state.status == AuthStatus.error) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.errorMessage ?? "PIN kod noto'g'ri"),
-              backgroundColor: AppColors.error,
-            ),
-          );
           setState(() {
             _pin = '';
           });

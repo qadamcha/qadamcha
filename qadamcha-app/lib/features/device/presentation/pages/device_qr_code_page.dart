@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:share_plus/share_plus.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/back_button_box.dart';
 
@@ -44,8 +43,12 @@ class _DeviceQrCodePageState extends State<DeviceQrCodePage> {
   }
 
   void _shareCode() {
-    Share.share(
-      'Qadamcha oila kodi: $_familyCode\nBu kodni bola qurilmasiga kiriting.',
+    // TODO: Implement share functionality
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Oila kodi: $_familyCode'),
+        backgroundColor: AppColors.primary,
+      ),
     );
   }
 

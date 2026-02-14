@@ -60,7 +60,7 @@ class _SplashPageState extends State<SplashPage>
       );
     } else if (status == AuthStatus.unauthenticated) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const PhonePage()),
+        MaterialPageRoute(builder: (_) => const RoleSelectionPage()),
       );
     }
   }

@@ -21,8 +21,6 @@ class MonitoringPage extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  BackButtonBox(onPressed: () => Navigator.pop(context)),
-                  const SizedBox(width: 16),
                   const Text(
                     '📊 Monitoring',
                     style: TextStyle(

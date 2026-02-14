@@ -63,3 +63,7 @@ class ToggleAutoRenewEvent extends SubscriptionEvent {
   @override
   List<Object?> get props => [subscriptionId];
 }
+
+class ActivateSubscriptionEvent extends SubscriptionEvent {
+  const ActivateSubscriptionEvent();
+}

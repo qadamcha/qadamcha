@@ -2,36 +2,196 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../content/presentation/pages/content_list_page.dart';
 import '../../../child/presentation/bloc/child_bloc.dart';
+import '../../../content/presentation/pages/content_page.dart';
+import '../../../child/presentation/pages/games_page.dart';
+import '../../../auth/presentation/pages/role_selection_page.dart';
+import '../../../subscription/presentation/bloc/subscription_bloc.dart';
 
+/// Child Home Page — full_architecture.html dizaynida
+/// Gradient fon + 2 ta katta kategoriya: Multfilmlar va O'yinlar
+/// Obuna tekshirishi bilan — obuna bo'lmasa kiritilmaydi
 class ChildHomePage extends StatelessWidget {
   const ChildHomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    return BlocBuilder<SubscriptionBloc, SubscriptionState>(
+      builder: (context, subState) {
+        if (!subState.isPremium) {
+          return _buildNoSubscriptionScreen(context);
+        }
+        return _buildMainScreen(context);
+      },
+    );
+  }
+
+  // ─── No Subscription Screen ───────────────────────────────────────────
+  Widget _buildNoSubscriptionScreen(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(16.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header with child avatar
-              _buildHeader(context),
-              SizedBox(height: 24.h),
-              
-              // Time Remaining
-              _buildTimeRemaining(context),
-              SizedBox(height: 24.h),
-              
-              // Content Categories
-              _buildContentCategories(context),
-              SizedBox(height: 24.h),
-              
-              // Continue Watching
-              _buildContinueWatching(),
-            ],
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFFFE0E0), Color(0xFFFFF5F5), Colors.white],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 32.w),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Lock icon
+                  Container(
+                    width: 100.w,
+                    height: 100.w,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF6B6B).withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text('\u{1F512}', style: TextStyle(fontSize: 48.sp)),
+                    ),
+                  ),
+                  SizedBox(height: 24.h),
+
+                  Text(
+                    'Obuna faol emas',
+                    style: TextStyle(
+                      fontSize: 24.sp,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                      fontFamily: 'Nunito',
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+
+                  Text(
+                    'Multfilmlar va o\'yinlardan foydalanish uchun\nota-ona panelidan obunani faollashtiring',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 15.sp,
+                      color: AppColors.textSecondary,
+                      fontFamily: 'Nunito',
+                      height: 1.5,
+                    ),
+                  ),
+                  SizedBox(height: 36.h),
+
+                  // Back button
+                  GestureDetector(
+                    onTap: () => Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const RoleSelectionPage()),
+                    ),
+                    child: Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(vertical: 16.h),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                        ),
+                        borderRadius: BorderRadius.circular(16.r),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF667eea).withOpacity(0.35),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20.sp),
+                          SizedBox(width: 8.w),
+                          Text(
+                            'Orqaga qaytish',
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              fontFamily: 'Nunito',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─── Main Screen (with subscription) ──────────────────────────────────
+  Widget _buildMainScreen(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: AppColors.childHomeGradient,
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(context),
+                SizedBox(height: 28.h),
+
+                Text(
+                  'Nima qilmoqchisan? \u{1F3AF}',
+                  style: TextStyle(
+                    fontSize: 22.sp,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                    fontFamily: 'Nunito',
+                  ),
+                ),
+                SizedBox(height: 16.h),
+
+                _buildCategoryCard(
+                  context,
+                  emoji: '\u{1F3AC}',
+                  title: 'Multfilmlar',
+                  subtitle: 'Qiziqarli multiklar ko\'rish',
+                  gradient: AppColors.cartoonGradient,
+                  itemCount: '100+',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ContentPage()),
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                _buildCategoryCard(
+                  context,
+                  emoji: '\u{1F3AE}',
+                  title: 'O\'yinlar',
+                  subtitle: 'Ta\'limiy o\'yinlar o\'ynash',
+                  gradient: AppColors.gamesGradient,
+                  itemCount: '50+',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const GamesPage()),
+                  ),
+                ),
+                SizedBox(height: 28.h),
+
+                _buildContinueWatching(),
+                SizedBox(height: 20.h),
+              ],
+            ),
           ),
         ),
       ),
@@ -41,44 +201,67 @@ class ChildHomePage extends StatelessWidget {
   Widget _buildHeader(BuildContext context) {
     return BlocBuilder<ChildBloc, ChildState>(
       builder: (context, state) {
-        final child = state.selectedChild;
-        
+        final name = state.selectedChild?.name ?? 'Bolajon';
         return Row(
           children: [
-            CircleAvatar(
-              radius: 28.r,
-              backgroundColor: child?.gender == 'girl' 
-                  ? AppColors.kidPink 
-                  : AppColors.kidBlue,
-              child: Text(
-                child?.name.isNotEmpty == true 
-                    ? child!.name[0].toUpperCase() 
-                    : '👶',
-                style: TextStyle(
-                  fontSize: 24.sp,
-                  fontWeight: FontWeight.bold,
+            GestureDetector(
+              onTap: () => Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const RoleSelectionPage()),
+              ),
+              child: Container(
+                width: 42.w,
+                height: 42.w,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  size: 18.sp,
                   color: Colors.white,
                 ),
               ),
             ),
-            SizedBox(width: 16.w),
+            SizedBox(width: 10.w),
+            Container(
+              width: 52.w,
+              height: 52.w,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.25),
+                borderRadius: BorderRadius.circular(16.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text('\u{1F476}', style: TextStyle(fontSize: 26.sp)),
+              ),
+            ),
+            SizedBox(width: 14.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Salom, ${child?.name ?? 'Do\'stim'}! 👋',
+                    'Salom! \u{1F31F}',
                     style: TextStyle(
-                      fontSize: 22.sp,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      fontSize: 14.sp,
+                      color: Colors.white.withOpacity(0.85),
+                      fontFamily: 'Nunito',
                     ),
                   ),
                   Text(
-                    'Bugun nima ko\'rmoqchisan?',
+                    name,
                     style: TextStyle(
-                      fontSize: 14.sp,
-                      color: AppColors.textSecondary,
+                      fontSize: 22.sp,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      fontFamily: 'Nunito',
                     ),
                   ),
                 ],
@@ -90,121 +273,99 @@ class ChildHomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildTimeRemaining(BuildContext context) {
-    return BlocBuilder<ChildBloc, ChildState>(
-      builder: (context, state) {
-        final child = state.selectedChild;
-        final remaining = child?.remainingMinutes ?? 0;
-        final total = child?.limits.weekdayMinutes ?? 60;
-        final progress = remaining / total;
-        
-        return Container(
-          padding: EdgeInsets.all(20.w),
-          decoration: BoxDecoration(
-            gradient: remaining > 10 
-                ? AppColors.primaryGradient 
-                : AppColors.sunsetGradient,
-            borderRadius: BorderRadius.circular(20.r),
-          ),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+  Widget _buildCategoryCard(
+    BuildContext context, {
+    required String emoji,
+    required String title,
+    required String subtitle,
+    required LinearGradient gradient,
+    required String itemCount,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(28.w),
+        decoration: BoxDecoration(
+          gradient: gradient,
+          borderRadius: BorderRadius.circular(24.r),
+          boxShadow: [
+            BoxShadow(
+              color: gradient.colors.first.withOpacity(0.35),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 80.w,
+              height: 80.w,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(22.r),
+              ),
+              child: Center(
+                child: Text(emoji, style: TextStyle(fontSize: 42.sp)),
+              ),
+            ),
+            SizedBox(width: 20.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '⏱️',
-                    style: TextStyle(fontSize: 32.sp),
-                  ),
-                  SizedBox(width: 12.w),
-                  Text(
-                    '$remaining min',
+                    title,
                     style: TextStyle(
-                      fontSize: 36.sp,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 24.sp,
+                      fontWeight: FontWeight.w800,
                       color: Colors.white,
+                      fontFamily: 'Nunito',
+                    ),
+                  ),
+                  SizedBox(height: 6.h),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 15.sp,
+                      color: Colors.white.withOpacity(0.85),
+                      fontFamily: 'Nunito',
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: 8.h),
-              Text(
-                'Bugungi qolgan vaqt',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: Colors.white.withOpacity(0.9),
+            ),
+            Column(
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Text(
+                    itemCount,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      fontFamily: 'Nunito',
+                    ),
+                  ),
                 ),
-              ),
-              SizedBox(height: 16.h),
-              // Progress Bar
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8.r),
-                child: LinearProgressIndicator(
-                  value: progress.clamp(0.0, 1.0),
-                  backgroundColor: Colors.white.withOpacity(0.3),
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                  minHeight: 8.h,
+                SizedBox(height: 10.h),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 20.sp,
+                  color: Colors.white.withOpacity(0.8),
                 ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildContentCategories(BuildContext context) {
-    final categories = [
-      _CategoryItem(
-        emoji: '📺',
-        label: 'Multfilmlar',
-        color: AppColors.kidBlue,
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const ContentListPage()),
+              ],
+            ),
+          ],
         ),
       ),
-      _CategoryItem(
-        emoji: '🎮',
-        label: 'O\'yinlar',
-        color: AppColors.kidGreen,
-        onTap: () {},
-      ),
-      _CategoryItem(
-        emoji: '📚',
-        label: 'Ertaklar',
-        color: AppColors.kidPurple,
-        onTap: () {},
-      ),
-      _CategoryItem(
-        emoji: '🎵',
-        label: 'Qo\'shiqlar',
-        color: AppColors.kidYellow,
-        onTap: () {},
-      ),
-    ];
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Kategoriyalar',
-          style: TextStyle(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        SizedBox(height: 12.h),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          crossAxisSpacing: 12.w,
-          mainAxisSpacing: 12.h,
-          childAspectRatio: 1.5,
-          children: categories.map((cat) => _CategoryCard(item: cat)).toList(),
-        ),
-      ],
     );
   }
 
@@ -213,78 +374,39 @@ class ChildHomePage extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Davom ettirish',
+          'Davom etish \u{25B6}\u{FE0F}',
           style: TextStyle(
             fontSize: 18.sp,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
+            fontFamily: 'Nunito',
           ),
         ),
         SizedBox(height: 12.h),
-        Container(
-          padding: EdgeInsets.all(16.w),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceVariant,
-            borderRadius: BorderRadius.circular(16.r),
-          ),
-          child: Row(
+        SizedBox(
+          height: 120.h,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
             children: [
-              Container(
-                width: 80.w,
-                height: 60.h,
-                decoration: BoxDecoration(
-                  gradient: AppColors.oceanGradient,
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Center(
-                  child: Text('🎬', style: TextStyle(fontSize: 28.sp)),
-                ),
-              ),
-              SizedBox(width: 16.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Qiziqarli multfilm',
-                      style: TextStyle(
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      '12:30 / 25:00',
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4.r),
-                      child: LinearProgressIndicator(
-                        value: 0.5,
-                        backgroundColor: AppColors.divider,
-                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                        minHeight: 4.h,
-                      ),
-                    ),
-                  ],
-                ),
+              _buildContinueCard(
+                title: 'Qiziqarli sarguzashtlar',
+                progress: 0.6,
+                emoji: '\u{1F981}',
+                color: AppColors.kidYellow,
               ),
               SizedBox(width: 12.w),
-              Container(
-                padding: EdgeInsets.all(12.w),
-                decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.play_arrow,
-                  color: Colors.white,
-                  size: 24.sp,
-                ),
+              _buildContinueCard(
+                title: 'Matematik o\'yin',
+                progress: 0.3,
+                emoji: '\u{1F522}',
+                color: AppColors.kidBlue,
+              ),
+              SizedBox(width: 12.w),
+              _buildContinueCard(
+                title: 'Alifbo sayohati',
+                progress: 0.8,
+                emoji: '\u{1F4D6}',
+                color: AppColors.kidGreen,
               ),
             ],
           ),
@@ -292,55 +414,68 @@ class ChildHomePage extends StatelessWidget {
       ],
     );
   }
-}
 
-class _CategoryItem {
-  final String emoji;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _CategoryItem({
-    required this.emoji,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-}
-
-class _CategoryCard extends StatelessWidget {
-  final _CategoryItem item;
-
-  const _CategoryCard({required this.item});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: item.onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: item.color.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(
-            color: item.color.withOpacity(0.3),
-            width: 2,
+  Widget _buildContinueCard({
+    required String title,
+    required double progress,
+    required String emoji,
+    required Color color,
+  }) {
+    return Container(
+      width: 150.w,
+      padding: EdgeInsets.all(14.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(item.emoji, style: TextStyle(fontSize: 36.sp)),
-            SizedBox(height: 8.h),
-            Text(
-              item.label,
-              style: TextStyle(
-                fontSize: 15.sp,
-                fontWeight: FontWeight.w600,
-                color: item.color,
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(emoji, style: TextStyle(fontSize: 22.sp)),
+              const Spacer(),
+              Text(
+                '${(progress * 100).toInt()}%',
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                  fontFamily: 'Nunito',
+                ),
               ),
+            ],
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 13.sp,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+              fontFamily: 'Nunito',
             ),
-          ],
-        ),
+          ),
+          const Spacer(),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(3.r),
+            child: LinearProgressIndicator(
+              value: progress,
+              backgroundColor: color.withOpacity(0.15),
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+              minHeight: 5.h,
+            ),
+          ),
+        ],
       ),
     );
   }

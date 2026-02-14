@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:qadamcha_app/core/theme/app_colors.dart';
+import 'package:qadamcha_app/core/widgets/gradient_button.dart';
+import 'package:qadamcha_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:qadamcha_app/features/auth/presentation/pages/parent_pin_page.dart';
-import 'package:qadamcha_app/features/home/presentation/pages/home_page.dart';
+import 'package:qadamcha_app/features/auth/presentation/pages/child_pin_page.dart';
+import 'package:qadamcha_app/features/auth/presentation/pages/phone_page.dart';
+import 'package:qadamcha_app/features/home/presentation/pages/child_home_page.dart';
+import 'package:qadamcha_app/features/home/presentation/pages/parent_home_page.dart';
 
 class RoleSelectionPage extends StatelessWidget {
   const RoleSelectionPage({super.key});
@@ -50,7 +56,7 @@ class RoleSelectionPage extends StatelessWidget {
               _buildRoleCard(
                 context,
                 title: 'Bolajon',
-                subtitle: 'To\'g\'ridan-to\'g\'ri kirish',
+                subtitle: 'Bolalar rejimiga kirish',
                 icon: '👶',
                 color: AppColors.secondary,
                 onTap: () => _onChildSelected(context),
@@ -113,7 +119,7 @@ class RoleSelectionPage extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: AppColors.textPrimary,
@@ -123,7 +129,7 @@ class RoleSelectionPage extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 14,
                       color: AppColors.textSecondary,
                       fontFamily: 'Nunito',
@@ -143,18 +149,71 @@ class RoleSelectionPage extends StatelessWidget {
     );
   }
 
+  bool _isLoggedIn(AuthStatus status) {
+    return status == AuthStatus.authenticated ||
+        status == AuthStatus.registered ||
+        status == AuthStatus.pinVerified ||
+        status == AuthStatus.pinReset;
+  }
+
   void _onParentSelected(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const ParentPinPage()),
-    );
+    final authState = context.read<AuthBloc>().state;
+    if (_isLoggedIn(authState.status)) {
+      // Token bor — PIN orqali kirish
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const ParentPinPage()),
+      );
+    } else {
+      // Token yo'q — ro'yxatdan o'tish
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const PhonePage()),
+      );
+    }
   }
 
   void _onChildSelected(BuildContext context) {
-    // Navigate to Child Home (currently just HomePage, logic handled later)
-     Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const HomePage()),
-    );
+    final authState = context.read<AuthBloc>().state;
+    if (_isLoggedIn(authState.status)) {
+      // Token bor — to'g'ridan-to'g'ri bola sahifasiga o'tish (PIN so'ramasdan)
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const ChildHomePage(),
+        ),
+      );
+    } else {
+      // Token yo'q — avval ro'yxatdan o'tish kerak
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Row(
+            children: [
+              Text('⚠️ ', style: TextStyle(fontSize: 24)),
+              Text('Diqqat', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold)),
+            ],
+          ),
+          content: const Text(
+            'Avval ota-ona sifatida ro\'yxatdan o\'ting.\n\nBuning uchun "Ota-ona" tugmasini bosing.',
+            style: TextStyle(fontFamily: 'Nunito', height: 1.4),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text(
+                'Tushundim',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Nunito',
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
   }
 }

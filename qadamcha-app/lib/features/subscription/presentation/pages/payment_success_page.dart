@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/gradient_button.dart';
 import '../../domain/entities/subscription_entity.dart';
-import '../../../home/presentation/pages/home_page.dart';
+import '../../../home/presentation/pages/main_navigation_page.dart';
 
 /// Payment Success Page - Shown after successful payment
 /// Matching full_architecture.html design with celebration
@@ -196,7 +196,7 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
                 onPressed: () {
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (_) => const HomePage()),
+                    MaterialPageRoute(builder: (_) => const MainNavigationPage()),
                     (route) => false,
                   );
                 },

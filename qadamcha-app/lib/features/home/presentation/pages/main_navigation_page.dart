@@ -3,12 +3,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../child/presentation/bloc/child_bloc.dart';
-import '../../../child/presentation/pages/children_list_page.dart';
-import '../../../content/presentation/pages/content_list_page.dart';
-import '../../../device/presentation/pages/device_linking_page.dart';
+import '../../../ai_chat/presentation/pages/ai_chat_page.dart';
 import 'parent_home_page.dart';
-import 'settings_page.dart';
+import 'guides_page.dart';
+import 'monitoring_page.dart';
+import 'stories_page.dart';
 
+/// Main Navigation Page — Ota-ona uchun bottom tab navigatsiya
+/// Tabs: Bosh sahifa, Qo'llanma, AI, Ertaklar, Nazorat
 class MainNavigationPage extends StatefulWidget {
   const MainNavigationPage({super.key});
 
@@ -21,9 +23,10 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
   
   final List<Widget> _pages = const [
     ParentHomePage(),
-    ContentListPage(),
-    ChildrenListPage(),
-    SettingsPage(),
+    GuidesPage(),
+    AiChatPage(),
+    StoriesPage(),
+    MonitoringPage(),
   ];
 
   @override
@@ -64,40 +67,34 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                   onTap: () => setState(() => _currentIndex = 0),
                 ),
                 _NavItem(
-                  icon: Icons.play_circle_outline_rounded,
-                  label: 'Kontent',
+                  icon: Icons.menu_book_rounded,
+                  label: 'Qo\'llanma',
                   isSelected: _currentIndex == 1,
                   onTap: () => setState(() => _currentIndex = 1),
                 ),
                 _NavItem(
-                  icon: Icons.child_care_rounded,
-                  label: 'Bolalarim',
+                  icon: Icons.psychology_rounded,
+                  label: 'AI',
                   isSelected: _currentIndex == 2,
                   onTap: () => setState(() => _currentIndex = 2),
                 ),
                 _NavItem(
-                  icon: Icons.settings_rounded,
-                  label: 'Sozlamalar',
+                  icon: Icons.auto_stories_rounded,
+                  label: 'Ertaklar',
                   isSelected: _currentIndex == 3,
                   onTap: () => setState(() => _currentIndex = 3),
+                ),
+                _NavItem(
+                  icon: Icons.bar_chart_rounded,
+                  label: 'Nazorat',
+                  isSelected: _currentIndex == 4,
+                  onTap: () => setState(() => _currentIndex = 4),
                 ),
               ],
             ),
           ),
         ),
       ),
-      floatingActionButton: _currentIndex == 2
-          ? FloatingActionButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const DeviceLinkingPage()),
-                );
-              },
-              backgroundColor: AppColors.primary,
-              child: const Icon(Icons.link, color: Colors.white),
-            )
-          : null,
     );
   }
 }

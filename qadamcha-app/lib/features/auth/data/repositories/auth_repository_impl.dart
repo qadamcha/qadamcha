@@ -5,6 +5,7 @@ import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_local_datasource.dart';
 import '../datasources/auth_remote_datasource.dart';
+import '../models/auth_models.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
@@ -51,6 +52,21 @@ class AuthRepositoryImpl implements AuthRepository {
   }) async {
     try {
       final user = await remoteDataSource.register(phone, name, pin);
+
+      // Ro'yxatdan keyin avtomatik login — tokenlarni olish
+      try {
+        final (loggedUser, tokens) = await remoteDataSource.login(
+          phone: phone,
+          pin: pin,
+          deviceId: 'default',
+        );
+        await localDataSource.cacheTokens(tokens);
+        await localDataSource.cacheUser(loggedUser);
+        await localDataSource.setLoggedIn(true);
+      } catch (_) {
+        // Login xato bo'lsa ham ro'yxatdan o'tish muvaffaqiyatli
+      }
+
       return Right(user.toEntity());
     } on NetworkException catch (e) {
       return Left(NetworkFailure(e.message));
@@ -102,11 +118,14 @@ class AuthRepositoryImpl implements AuthRepository {
       if (tokens == null) {
         return const Left(TokenExpiredFailure());
       }
-
-      final newTokens = await remoteDataSource.refreshToken(tokens.refreshToken);
-      await localDataSource.cacheTokens(newTokens);
-
-      return Right(newTokens.accessToken);
+      
+      final newToken = await remoteDataSource.refreshToken(tokens.refreshToken);
+      await localDataSource.cacheTokens(AuthTokensModel(
+        accessToken: newToken,
+        refreshToken: tokens.refreshToken,
+      ));
+      
+      return Right(newToken);
     } on UnauthorizedException {
       await localDataSource.clearCache();
       return const Left(TokenExpiredFailure());

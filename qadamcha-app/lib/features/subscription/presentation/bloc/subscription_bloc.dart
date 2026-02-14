@@ -17,6 +17,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     on<ConfirmPaymentEvent>(_onConfirmPayment);
     on<CancelSubscriptionEvent>(_onCancelSubscription);
     on<ToggleAutoRenewEvent>(_onToggleAutoRenew);
+    on<ActivateSubscriptionEvent>(_onActivateSubscription);
   }
   
   Future<void> _onLoadSubscription(
@@ -128,5 +129,28 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
         currentSubscription: subscription,
       )),
     );
+  }
+
+  void _onActivateSubscription(
+    ActivateSubscriptionEvent event,
+    Emitter<SubscriptionState> emit,
+  ) {
+    // Create a mock premium subscription for testing
+    final now = DateTime.now();
+    final subscription = Subscription(
+      id: 'sub_${now.millisecondsSinceEpoch}',
+      userId: 'current_user',
+      plan: SubscriptionPlan.premium,
+      status: SubscriptionStatus.active,
+      startDate: now,
+      endDate: now.add(const Duration(days: 30)),
+      autoRenew: true,
+      createdAt: now,
+    );
+    emit(state.copyWith(
+      status: SubscriptionLoadStatus.loaded,
+      currentSubscription: subscription,
+      paymentStatus: PaymentStatus.success,
+    ));
   }
 }

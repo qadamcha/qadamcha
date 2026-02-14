@@ -5,7 +5,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
-import '../network/api_client.dart';
 
 /// Background message handler (must be top-level function)
 @pragma('vm:entry-point')
@@ -22,27 +21,15 @@ class NotificationService {
   NotificationService._internal();
 
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
-  final FlutterLocalNotificationsPlugin _localNotifications =
+  final FlutterLocalNotificationsPlugin _localNotifications = 
       FlutterLocalNotificationsPlugin();
-
-  ApiClient? _apiClient;
-  GlobalKey<NavigatorState>? _navigatorKey;
 
   String? _fcmToken;
   String? get fcmToken => _fcmToken;
 
-  final StreamController<RemoteMessage> _messageController =
+  final StreamController<RemoteMessage> _messageController = 
       StreamController<RemoteMessage>.broadcast();
   Stream<RemoteMessage> get onMessage => _messageController.stream;
-
-  /// Configure dependencies (call before initialize)
-  void configure({
-    required ApiClient apiClient,
-    required GlobalKey<NavigatorState> navigatorKey,
-  }) {
-    _apiClient = apiClient;
-    _navigatorKey = navigatorKey;
-  }
 
   /// Initialize notification service
   Future<void> initialize() async {
@@ -62,7 +49,7 @@ class NotificationService {
     _firebaseMessaging.onTokenRefresh.listen((token) {
       _fcmToken = token;
       print('FCM Token refreshed: $token');
-      _sendTokenToBackend(token);
+      // TODO: Send to backend
     });
 
     // Handle foreground messages
@@ -134,26 +121,25 @@ class NotificationService {
   Future<void> _getFcmToken() async {
     _fcmToken = await _firebaseMessaging.getToken();
     print('FCM Token: $_fcmToken');
-    if (_fcmToken != null) {
-      _sendTokenToBackend(_fcmToken!);
-    }
+    // TODO: Send to backend for targeting this device
   }
 
   /// Handle foreground messages
   void _handleForegroundMessage(RemoteMessage message) {
     print('Foreground message: ${message.notification?.title}');
     _messageController.add(message);
-
+    
     // Show local notification
     _showLocalNotification(message);
   }
 
-  /// Handle notification tap — navigate based on message data
+  /// Handle notification tap
   void _handleNotificationTap(RemoteMessage message) {
     print('Notification tapped: ${message.data}');
     _messageController.add(message);
-
-    _navigateByData(message.data);
+    
+    // TODO: Navigate based on message data
+    // Example: if (message.data['type'] == 'child_activity') navigateTo(...)
   }
 
   /// Show local notification
@@ -190,44 +176,10 @@ class NotificationService {
     );
   }
 
-  /// Handle local notification tap — parse payload and navigate
+  /// Handle local notification tap
   void _onLocalNotificationTap(NotificationResponse response) {
     print('Local notification tapped: ${response.payload}');
-    if (response.payload != null) {
-      try {
-        final data = jsonDecode(response.payload!) as Map<String, dynamic>;
-        _navigateByData(data);
-      } catch (_) {}
-    }
-  }
-
-  /// Navigate based on notification data type
-  void _navigateByData(Map<String, dynamic> data) {
-    final navigator = _navigatorKey?.currentState;
-    if (navigator == null) return;
-
-    final type = NotificationTypeExtension.fromString(data['type']);
-    switch (type) {
-      case NotificationType.childActivity:
-      case NotificationType.timeLimitWarning:
-      case NotificationType.timeLimitReached:
-        navigator.pushNamed('/devices');
-        break;
-      case NotificationType.deviceLinked:
-        navigator.pushNamed('/devices');
-        break;
-      case NotificationType.subscriptionExpiry:
-        navigator.pushNamed('/subscription');
-        break;
-      case NotificationType.newContent:
-        navigator.pushNamed('/content');
-        break;
-      case NotificationType.aiMessage:
-        navigator.pushNamed('/ai-chat');
-        break;
-      case null:
-        break;
-    }
+    // TODO: Navigate based on payload
   }
 
   /// Subscribe to topic
@@ -243,20 +195,10 @@ class NotificationService {
   }
 
   /// Send FCM token to backend
-  Future<void> _sendTokenToBackend(String token) async {
-    if (_apiClient == null) return;
-    try {
-      await _apiClient!.put('/devices/fcm-token', data: {'fcmToken': token});
-      print('FCM token sent to backend');
-    } catch (e) {
-      print('Failed to send FCM token: $e');
-    }
-  }
-
-  /// Register token with backend (public API for manual trigger)
   Future<void> registerTokenWithBackend(String userId) async {
     if (_fcmToken == null) return;
-    await _sendTokenToBackend(_fcmToken!);
+    // TODO: Implement API call to register token
+    print('Registering FCM token for user: $userId');
   }
 
   void dispose() {

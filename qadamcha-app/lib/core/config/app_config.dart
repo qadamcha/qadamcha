@@ -4,20 +4,20 @@ import 'dart:io' show Platform;
 ///
 /// Ishlatish (production — Railway):
 ///   flutter run --dart-define=ENV=production
+///   flutter build apk --release --dart-define=ENV=production
 ///
 /// Ishlatish (development — local backend):
-///   flutter run
-///   flutter run --dart-define=API_HOST=192.168.0.105
-///   flutter run --dart-define=API_HOST=192.168.0.105 --dart-define=API_PORT=3001
+///   flutter run --dart-define=ENV=development
+///   flutter run --dart-define=ENV=development --dart-define=API_HOST=192.168.0.105
 ///
-/// Default: production da Railway URL, development da local emulator.
+/// Default: production (Railway URL).
 class AppConfig {
   AppConfig._();
 
   // --dart-define=ENV=production
   static const String _env = String.fromEnvironment(
     'ENV',
-    defaultValue: 'development',
+    defaultValue: 'production',
   );
 
   // --dart-define=API_HOST=x.x.x.x

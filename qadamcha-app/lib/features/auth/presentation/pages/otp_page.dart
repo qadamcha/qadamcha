@@ -8,15 +8,13 @@ import '../../../../core/widgets/gradient_button.dart';
 import '../bloc/auth_bloc.dart';
 import 'register_page.dart';
 import 'login_page.dart';
-import 'new_pin_page.dart';
 
 /// OTP Page - matching full_architecture.html design
 /// ✉️ icon, 6-digit input boxes, countdown timer
 class OtpPage extends StatefulWidget {
   final String phone;
-  final bool isResetPin;
 
-  const OtpPage({super.key, required this.phone, this.isResetPin = false});
+  const OtpPage({super.key, required this.phone});
 
   @override
   State<OtpPage> createState() => _OtpPageState();
@@ -107,18 +105,12 @@ class _OtpPageState extends State<OtpPage> {
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
+        // Faqat aktiv sahifa bo'lgandagina ishlaydi
+        final route = ModalRoute.of(context);
+        if (route != null && !route.isCurrent) return;
+
         if (state.status == AuthStatus.otpVerified) {
-          final isNew = state.isNewUser;
-          // State ni tozalash — keyingi sahifada eski state qolmasligi uchun
-          context.read<AuthBloc>().add(ResetAuthEvent());
-          if (widget.isResetPin) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => NewPinPage(phone: widget.phone),
-              ),
-            );
-          } else if (isNew) {
+          if (state.isNewUser) {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(

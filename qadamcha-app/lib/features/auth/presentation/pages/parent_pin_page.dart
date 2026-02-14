@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:qadamcha_app/core/theme/app_colors.dart';
 import 'package:qadamcha_app/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:qadamcha_app/features/auth/presentation/pages/phone_page.dart';
 import 'package:qadamcha_app/features/auth/presentation/widgets/pin_dots.dart';
 import 'package:qadamcha_app/features/auth/presentation/widgets/pin_keypad.dart';
-import 'package:qadamcha_app/features/home/presentation/pages/home_page.dart';
+import 'package:qadamcha_app/features/auth/presentation/pages/pin_reset_page.dart';
+import 'package:qadamcha_app/features/home/presentation/pages/main_navigation_page.dart';
 
 class ParentPinPage extends StatefulWidget {
   const ParentPinPage({super.key});
@@ -51,17 +51,27 @@ class _ParentPinPageState extends State<ParentPinPage> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
+      listenWhen: (prev, curr) =>
+          curr.status == AuthStatus.pinVerified ||
+          curr.status == AuthStatus.error ||
+          curr.status == AuthStatus.unauthenticated,
       listener: (context, state) {
         if (state.status == AuthStatus.pinVerified) {
           Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const HomePage()),
+            MaterialPageRoute(builder: (_) => const MainNavigationPage()),
             (route) => false,
           );
+        } else if (state.status == AuthStatus.unauthenticated) {
+          setState(() {
+            _isLoading = false;
+            _error = state.errorMessage ?? 'Sessiya tugadi. Qayta kiring.';
+            _pin = '';
+          });
         } else if (state.status == AuthStatus.error) {
           setState(() {
             _isLoading = false;
             _error = state.errorMessage ?? 'PIN kod noto\'g\'ri';
-            _pin = ''; // Clear PIN on error
+            _pin = '';
           });
         }
       },
@@ -142,9 +152,7 @@ class _ParentPinPageState extends State<ParentPinPage> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => const PhonePage(isResetPin: true),
-                    ),
+                    MaterialPageRoute(builder: (_) => const PinResetPage()),
                   );
                 },
                 child: const Text(

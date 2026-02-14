@@ -4,7 +4,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/back_button_box.dart';
 import '../../../../core/widgets/custom_keypad.dart';
 import '../bloc/auth_bloc.dart';
-import 'login_page.dart';
+import 'role_selection_page.dart';
 
 /// PIN Create Page - matching full_architecture.html design
 /// 🔐 icon, dot indicators, custom keypad, confirmation step
@@ -118,13 +118,12 @@ class _PinCreatePageState extends State<PinCreatePage> {
               backgroundColor: AppColors.success,
             ),
           );
-          // State ni tozalash — LoginPage error ko'rsatmasligi uchun
-          context.read<AuthBloc>().add(ResetAuthEvent());
-          Navigator.pushReplacement(
+          Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(
-              builder: (_) => LoginPage(phone: widget.phone),
+              builder: (_) => const RoleSelectionPage(),
             ),
+            (route) => false,
           );
         } else if (state.status == AuthStatus.error) {
           ScaffoldMessenger.of(context).showSnackBar(

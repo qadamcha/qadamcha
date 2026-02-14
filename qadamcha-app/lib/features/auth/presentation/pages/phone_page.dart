@@ -10,9 +10,7 @@ import 'otp_page.dart';
 /// Phone Page - matching full_architecture.html design
 /// 📱 emoji header, +998 prefix, styled input
 class PhonePage extends StatefulWidget {
-  final bool isResetPin;
-
-  const PhonePage({super.key, this.isResetPin = false});
+  const PhonePage({super.key});
 
   @override
   State<PhonePage> createState() => _PhonePageState();
@@ -40,36 +38,27 @@ class _PhonePageState extends State<PhonePage> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
-      // Faqat OTP yuborish bilan bog'liq statelarni eshitish
-      listenWhen: (previous, current) =>
-          current.status == AuthStatus.otpSent ||
-          (current.status == AuthStatus.error &&
-              previous.status == AuthStatus.loading),
       listener: (context, state) {
+        // Faqat aktiv sahifa bo'lgandagina ishlaydi
+        final route = ModalRoute.of(context);
+        if (route != null && !route.isCurrent) return;
+
         if (state.status == AuthStatus.otpSent) {
-          if (widget.isResetPin) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => OtpPage(
-                  phone: _formattedPhone,
-                  isResetPin: true,
-                ),
-              ),
-            );
-          } else {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => OtpPage(phone: _formattedPhone),
-              ),
-            );
-          }
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => OtpPage(phone: _formattedPhone),
+            ),
+          );
         } else if (state.status == AuthStatus.error) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.errorMessage ?? 'Xatolik yuz berdi'),
-              backgroundColor: AppColors.error,
+              backgroundColor: Colors.red.shade600,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           );
         }
@@ -162,16 +151,21 @@ class _PhonePageState extends State<PhonePage> {
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                               fontFamily: 'Nunito',
+                              color: AppColors.textPrimary,
                             ),
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               hintText: '90 123 45 67',
-                              hintStyle: TextStyle(
+                              hintStyle: const TextStyle(
                                 color: AppColors.textDisabled,
                                 fontSize: 16,
                                 fontFamily: 'Nunito',
                               ),
                               border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              filled: true,
+                              fillColor: Colors.transparent,
+                              contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 12,
                                 vertical: 14,
                               ),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
 
+/// AI Maslahatchi sahifasi — full_architecture.html dizaynida
+/// Chat interfeysi: header + xabarlar + input
 class AiChatPage extends StatefulWidget {
   const AiChatPage({super.key});
 
@@ -14,7 +16,7 @@ class _AiChatPageState extends State<AiChatPage> {
   final ScrollController _scrollController = ScrollController();
   final List<_ChatMessage> _messages = [
     _ChatMessage(
-      text: 'Salom! Men Qadamcha AI yordamchisiman. 👋\n\nBolangizning ta\'limi va rivojlanishi haqida savollaringizga javob berishga tayyorman.',
+      text: 'Assalomu alaykum! Qanday savol bor? 😊',
       isUser: false,
       timestamp: DateTime.now(),
     ),
@@ -60,31 +62,17 @@ class _AiChatPageState extends State<AiChatPage> {
   }
 
   String _getAiResponse(String query) {
-    // Placeholder responses - will be replaced with actual Gemini API
     final queries = query.toLowerCase();
-    
-    if (queries.contains('ekran') || queries.contains('vaqt')) {
-      return '📱 Ekran vaqti haqida:\n\n'
-          '• 2-5 yoshdagi bolalar uchun: kuniga 1 soatgacha\n'
-          '• 6-12 yosh: kuniga 2 soatgacha\n'
-          '• O\'rtacha qoida: har 30 daqiqada tanaffus\n\n'
-          'Ta\'limiy kontentga ustuvor e\'tibor bering!';
+
+    if (queries.contains('ekran') || queries.contains('vaqt') || queries.contains('telefon')) {
+      return 'Yaxshi savol!\n\n⏰ Kuniga 1 soat limit\n✅ Foydali kontent\n🏃 Sport bilan almashtiring';
     }
-    
+
     if (queries.contains('multfilm') || queries.contains('kontent')) {
-      return '🎬 Yosh bo\'yicha kontent:\n\n'
-          '• 0-3 yosh: Ranglar, shakllar, hayvonlar\n'
-          '• 3-6 yosh: Qisqa hikoyalar, qo\'shiqlar\n'
-          '• 6+ yosh: Ta\'limiy seriallar, ilmiy kontentlar\n\n'
-          'Qadamcha barcha kontentni yosh guruhiga moslab taklif qiladi!';
+      return '🎬 Yosh bo\'yicha kontent:\n\n• 0-3 yosh: Ranglar, shakllar\n• 3-6 yosh: Qisqa hikoyalar\n• 6+ yosh: Ta\'limiy seriallar';
     }
-    
-    return '🤔 Yaxshi savol!\n\n'
-        'Bu haqida batafsil ma\'lumot berish uchun yanada aniqroq savol berishingiz mumkin. '
-        'Masalan:\n\n'
-        '• Ekran vaqti qancha bo\'lishi kerak?\n'
-        '• Qanday multfilmlar foydali?\n'
-        '• Bolam qanday rivojlanmoqda?';
+
+    return '🤔 Yaxshi savol!\n\nBu haqida batafsil ma\'lumot berish uchun savol berishingiz mumkin:\n\n• Ekran vaqti qancha bo\'lishi kerak?\n• Qanday multfilmlar foydali?\n• Bolam qanday rivojlanmoqda?';
   }
 
   void _scrollToBottom() {
@@ -102,141 +90,381 @@ class _AiChatPageState extends State<AiChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
+      backgroundColor: const Color(0xFFF8F9FA),
+      body: SafeArea(
+        child: Column(
           children: [
-            Container(
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                gradient: AppColors.primaryGradient,
-                shape: BoxShape.circle,
+            // Custom header matching HTML design
+            _buildHeader(),
+
+            // Chat messages
+            Expanded(
+              child: ListView.builder(
+                controller: _scrollController,
+                padding: EdgeInsets.all(16.w),
+                itemCount: _messages.length + (_isTyping ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index == _messages.length && _isTyping) {
+                    return _buildTypingIndicator();
+                  }
+                  return _buildMessageBubble(_messages[index]);
+                },
               ),
-              child: Text('🤖', style: TextStyle(fontSize: 20.sp)),
             ),
-            SizedBox(width: 12.w),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('AI Yordamchi'),
-                Text(
-                  'Har doim onlayn',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.normal,
-                    color: AppColors.success,
-                  ),
+
+            // Quick Suggestions
+            if (_messages.length == 1)
+              Container(
+                height: 46.h,
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    _buildSuggestionChip(
+                      '📱 Ekran vaqti',
+                      () {
+                        _controller.text = 'Bolam uchun ekran vaqti qancha bo\'lishi kerak?';
+                        _sendMessage();
+                      },
+                    ),
+                    _buildSuggestionChip(
+                      '🎬 Multfilmlar',
+                      () {
+                        _controller.text = 'Qaysi multfilmlar bolam uchun foydali?';
+                        _sendMessage();
+                      },
+                    ),
+                    _buildSuggestionChip(
+                      '📊 Rivojlanish',
+                      () {
+                        _controller.text = 'Bolam qanday rivojlanmoqda?';
+                        _sendMessage();
+                      },
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+
+            if (_messages.length == 1)
+              SizedBox(height: 8.h),
+
+            // Input area — matching HTML design
+            _buildInputArea(),
           ],
         ),
       ),
-      body: Column(
+    );
+  }
+
+  /// Header: white bg, border-bottom, back button, robot avatar, title + status
+  Widget _buildHeader() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 10.h),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+        ),
+      ),
+      child: Row(
         children: [
-          // Messages
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: EdgeInsets.all(16.w),
-              itemCount: _messages.length + (_isTyping ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index == _messages.length && _isTyping) {
-                  return _TypingIndicator();
-                }
-                return _MessageBubble(message: _messages[index]);
-              },
+          // Robot avatar — purple gradient
+          Container(
+            width: 38.w,
+            height: 38.w,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF7C4DFF), Color(0xFFB388FF)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(11.r),
+            ),
+            child: Center(
+              child: Text('🤖', style: TextStyle(fontSize: 20.sp)),
             ),
           ),
-          
-          // Quick Suggestions
-          if (_messages.length == 1)
-            Container(
-              height: 50.h,
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  _SuggestionChip(
-                    label: 'Ekran vaqti',
-                    onTap: () {
-                      _controller.text = 'Bolam uchun ekran vaqti qancha bo\'lishi kerak?';
-                      _sendMessage();
-                    },
+          SizedBox(width: 10.w),
+          // Title and status
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'AI Maslahatchi',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF1A1A2E),
+                    fontFamily: 'Nunito',
                   ),
-                  _SuggestionChip(
-                    label: 'Foydali multfilmlar',
-                    onTap: () {
-                      _controller.text = 'Qaysi multfilmlar bolam uchun foydali?';
-                      _sendMessage();
-                    },
+                ),
+                Text(
+                  '✅ Online',
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF22C55E),
+                    fontFamily: 'Nunito',
                   ),
-                  _SuggestionChip(
-                    label: 'Rivojlanish',
-                    onTap: () {
-                      _controller.text = 'Bolam qanday rivojlanmoqda?';
-                      _sendMessage();
-                    },
-                  ),
-                ],
-              ),
-            ),
-          
-          // Input
-          Container(
-            padding: EdgeInsets.all(16.w),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -5),
                 ),
               ],
             ),
-            child: SafeArea(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16.w),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceVariant,
-                        borderRadius: BorderRadius.circular(24.r),
-                      ),
-                      child: TextField(
-                        controller: _controller,
-                        decoration: const InputDecoration(
-                          hintText: 'Savolingizni yozing...',
-                          border: InputBorder.none,
-                        ),
-                        maxLines: null,
-                        textInputAction: TextInputAction.send,
-                        onSubmitted: (_) => _sendMessage(),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
-                  GestureDetector(
-                    onTap: _sendMessage,
-                    child: Container(
-                      padding: EdgeInsets.all(12.w),
-                      decoration: BoxDecoration(
-                        gradient: AppColors.primaryGradient,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.send,
-                        color: Colors.white,
-                        size: 22.sp,
-                      ),
-                    ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Message bubble with avatar circle for bot messages
+  Widget _buildMessageBubble(_ChatMessage message) {
+    if (message.isUser) {
+      // User message — right aligned, blue gradient
+      return Align(
+        alignment: Alignment.centerRight,
+        child: Container(
+          margin: EdgeInsets.only(bottom: 12.h, left: 60.w),
+          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF2D6A9F), Color(0xFF4A90D9)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(16.r),
+              topRight: Radius.circular(16.r),
+              bottomLeft: Radius.circular(16.r),
+              bottomRight: Radius.circular(4.r),
+            ),
+          ),
+          child: Text(
+            message.text,
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: Colors.white,
+              height: 1.5,
+              fontFamily: 'Nunito',
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Bot message — left aligned with small avatar
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          // Small bot avatar
+          Container(
+            width: 26.w,
+            height: 26.w,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF7C4DFF), Color(0xFFB388FF)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(9.r),
+            ),
+            child: Center(
+              child: Text('🤖', style: TextStyle(fontSize: 12.sp)),
+            ),
+          ),
+          SizedBox(width: 6.w),
+          // Message bubble
+          Flexible(
+            child: Container(
+              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(16.r),
+                  topRight: Radius.circular(16.r),
+                  bottomLeft: Radius.circular(4.r),
+                  bottomRight: Radius.circular(16.r),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 3,
+                    offset: const Offset(0, 1),
                   ),
                 ],
+              ),
+              child: Text(
+                message.text,
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: const Color(0xFF1A1A2E),
+                  height: 1.6,
+                  fontFamily: 'Nunito',
+                ),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Typing indicator with bot avatar
+  Widget _buildTypingIndicator() {
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Container(
+            width: 26.w,
+            height: 26.w,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF7C4DFF), Color(0xFFB388FF)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(9.r),
+            ),
+            child: Center(
+              child: Text('🤖', style: TextStyle(fontSize: 12.sp)),
+            ),
+          ),
+          SizedBox(width: 6.w),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.06),
+                  blurRadius: 3,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _Dot(delay: 0),
+                SizedBox(width: 4.w),
+                _Dot(delay: 150),
+                SizedBox(width: 4.w),
+                _Dot(delay: 300),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Input area: white bg, border-top, gray pill input, blue gradient send button
+  Widget _buildInputArea() {
+    return Container(
+      padding: EdgeInsets.fromLTRB(18.w, 12.h, 18.w, 18.h),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          top: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8F9FA),
+                borderRadius: BorderRadius.circular(14.r),
+              ),
+              child: TextField(
+                controller: _controller,
+                style: TextStyle(
+                  fontSize: 15.sp,
+                  color: const Color(0xFF1A1A2E),
+                  fontFamily: 'Nunito',
+                ),
+                decoration: InputDecoration(
+                  filled: false,
+                  fillColor: Colors.transparent,
+                  hintText: 'Savol yozing...',
+                  hintStyle: TextStyle(
+                    fontSize: 15.sp,
+                    color: const Color(0xFF9CA3AF),
+                    fontFamily: 'Nunito',
+                  ),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+                maxLines: null,
+                textInputAction: TextInputAction.send,
+                onSubmitted: (_) => _sendMessage(),
+              ),
+            ),
+          ),
+          SizedBox(width: 8.w),
+          // Send button — blue gradient rounded square
+          GestureDetector(
+            onTap: _sendMessage,
+            child: Container(
+              width: 40.w,
+              height: 40.w,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF2D6A9F), Color(0xFF4A90D9)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Icon(
+                Icons.send_rounded,
+                color: Colors.white,
+                size: 20.sp,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSuggestionChip(String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: EdgeInsets.only(right: 8.w),
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20.r),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13.sp,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF2D6A9F),
+            fontFamily: 'Nunito',
+          ),
+        ),
       ),
     );
   }
@@ -252,87 +480,6 @@ class _ChatMessage {
     required this.isUser,
     required this.timestamp,
   });
-}
-
-class _MessageBubble extends StatelessWidget {
-  final _ChatMessage message;
-
-  const _MessageBubble({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: EdgeInsets.only(
-          bottom: 12.h,
-          left: message.isUser ? 60.w : 0,
-          right: message.isUser ? 0 : 60.w,
-        ),
-        padding: EdgeInsets.all(14.w),
-        decoration: BoxDecoration(
-          gradient: message.isUser ? AppColors.primaryGradient : null,
-          color: message.isUser ? null : Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(16.r),
-            topRight: Radius.circular(16.r),
-            bottomLeft: Radius.circular(message.isUser ? 16.r : 4.r),
-            bottomRight: Radius.circular(message.isUser ? 4.r : 16.r),
-          ),
-          boxShadow: [
-            if (!message.isUser)
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-          ],
-        ),
-        child: Text(
-          message.text,
-          style: TextStyle(
-            fontSize: 15.sp,
-            color: message.isUser ? Colors.white : AppColors.textPrimary,
-            height: 1.4,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _TypingIndicator extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        margin: EdgeInsets.only(bottom: 12.h, right: 100.w),
-        padding: EdgeInsets.all(14.w),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _Dot(delay: 0),
-            SizedBox(width: 4.w),
-            _Dot(delay: 150),
-            SizedBox(width: 4.w),
-            _Dot(delay: 300),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _Dot extends StatefulWidget {
@@ -358,7 +505,7 @@ class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
     _animation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
-    
+
     Future.delayed(Duration(milliseconds: widget.delay), () {
       if (mounted) _controller.repeat(reverse: true);
     });
@@ -378,39 +525,8 @@ class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
         width: 8.w,
         height: 8.w,
         decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.3 + _animation.value * 0.7),
+          color: const Color(0xFF7C4DFF).withOpacity(0.3 + _animation.value * 0.7),
           shape: BoxShape.circle,
-        ),
-      ),
-    );
-  }
-}
-
-class _SuggestionChip extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-
-  const _SuggestionChip({required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: EdgeInsets.only(right: 8.w),
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
-        decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(20.r),
-          border: Border.all(color: AppColors.primary.withOpacity(0.3)),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13.sp,
-            fontWeight: FontWeight.w500,
-            color: AppColors.primary,
-          ),
         ),
       ),
     );
