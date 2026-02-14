@@ -1,7 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/network/api_client.dart';
+import 'core/services/notification_service.dart';
 
 // Auth Feature
 import 'features/auth/domain/repositories/auth_repository.dart';
@@ -40,12 +42,23 @@ Future<void> initializeDependencies() async {
   sl.registerLazySingleton<FlutterSecureStorage>(
     () => const FlutterSecureStorage(),
   );
+  sl.registerLazySingleton<GlobalKey<NavigatorState>>(
+    () => GlobalKey<NavigatorState>(),
+  );
   
   //=== Core ===
   sl.registerLazySingleton<ApiClient>(
     () => ApiClient(storage: sl()),
   );
   
+  //=== Notification Service ===
+  sl.registerLazySingleton<NotificationService>(
+    () => NotificationService()..configure(
+      apiClient: sl(),
+      navigatorKey: sl(),
+    ),
+  );
+
   //=== Auth Feature ===
   sl.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSourceImpl(sl()),

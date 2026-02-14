@@ -39,6 +39,16 @@ module.exports = async function (fastify) {
         preHandler: [fastify.authenticate]
     }, devicesController.delete);
 
+    // PUT /devices/fcm-token (autentifikatsiya bilan)
+    fastify.put('/fcm-token', {
+        preHandler: [fastify.authenticate],
+        schema: {
+            body: Type.Object({
+                fcmToken: Type.String({ minLength: 1 })
+            })
+        }
+    }, devicesController.updateFcmToken);
+
     // POST /devices/heartbeat (autentifikatsiya bilan)
     fastify.post('/heartbeat', {
         preHandler: [fastify.authenticate]

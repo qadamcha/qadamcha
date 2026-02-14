@@ -1,11 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/custom_keypad.dart';
 import '../bloc/auth_bloc.dart';
 import '../../../home/presentation/pages/home_page.dart';
-import 'phone_page.dart';
 
 /// Login Page - matching full_architecture.html design  
 /// Avatar with gradient, personal greeting, dot indicators, custom keypad
@@ -28,8 +29,22 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     super.initState();
     _getDeviceId();
-    // TODO: Get user name from state/storage
-    _userName = null; // Will be fetched from bloc
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userJson = prefs.getString('cached_user');
+      if (userJson != null) {
+        final userData = jsonDecode(userJson) as Map<String, dynamic>;
+        if (mounted) {
+          setState(() {
+            _userName = userData['name'] as String?;
+          });
+        }
+      }
+    } catch (_) {}
   }
 
   Future<void> _getDeviceId() async {

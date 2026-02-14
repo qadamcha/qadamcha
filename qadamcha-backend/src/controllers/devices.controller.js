@@ -186,6 +186,33 @@ module.exports = {
         return { success: true, message: SUCCESS.DELETED };
     },
 
+    // PUT /devices/fcm-token - FCM tokenni saqlash
+    async updateFcmToken(request, reply) {
+        const { deviceId } = request.user;
+        const { fcmToken } = request.body;
+
+        if (!fcmToken) {
+            return reply.status(400).send({
+                success: false,
+                message: 'fcmToken majburiy'
+            });
+        }
+
+        const result = await Device.updateOne(
+            { deviceId, isActive: true },
+            { fcmToken }
+        );
+
+        if (result.matchedCount === 0) {
+            return reply.status(404).send({
+                success: false,
+                message: ERRORS.NOT_FOUND
+            });
+        }
+
+        return { success: true, message: 'FCM token yangilandi' };
+    },
+
     // POST /devices/:id/heartbeat - Qurilma online statusini yangilash
     async heartbeat(request, reply) {
         const { deviceId } = request.user;

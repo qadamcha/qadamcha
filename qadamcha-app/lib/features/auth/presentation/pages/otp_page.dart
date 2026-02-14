@@ -8,13 +8,15 @@ import '../../../../core/widgets/gradient_button.dart';
 import '../bloc/auth_bloc.dart';
 import 'register_page.dart';
 import 'login_page.dart';
+import 'new_pin_page.dart';
 
 /// OTP Page - matching full_architecture.html design
 /// ✉️ icon, 6-digit input boxes, countdown timer
 class OtpPage extends StatefulWidget {
   final String phone;
+  final bool isResetPin;
 
-  const OtpPage({super.key, required this.phone});
+  const OtpPage({super.key, required this.phone, this.isResetPin = false});
 
   @override
   State<OtpPage> createState() => _OtpPageState();
@@ -109,7 +111,14 @@ class _OtpPageState extends State<OtpPage> {
           final isNew = state.isNewUser;
           // State ni tozalash — keyingi sahifada eski state qolmasligi uchun
           context.read<AuthBloc>().add(ResetAuthEvent());
-          if (isNew) {
+          if (widget.isResetPin) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => NewPinPage(phone: widget.phone),
+              ),
+            );
+          } else if (isNew) {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(

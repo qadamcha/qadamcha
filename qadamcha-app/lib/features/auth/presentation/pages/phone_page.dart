@@ -10,7 +10,9 @@ import 'otp_page.dart';
 /// Phone Page - matching full_architecture.html design
 /// 📱 emoji header, +998 prefix, styled input
 class PhonePage extends StatefulWidget {
-  const PhonePage({super.key});
+  final bool isResetPin;
+
+  const PhonePage({super.key, this.isResetPin = false});
 
   @override
   State<PhonePage> createState() => _PhonePageState();
@@ -45,12 +47,24 @@ class _PhonePageState extends State<PhonePage> {
               previous.status == AuthStatus.loading),
       listener: (context, state) {
         if (state.status == AuthStatus.otpSent) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => OtpPage(phone: _formattedPhone),
-            ),
-          );
+          if (widget.isResetPin) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => OtpPage(
+                  phone: _formattedPhone,
+                  isResetPin: true,
+                ),
+              ),
+            );
+          } else {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => OtpPage(phone: _formattedPhone),
+              ),
+            );
+          }
         } else if (state.status == AuthStatus.error) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

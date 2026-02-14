@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:qadamcha_app/core/theme/app_colors.dart';
 import 'package:qadamcha_app/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:qadamcha_app/features/auth/presentation/pages/phone_page.dart';
 import 'package:qadamcha_app/features/auth/presentation/widgets/pin_dots.dart';
 import 'package:qadamcha_app/features/auth/presentation/widgets/pin_keypad.dart';
 import 'package:qadamcha_app/features/home/presentation/pages/home_page.dart';
@@ -139,9 +140,11 @@ class _ParentPinPageState extends State<ParentPinPage> {
               // Forgot PIN
               TextButton(
                 onPressed: () {
-                  // TODO: Implement forgot PIN flow
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('PIN kodni tiklash tez orada qo\'shiladi')),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const PhonePage(isResetPin: true),
+                    ),
                   );
                 },
                 child: const Text(

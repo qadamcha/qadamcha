@@ -32,6 +32,7 @@ class _DeviceLinkingPageState extends State<DeviceLinkingPage> {
     super.dispose();
   }
 
+  // ignore: unused_element
   void _startCountdown(Duration duration) {
     _remainingSeconds = duration.inSeconds;
     _timer?.cancel();

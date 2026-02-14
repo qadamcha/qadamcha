@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:qadamcha_app/core/theme/app_colors.dart';
-import 'package:qadamcha_app/core/widgets/gradient_button.dart';
-import 'package:qadamcha_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:qadamcha_app/features/auth/presentation/pages/parent_pin_page.dart';
 import 'package:qadamcha_app/features/home/presentation/pages/home_page.dart';
 

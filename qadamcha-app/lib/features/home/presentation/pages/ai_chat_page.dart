@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/back_button_box.dart';
-import '../../../../core/widgets/gradient_button.dart';
 
 /// AI Chat Page - matching full_architecture.html design
 /// Chat interface with message bubbles and input field
