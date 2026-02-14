@@ -73,6 +73,11 @@ module.exports = {
     BUNNY_API_KEY: process.env.BUNNY_STREAM_API_KEY,
     BUNNY_CDN_HOST: process.env.BUNNY_CDN_HOSTNAME,
 
+    // Payme
+    PAYME_MERCHANT_ID: process.env.PAYME_MERCHANT_ID,
+    PAYME_KEY: process.env.PAYME_KEY,
+    PAYME_CHECKOUT_URL: process.env.PAYME_CHECKOUT_URL || 'https://test.paycom.uz',
+
     // Gemini AI
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,
 

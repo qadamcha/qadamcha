@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../subscription/presentation/bloc/subscription_bloc.dart';
+import '../../../subscription/presentation/pages/subscription_plans_page.dart';
 import 'settings_page.dart';
 import '../../../auth/presentation/pages/role_selection_page.dart';
 
@@ -271,7 +272,7 @@ class ParentHomePage extends StatelessWidget {
               if (!isPremium) ...[
                 GestureDetector(
                   onTap: () {
-                    context.read<SubscriptionBloc>().add(const ActivateSubscriptionEvent());
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const SubscriptionPlansPage()));
                   },
                   child: Container(
                     width: double.infinity,

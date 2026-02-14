@@ -2,7 +2,7 @@ part of 'subscription_bloc.dart';
 
 abstract class SubscriptionEvent extends Equatable {
   const SubscriptionEvent();
-  
+
   @override
   List<Object?> get props => [];
 }
@@ -13,57 +13,31 @@ class LoadPlansEvent extends SubscriptionEvent {}
 
 class SelectPlanEvent extends SubscriptionEvent {
   final SubscriptionPlan plan;
-  
+
   const SelectPlanEvent(this.plan);
-  
+
   @override
   List<Object?> get props => [plan];
 }
 
-class InitiatePaymentEvent extends SubscriptionEvent {
+class CreateOrderEvent extends SubscriptionEvent {
   final SubscriptionPlan plan;
-  final String paymentMethod;
-  
-  const InitiatePaymentEvent({
-    required this.plan,
-    required this.paymentMethod,
-  });
-  
+
+  const CreateOrderEvent({required this.plan});
+
   @override
-  List<Object?> get props => [plan, paymentMethod];
+  List<Object?> get props => [plan];
 }
 
-class ConfirmPaymentEvent extends SubscriptionEvent {
-  final String transactionId;
-  final String paymentMethod;
-  
-  const ConfirmPaymentEvent({
-    required this.transactionId,
-    required this.paymentMethod,
-  });
-  
+class CheckOrderEvent extends SubscriptionEvent {
+  final String orderId;
+
+  const CheckOrderEvent({required this.orderId});
+
   @override
-  List<Object?> get props => [transactionId, paymentMethod];
+  List<Object?> get props => [orderId];
 }
 
-class CancelSubscriptionEvent extends SubscriptionEvent {
-  final String subscriptionId;
-  
-  const CancelSubscriptionEvent(this.subscriptionId);
-  
-  @override
-  List<Object?> get props => [subscriptionId];
-}
+class CancelSubscriptionEvent extends SubscriptionEvent {}
 
-class ToggleAutoRenewEvent extends SubscriptionEvent {
-  final String subscriptionId;
-  
-  const ToggleAutoRenewEvent(this.subscriptionId);
-  
-  @override
-  List<Object?> get props => [subscriptionId];
-}
-
-class ActivateSubscriptionEvent extends SubscriptionEvent {
-  const ActivateSubscriptionEvent();
-}
+class ResetPaymentEvent extends SubscriptionEvent {}

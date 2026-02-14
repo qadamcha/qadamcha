@@ -9,4 +9,5 @@ module.exports = {
     Content: require('./Content'),
     Activity: require('./Activity'),
     ContentLike: require('./ContentLike'),
+    PaymeTransaction: require('./PaymeTransaction'),
 };

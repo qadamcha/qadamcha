@@ -37,6 +37,11 @@ module.exports = async function (fastify) {
         schema: { body: CreateSchema }
     }, subscriptionController.create);
 
+    // GET /subscription/check/:orderId - To'lov holatini tekshirish
+    fastify.get('/check/:orderId', {
+        preHandler: [fastify.authenticate]
+    }, subscriptionController.checkOrder);
+
     // POST /subscription/activate
     fastify.post('/activate', {
         preHandler: [fastify.authenticate],

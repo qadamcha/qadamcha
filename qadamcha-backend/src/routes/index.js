@@ -16,4 +16,7 @@ module.exports = async function (fastify) {
 
     // AI Routes
     fastify.register(require('./ai.routes'), { prefix: '/ai' });
+
+    // Payme Webhook (Payme o'zi so'rov yuboradi)
+    fastify.register(require('./payme.routes'), { prefix: '/payme' });
 };

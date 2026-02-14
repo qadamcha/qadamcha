@@ -1,7 +1,7 @@
 part of 'subscription_bloc.dart';
 
 enum SubscriptionLoadStatus { initial, loading, loaded, error }
-enum PaymentStatus { initial, processing, pending, confirming, success, failed }
+enum PaymentStatus { initial, creatingOrder, orderCreated, checking, success, failed }
 
 class SubscriptionState extends Equatable {
   final SubscriptionLoadStatus status;
@@ -9,44 +9,45 @@ class SubscriptionState extends Equatable {
   final List<SubscriptionPlan> availablePlans;
   final SubscriptionPlan? selectedPlan;
   final PaymentStatus paymentStatus;
-  final PaymentIntent? paymentIntent;
+  final PaymentOrder? paymentOrder;
   final String? errorMessage;
-  
+
   const SubscriptionState({
     this.status = SubscriptionLoadStatus.initial,
     this.currentSubscription,
     this.availablePlans = const [],
     this.selectedPlan,
     this.paymentStatus = PaymentStatus.initial,
-    this.paymentIntent,
+    this.paymentOrder,
     this.errorMessage,
   });
-  
+
   SubscriptionState copyWith({
     SubscriptionLoadStatus? status,
     Subscription? currentSubscription,
+    bool clearSubscription = false,
     List<SubscriptionPlan>? availablePlans,
     SubscriptionPlan? selectedPlan,
     PaymentStatus? paymentStatus,
-    PaymentIntent? paymentIntent,
+    PaymentOrder? paymentOrder,
+    bool clearPaymentOrder = false,
     String? errorMessage,
   }) {
     return SubscriptionState(
       status: status ?? this.status,
-      currentSubscription: currentSubscription ?? this.currentSubscription,
+      currentSubscription: clearSubscription ? null : (currentSubscription ?? this.currentSubscription),
       availablePlans: availablePlans ?? this.availablePlans,
       selectedPlan: selectedPlan ?? this.selectedPlan,
       paymentStatus: paymentStatus ?? this.paymentStatus,
-      paymentIntent: paymentIntent ?? this.paymentIntent,
+      paymentOrder: clearPaymentOrder ? null : (paymentOrder ?? this.paymentOrder),
       errorMessage: errorMessage,
     );
   }
-  
-  bool get isPremium => currentSubscription?.isPremium ?? false;
+
   bool get isActive => currentSubscription?.isActive ?? false;
-  SubscriptionPlan get currentPlan => 
-      currentSubscription?.plan ?? SubscriptionPlan.free;
-  
+  bool get isPremium => currentSubscription?.isPremium ?? false;
+  SubscriptionPlan? get currentPlan => currentSubscription?.plan;
+
   @override
   List<Object?> get props => [
     status,
@@ -54,7 +55,7 @@ class SubscriptionState extends Equatable {
     availablePlans,
     selectedPlan,
     paymentStatus,
-    paymentIntent,
+    paymentOrder,
     errorMessage,
   ];
 }

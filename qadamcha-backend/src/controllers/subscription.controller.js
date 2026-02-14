@@ -51,7 +51,7 @@ module.exports = {
         return { success: true, plans };
     },
 
-    // POST /subscription/create - Yangi obuna yaratish (to'lov oldidan)
+    // POST /subscription/create - Yangi obuna yaratish + Payme checkout URL
     async create(request, reply) {
         const { userId } = request.user;
         const { plan } = request.body;
@@ -77,12 +77,62 @@ module.exports = {
             createdBy: userId
         });
 
+        const orderId = subscription._id.toString();
+        const amountTiyin = planData.price * 100; // Payme tiyin da kutadi
+
+        // Payme checkout URL generatsiya
+        const params = Buffer.from(JSON.stringify({
+            m: config.PAYME_MERCHANT_ID,
+            ac: { order_id: orderId },
+            a: amountTiyin,
+            l: 'uz',
+            ct: 600000, // 10 min timeout
+        })).toString('base64');
+
+        const checkoutUrl = `${config.PAYME_CHECKOUT_URL}/${params}`;
+
         return {
             success: true,
-            subscription,
-            orderId: subscription._id.toString(),
+            orderId,
             amount: planData.price,
+            checkoutUrl,
             message: 'To\'lov kutilmoqda'
+        };
+    },
+
+    // GET /subscription/check/:orderId - To'lov holatini tekshirish
+    async checkOrder(request, reply) {
+        const { userId } = request.user;
+        const { orderId } = request.params;
+
+        const subscription = await Subscription.findById(orderId);
+
+        if (!subscription) {
+            return reply.status(404).send({
+                success: false,
+                message: 'Buyurtma topilmadi'
+            });
+        }
+
+        if (subscription.userId.toString() !== userId) {
+            return reply.status(403).send({
+                success: false,
+                message: 'Ruxsat yo\'q'
+            });
+        }
+
+        return {
+            success: true,
+            status: subscription.status,
+            paid: subscription.status === 'active',
+            subscription: subscription.status === 'active' ? {
+                plan: subscription.plan,
+                status: subscription.status,
+                startDate: subscription.startDate,
+                endDate: subscription.endDate,
+                daysRemaining: Math.ceil((subscription.endDate - new Date()) / (1000 * 60 * 60 * 24)),
+                maxDevices: subscription.maxDevices
+            } : null
         };
     },
 

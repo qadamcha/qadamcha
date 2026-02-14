@@ -3,6 +3,9 @@
 .env.local
 .env.production
 
+# Firebase credentials (NEVER commit!)
+firebase-service-account.json
+
 # Node.js
 node_modules/
 npm-debug.log*
@@ -23,6 +26,10 @@ qadamcha-app/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistr
 qadamcha-app/ios/Runner/GeneratedPluginRegistrant.m
 qadamcha-app/windows/flutter/generated_plugin_registrant.cc
 qadamcha-app/windows/flutter/generated_plugins.cmake
+qadamcha-app/windows/flutter/ephemeral/.plugin_symlinks/
+
+# Android local properties
+qadamcha-app/android/local.properties
 
 # IDE
 .idea/
