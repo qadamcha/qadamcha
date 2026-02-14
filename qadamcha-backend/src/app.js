@@ -11,7 +11,7 @@ const fastify = require('fastify')({
 
 const config = require('./config/env');
 const connectDB = require('./config/database');
-const { connectRedis } = require('./config/redis');
+const { connectRedis, disconnectRedis } = require('./config/redis');
 const { API_PREFIX } = require('./config/constants');
 
 // Sentry — eng tepada init qilish
@@ -183,9 +183,8 @@ const start = async () => {
         // Connect to databases
         await connectDB();
 
-        // Get Redis instance (already connected or mocked)
-        const { getRedis } = require('./config/redis');
-        const redis = getRedis();
+        // Connect to Redis (await ensures no race condition)
+        const redis = await connectRedis();
 
         // Store Redis in app
         fastify.decorate('redis', redis);
@@ -243,6 +242,7 @@ const gracefulShutdown = async (signal) => {
 
     try {
         await fastify.close();
+        await disconnectRedis();
         console.log('✅ Server closed');
         process.exit(0);
     } catch (err) {

@@ -6,6 +6,7 @@
 # Node.js
 node_modules/
 npm-debug.log*
+package-lock.json
 
 # Flutter / Dart
 qadamcha-app/build/
@@ -13,6 +14,15 @@ qadamcha-app/.dart_tool/
 qadamcha-app/.packages
 qadamcha-app/.flutter-plugins
 qadamcha-app/.flutter-plugins-dependencies
+
+# Gradle (Android build cache)
+qadamcha-app/android/.gradle/
+
+# Generated plugin files
+qadamcha-app/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+qadamcha-app/ios/Runner/GeneratedPluginRegistrant.m
+qadamcha-app/windows/flutter/generated_plugin_registrant.cc
+qadamcha-app/windows/flutter/generated_plugins.cmake
 
 # IDE
 .idea/

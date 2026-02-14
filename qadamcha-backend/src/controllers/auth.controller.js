@@ -42,7 +42,15 @@ module.exports = {
             await smsService.sendOtp(phone, code);
         } catch (err) {
             request.log.error('SMS sending failed:', err);
-            // Testlash uchun davom etamiz
+            // Production da xato qaytarish — foydalanuvchini xabardor qilish
+            if (config.NODE_ENV === 'production') {
+                // OTP ni Redis dan tozalash — yuborilmagan kod ishlatilmasin
+                await redis.del(otpKey);
+                return reply.status(503).send({
+                    success: false,
+                    message: 'SMS xizmati vaqtincha ishlamayapti. Keyinroq urinib ko\'ring.'
+                });
+            }
         }
 
         // Dev modeda kodni ko'rsatish

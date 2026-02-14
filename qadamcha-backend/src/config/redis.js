@@ -19,7 +19,7 @@ const fallbackToMock = (reason) => {
     isMocked = true;
 };
 
-const connectRedis = () => {
+const connectRedis = async () => {
     try {
         console.log('🔄 Connecting to Redis...');
         redis = new Redis(config.REDIS_URL, {
@@ -35,10 +35,6 @@ const connectRedis = () => {
             }
         });
 
-        redis.on('connect', () => {
-            console.log('✅ Redis connected successfully');
-        });
-
         redis.on('error', (err) => {
             console.warn('⚠️ Redis error:', err.message);
             if (err.message.includes('ECONNREFUSED') || err.message.includes('ENOTFOUND')) {
@@ -46,10 +42,13 @@ const connectRedis = () => {
             }
         });
 
-        // Ulanishni sinab ko'rish
-        redis.connect().catch(() => {
+        // Ulanishni kutish (race condition oldini olish)
+        try {
+            await redis.connect();
+            console.log('✅ Redis connected successfully');
+        } catch (err) {
             fallbackToMock('Redis connect() muvaffaqiyatsiz');
-        });
+        }
 
         return redis;
     } catch (error) {
@@ -60,10 +59,18 @@ const connectRedis = () => {
 };
 
 const getRedis = () => {
-    if (!redis) {
-        redis = connectRedis();
-    }
     return redis;
 };
 
-module.exports = { connectRedis, getRedis };
+const disconnectRedis = async () => {
+    if (redis && !isMocked) {
+        try {
+            await redis.quit();
+            console.log('✅ Redis disconnected');
+        } catch {
+            // Ignore disconnect errors
+        }
+    }
+};
+
+module.exports = { connectRedis, getRedis, disconnectRedis };
