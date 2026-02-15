@@ -11,7 +11,7 @@ class AiService {
             try {
                 const genAI = new GoogleGenerativeAI(config.GEMINI_API_KEY);
                 this.model = genAI.getGenerativeModel({
-                    model: 'gemini-3.0-flash-preview',
+                    model: 'gemini-3-flash-preview',
                     generationConfig: {
                         maxOutputTokens: 1024,
                         temperature: 0.7,
