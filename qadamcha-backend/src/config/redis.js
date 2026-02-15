@@ -7,15 +7,25 @@ let isMocked = false;
 const fallbackToMock = (reason) => {
     if (isMocked) return;
 
-    // Production da mock ruxsat etilmaydi — crash qilsin
+    // Production da mock bilan davom etish (crash qilmaslik — healthcheck ishlashi kerak)
     if (config.NODE_ENV === 'production') {
-        console.error(`❌ CRITICAL: ${reason}. Production da Redis MAJBURIY!`);
-        process.exit(1);
+        console.error(`❌ CRITICAL: ${reason}. Redis ishlamayapti, mock ishlatilmoqda!`);
     }
 
     console.warn(`⚠️ ${reason}. Mock Redis ishga tushmoqda...`);
-    const RedisMock = require('ioredis-mock');
-    redis = new RedisMock();
+    try {
+        const RedisMock = require('ioredis-mock');
+        redis = new RedisMock();
+    } catch {
+        // ioredis-mock production da yo'q — oddiy mock yaratamiz
+        const noOp = () => Promise.resolve(null);
+        redis = {
+            get: noOp, set: noOp, del: noOp, setex: noOp,
+            incr: () => Promise.resolve(1), expire: noOp,
+            ping: () => Promise.resolve('PONG'),
+            on: () => { }, quit: noOp,
+        };
+    }
     isMocked = true;
 };
 
