@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../subscription/presentation/bloc/subscription_bloc.dart';
-import '../../../subscription/presentation/pages/subscription_plans_page.dart';
+// import '../../../subscription/presentation/pages/subscription_plans_page.dart';
 import '../../../device/presentation/pages/device_linking_page.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -196,10 +196,9 @@ class SettingsPage extends StatelessWidget {
     return BlocBuilder<SubscriptionBloc, SubscriptionState>(
       builder: (context, state) {
         return GestureDetector(
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const SubscriptionPlansPage()),
-          ),
+          onTap: () {
+            // Navigator.pop(context); // Asosiy sahifaga qaytish
+          },
           child: Container(
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(

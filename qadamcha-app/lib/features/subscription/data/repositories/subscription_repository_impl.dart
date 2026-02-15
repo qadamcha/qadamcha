@@ -110,6 +110,11 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     required String cardNumber,
     required String expire,
   }) async {
+    // TODO: Paycom shartnomasi tuzilgandan keyin buni olib tashlash kerak
+    await Future.delayed(const Duration(seconds: 2));
+    return Left(ServerFailure("To'lov tizimi vaqtinchalik profilaktikada. Tez orada ishga tushadi."));
+
+    /* 
     try {
       final response = await apiClient.post('/payme/card/create', data: {
         'cardNumber': cardNumber,
@@ -128,6 +133,7 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     } catch (e) {
       return Left(ServerFailure('Karta tokenini yaratishda xatolik: $e'));
     }
+    */
   }
 
   @override
