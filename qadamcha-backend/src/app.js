@@ -171,6 +171,7 @@ const start = async () => {
         // Configure services with Redis
         const smsService = require('./services/sms.service');
         smsService.setRedis(redis);
+        const blacklistService = require('./services/blacklist.service');
         blacklistService.setRedis(redis);
 
         const cacheService = require('./services/cache.service');
