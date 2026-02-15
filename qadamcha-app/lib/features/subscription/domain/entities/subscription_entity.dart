@@ -40,9 +40,7 @@ class Subscription extends Equatable {
 }
 
 enum SubscriptionPlan {
-  monthly('monthly', 'Oylik', 49000, '⭐'),
-  yearly('yearly', 'Yillik', 399000, '💎'),
-  lifetime('lifetime', 'Umrbod', 990000, '👨‍👩‍👧‍👦');
+  monthly('monthly', 'Oylik', 100000, '⭐');
 
   final String value;
   final String label;
@@ -52,33 +50,16 @@ enum SubscriptionPlan {
   const SubscriptionPlan(this.value, this.label, this.priceUzs, this.emoji);
 
   static SubscriptionPlan fromString(String value) {
-    return SubscriptionPlan.values.firstWhere(
-      (e) => e.value == value,
-      orElse: () => SubscriptionPlan.monthly,
-    );
+    return SubscriptionPlan.monthly;
   }
 
   String get formattedPrice {
     final thousands = (priceUzs / 1000).toStringAsFixed(0);
-    switch (this) {
-      case SubscriptionPlan.monthly:
-        return '$thousands 000 so\'m/oy';
-      case SubscriptionPlan.yearly:
-        return '$thousands 000 so\'m/yil';
-      case SubscriptionPlan.lifetime:
-        return '$thousands 000 so\'m';
-    }
+    return '$thousands 000 so\'m/oy';
   }
 
   String get periodLabel {
-    switch (this) {
-      case SubscriptionPlan.monthly:
-        return '30 kun';
-      case SubscriptionPlan.yearly:
-        return '365 kun';
-      case SubscriptionPlan.lifetime:
-        return 'Cheksiz';
-    }
+     return '30 kun';
   }
 }
 
@@ -125,22 +106,6 @@ class PlanFeatures {
       PlanFeature(title: 'Barcha kontentlar', description: '', included: true),
       PlanFeature(title: 'AI maslahatchi', description: '', included: true),
       PlanFeature(title: 'Vaqt boshqaruvi', description: '', included: true),
-    ],
-    SubscriptionPlan.yearly: [
-      PlanFeature(title: 'Reklama yo\'q', description: '', included: true),
-      PlanFeature(title: '3 ta qurilma', description: '', included: true),
-      PlanFeature(title: 'Barcha kontentlar', description: '', included: true),
-      PlanFeature(title: 'AI maslahatchi', description: '', included: true),
-      PlanFeature(title: 'Vaqt boshqaruvi', description: '', included: true),
-      PlanFeature(title: '32% tejash', description: 'Oyligiga nisbatan', included: true),
-    ],
-    SubscriptionPlan.lifetime: [
-      PlanFeature(title: 'Reklama yo\'q', description: '', included: true),
-      PlanFeature(title: '3 ta qurilma', description: '', included: true),
-      PlanFeature(title: 'Barcha kontentlar', description: '', included: true),
-      PlanFeature(title: 'AI maslahatchi', description: '', included: true),
-      PlanFeature(title: 'Vaqt boshqaruvi', description: '', included: true),
-      PlanFeature(title: 'Umrbod foydalanish', description: 'Bir marta to\'lang', included: true),
     ],
   };
 }

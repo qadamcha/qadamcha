@@ -3,7 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../subscription/presentation/bloc/subscription_bloc.dart';
-import '../../../subscription/presentation/pages/subscription_plans_page.dart';
+import '../../../subscription/presentation/pages/payment_page.dart';
+import '../../../subscription/domain/entities/subscription_entity.dart';
 import 'settings_page.dart';
 import '../../../auth/presentation/pages/role_selection_page.dart';
 
@@ -125,7 +126,41 @@ class ParentHomePage extends StatelessWidget {
   }
 
   Widget _buildSubscriptionCard(BuildContext context) {
-    return BlocBuilder<SubscriptionBloc, SubscriptionState>(
+    return BlocConsumer<SubscriptionBloc, SubscriptionState>(
+      listener: (context, state) {
+        if (state.paymentStatus == PaymentStatus.orderCreated &&
+            state.paymentOrder != null) {
+          final bloc = context.read<SubscriptionBloc>();
+          final order = state.paymentOrder!;
+          final plan = SubscriptionPlan.monthly; // Faqat monthly
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => BlocProvider.value(
+                value: bloc,
+                child: PaymentPage(
+                  plan: plan,
+                  orderId: order.orderId,
+                ),
+              ),
+            ),
+          ).then((_) {
+            bloc.add(ResetPaymentEvent());
+            bloc.add(LoadSubscriptionEvent());
+          });
+        }
+
+        if (state.paymentStatus == PaymentStatus.failed &&
+            state.errorMessage != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.errorMessage!),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      },
       builder: (context, subState) {
         final isPremium = subState.isPremium;
         return Container(
@@ -191,7 +226,7 @@ class ParentHomePage extends StatelessWidget {
                         Text(
                           isPremium
                               ? '${subState.currentSubscription?.remainingDays ?? 30} kun qoldi'
-                              : 'Premium rejaga o\'ting',
+                              : '100 000 so\'m/oy',
                           style: TextStyle(
                             fontSize: 14.sp,
                             color: Colors.white.withOpacity(0.85),
@@ -270,45 +305,53 @@ class ParentHomePage extends StatelessWidget {
 
               // Action button
               if (!isPremium) ...[
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const SubscriptionPlansPage()));
-                  },
-                  child: Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.symmetric(vertical: 14.h),
-                    decoration: BoxDecoration(
+                if (subState.paymentStatus == PaymentStatus.creatingOrder)
+                  const Center(
+                    child: CircularProgressIndicator(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(16.r),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '\u{2728}',
-                          style: TextStyle(fontSize: 18.sp),
-                        ),
-                        SizedBox(width: 8.w),
-                        Text(
-                          'Obunani faollashtirish',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFFFF6B6B),
-                            fontFamily: 'Nunito',
+                  )
+                else
+                  GestureDetector(
+                    onTap: () {
+                      context.read<SubscriptionBloc>().add(
+                          CreateOrderEvent(plan: SubscriptionPlan.monthly));
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(vertical: 14.h),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16.r),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '\u{2728}',
+                            style: TextStyle(fontSize: 18.sp),
+                          ),
+                          SizedBox(width: 8.w),
+                          Text(
+                            'Obunani faollashtirish',
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFFFF6B6B),
+                              fontFamily: 'Nunito',
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
               ],
               if (isPremium) ...[
                 Container(
