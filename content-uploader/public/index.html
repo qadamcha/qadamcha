@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Qadamcha - Video Yuklash</title>
+    <title>Qadamcha - Content Uploader</title>
     <style>
         :root {
             --primary: #6366f1;
@@ -16,6 +16,8 @@
             --success: #10b981;
             --danger: #ef4444;
             --border: #334155;
+            --orange: #f59e0b;
+            --orange-dark: #d97706;
         }
 
         * {
@@ -47,7 +49,73 @@
 
         .subtitle {
             color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        /* ===== TAB NAVIGATION ===== */
+        .tab-nav {
+            display: flex;
+            gap: 0;
             margin-bottom: 2rem;
+            background: var(--card);
+            border-radius: 1rem;
+            padding: 0.35rem;
+            border: 1px solid var(--border);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 0.85rem 1.5rem;
+            border: none;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: transparent;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .tab-btn:hover {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-btn.active-multfilm {
+            background: linear-gradient(135deg, var(--primary), #8b5cf6);
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .tab-btn.active-ertak {
+            background: linear-gradient(135deg, var(--orange), #ef4444);
+            color: white;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .grid {
@@ -113,6 +181,12 @@
             min-height: 80px;
         }
 
+        .story-text-area {
+            min-height: 200px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
         .row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -151,6 +225,18 @@
             box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
         }
 
+        .btn-orange {
+            background: linear-gradient(135deg, var(--orange), #ef4444);
+            color: white;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .btn-orange:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+        }
+
         .btn-danger {
             background: var(--danger);
             color: white;
@@ -172,6 +258,11 @@
             border-radius: 0.5rem;
             margin-bottom: 0.75rem;
             border: 1px solid var(--border);
+            transition: border-color 0.2s;
+        }
+
+        .content-item:hover {
+            border-color: var(--primary);
         }
 
         .content-info h3 {
@@ -184,6 +275,7 @@
             gap: 1rem;
             font-size: 0.75rem;
             color: var(--text-muted);
+            flex-wrap: wrap;
         }
 
         .badge {
@@ -207,6 +299,22 @@
 
         .badge.quest {
             background: #8b5cf6;
+        }
+
+        .badge.ertak {
+            background: #f59e0b;
+        }
+
+        .badge.masal {
+            background: #ec4899;
+        }
+
+        .badge.hikoya {
+            background: #14b8a6;
+        }
+
+        .badge.sher {
+            background: #a855f7;
         }
 
         .toast {
@@ -267,9 +375,30 @@
             color: var(--primary);
         }
 
+        .stat-number.orange {
+            color: var(--orange);
+        }
+
         .stat-label {
             font-size: 0.75rem;
             color: var(--text-muted);
+        }
+
+        .story-preview {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.35rem;
+            max-width: 400px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .char-count {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: right;
+            margin-top: 0.25rem;
         }
     </style>
 </head>
@@ -277,126 +406,245 @@
 <body>
     <div class="container">
         <h1>🎬 Qadamcha Content Uploader</h1>
-        <p class="subtitle">Video kontentlarni bazaga yuklash uchun admin panel</p>
+        <p class="subtitle">Video va ertak kontentlarni bazaga yuklash uchun admin panel</p>
 
-        <div class="grid">
-            <!-- Form -->
-            <div class="card">
-                <h2>➕ Yangi Video Qo'shish</h2>
-                <form id="uploadForm">
-                    <div class="form-group">
-                        <label>Video Nomi *</label>
-                        <input type="text" name="title" required placeholder="Masalan: Alpomish ertagi">
+        <!-- Tab Navigation -->
+        <div class="tab-nav">
+            <button class="tab-btn active-multfilm" onclick="switchTab('multfilm')" id="tabMultfilm">
+                🎬 Multfilm Yuklash
+            </button>
+            <button class="tab-btn" onclick="switchTab('ertak')" id="tabErtak">
+                📖 Ertak Yuklash
+            </button>
+        </div>
+
+        <!-- ==================== MULTFILM TAB ==================== -->
+        <div class="tab-content active" id="multfilmTab">
+            <div class="grid">
+                <!-- Multfilm Form -->
+                <div class="card">
+                    <h2>➕ Yangi Video Qo'shish</h2>
+                    <form id="uploadForm">
+                        <div class="form-group">
+                            <label>Video Nomi *</label>
+                            <input type="text" name="title" required placeholder="Masalan: Alpomish ertagi">
+                        </div>
+
+                        <div class="row">
+                            <div class="form-group">
+                                <label>Turi *</label>
+                                <select name="type" required>
+                                    <option value="">Tanlang...</option>
+                                    <option value="cartoon">🎬 Multfilm</option>
+                                    <option value="game">🎮 O'yin</option>
+                                    <option value="story">📖 Hikoya</option>
+                                    <option value="quest">🧩 Topshiriq</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Kategoriya</label>
+                                <input type="text" name="category" placeholder="Masalan: Ta'lim, Ertak">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Til</label>
+                            <select name="language">
+                                <option value="uz">🇺🇿 O'zbek tili</option>
+                                <option value="ru">🇷🇺 Rus tili</option>
+                                <option value="en">🇬🇧 Ingliz tili</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Tavsif</label>
+                            <textarea name="description" placeholder="Video haqida qisqacha..."></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="form-group">
+                                <label>Yosh (min)</label>
+                                <input type="number" name="ageMin" min="1" max="18" value="3">
+                            </div>
+                            <div class="form-group">
+                                <label>Yosh (max)</label>
+                                <input type="number" name="ageMax" min="1" max="18" value="12">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Bunny.net Video ID</label>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <input type="text" name="videoId" id="videoIdInput"
+                                    placeholder="Masalan: 9acac5a0-4742-4f6e-..." style="flex: 1;">
+                                <button type="button" class="btn"
+                                    style="background: var(--success); color: white; padding: 0.75rem 1rem;"
+                                    onclick="fetchVideoInfo()">🔍 Olish</button>
+                            </div>
+                            <small id="videoStatus" style="color: var(--text-muted); font-size: 0.75rem;"></small>
+                        </div>
+
+                        <div class="row">
+                            <div class="form-group">
+                                <label>Davomiyligi (sekund)</label>
+                                <input type="number" name="duration" min="0" placeholder="300">
+                            </div>
+                            <div class="form-group">
+                                <label>Thumbnail URL</label>
+                                <input type="url" name="thumbnail" placeholder="https://...">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Teglar (vergul bilan)</label>
+                            <input type="text" name="tags" placeholder="ta'lim, matematika, bolalar">
+                        </div>
+
+                        <div class="form-group checkbox-group">
+                            <input type="checkbox" name="isFeatured" id="isFeatured">
+                            <label for="isFeatured" style="margin: 0;">⭐ Tavsiya etilganlarda ko'rsatish</label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">💾 Saqlash</button>
+                    </form>
+                </div>
+
+                <!-- Multfilm List -->
+                <div class="card">
+                    <h2>📋 Mavjud Kontentlar</h2>
+                    <div class="stats">
+                        <div class="stat">
+                            <div class="stat-number" id="totalCount">0</div>
+                            <div class="stat-label">Jami</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number" id="cartoonCount">0</div>
+                            <div class="stat-label">Multfilm</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number" id="gameCount">0</div>
+                            <div class="stat-label">O'yin</div>
+                        </div>
                     </div>
+                    <div class="content-list" id="contentList">
+                        <div class="empty">Yuklanmoqda...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                    <div class="row">
+        <!-- ==================== ERTAK TAB ==================== -->
+        <div class="tab-content" id="ertakTab">
+            <div class="grid">
+                <!-- Ertak Form -->
+                <div class="card">
+                    <h2>📖 Yangi Ertak Qo'shish</h2>
+                    <form id="storyForm">
+                        <div class="form-group">
+                            <label>Ertak Nomi *</label>
+                            <input type="text" name="title" required placeholder="Masalan: Zumrad va Qimmat">
+                        </div>
+
                         <div class="form-group">
                             <label>Turi *</label>
                             <select name="type" required>
-                                <option value="">Tanlang...</option>
-                                <option value="cartoon">🎬 Multfilm</option>
-                                <option value="game">🎮 O'yin</option>
-                                <option value="story">📖 Hikoya</option>
-                                <option value="quest">🧩 Topshiriq</option>
+                                <option value="ertak">📖 Ertak</option>
+                                <option value="masal">🦊 Masal</option>
+                                <option value="hikoya">📝 Hikoya</option>
+                                <option value="she'r">🎵 She'r</option>
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label>Kategoriya</label>
-                            <input type="text" name="category" placeholder="Masalan: Ta'lim, Ertak">
-                        </div>
-                    </div>
 
-                    <div class="form-group">
-                        <label>Til</label>
-                        <select name="language">
-                            <option value="uz">🇺🇿 O'zbek tili</option>
-                            <option value="ru">🇷🇺 Rus tili</option>
-                            <option value="en">🇬🇧 Ingliz tili</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Tavsif</label>
-                        <textarea name="description" placeholder="Video haqida qisqacha..."></textarea>
-                    </div>
-
-                    <div class="row">
                         <div class="form-group">
-                            <label>Yosh (min)</label>
-                            <input type="number" name="ageMin" min="1" max="18" value="3">
+                            <label>Til</label>
+                            <select name="language">
+                                <option value="uz">🇺🇿 O'zbek tili</option>
+                                <option value="ru">🇷🇺 Rus tili</option>
+                                <option value="en">🇬🇧 Ingliz tili</option>
+                            </select>
                         </div>
-                        <div class="form-group">
-                            <label>Yosh (max)</label>
-                            <input type="number" name="ageMax" min="1" max="18" value="12">
-                        </div>
-                    </div>
 
-                    <div class="form-group">
-                        <label>Bunny.net Video ID</label>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <input type="text" name="videoId" id="videoIdInput"
-                                placeholder="Masalan: 9acac5a0-4742-4f6e-..." style="flex: 1;">
-                            <button type="button" class="btn"
-                                style="background: var(--success); color: white; padding: 0.75rem 1rem;"
-                                onclick="fetchVideoInfo()">🔍 Olish</button>
+                        <div class="row">
+                            <div class="form-group">
+                                <label>Yosh (min)</label>
+                                <input type="number" name="ageMin" min="1" max="18" value="3">
+                            </div>
+                            <div class="form-group">
+                                <label>Yosh (max)</label>
+                                <input type="number" name="ageMax" min="1" max="18" value="12">
+                            </div>
                         </div>
-                        <small id="videoStatus" style="color: var(--text-muted); font-size: 0.75rem;"></small>
-                    </div>
 
-                    <div class="row">
                         <div class="form-group">
-                            <label>Davomiyligi (sekund)</label>
-                            <input type="number" name="duration" min="0" placeholder="300">
+                            <label>Ertak Matni *</label>
+                            <textarea name="storyText" class="story-text-area" required
+                                placeholder="Bir bor ekan, bir yo'q ekan..." id="storyTextArea"></textarea>
+                            <div class="char-count" id="charCount">0 belgi</div>
                         </div>
+
                         <div class="form-group">
-                            <label>Thumbnail URL</label>
+                            <label>Thumbnail URL (ixtiyoriy)</label>
                             <input type="url" name="thumbnail" placeholder="https://...">
                         </div>
-                    </div>
 
-                    <div class="form-group">
-                        <label>Teglar (vergul bilan)</label>
-                        <input type="text" name="tags" placeholder="ta'lim, matematika, bolalar">
-                    </div>
+                        <div class="form-group checkbox-group">
+                            <input type="checkbox" name="isFeatured" id="storyFeatured">
+                            <label for="storyFeatured" style="margin: 0;">⭐ Tavsiya etilganlarda ko'rsatish</label>
+                        </div>
 
-                    <div class="form-group checkbox-group">
-                        <input type="checkbox" name="isFeatured" id="isFeatured">
-                        <label for="isFeatured" style="margin: 0;">⭐ Tavsiya etilganlarda ko'rsatish</label>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary">💾 Saqlash</button>
-                </form>
-            </div>
-
-            <!-- List -->
-            <div class="card">
-                <h2>📋 Mavjud Kontentlar</h2>
-                <div class="stats">
-                    <div class="stat">
-                        <div class="stat-number" id="totalCount">0</div>
-                        <div class="stat-label">Jami</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-number" id="cartoonCount">0</div>
-                        <div class="stat-label">Multfilm</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-number" id="gameCount">0</div>
-                        <div class="stat-label">O'yin</div>
-                    </div>
+                        <button type="submit" class="btn btn-orange">📖 Ertakni Saqlash</button>
+                    </form>
                 </div>
-                <div class="content-list" id="contentList">
-                    <div class="empty">Yuklanmoqda...</div>
+
+                <!-- Ertak List -->
+                <div class="card">
+                    <h2>📚 Mavjud Ertaklar</h2>
+                    <div class="stats">
+                        <div class="stat">
+                            <div class="stat-number orange" id="storyTotalCount">0</div>
+                            <div class="stat-label">Jami Ertaklar</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number orange" id="ertakCount">0</div>
+                            <div class="stat-label">Ertak</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number orange" id="masalCount">0</div>
+                            <div class="stat-label">Masal</div>
+                        </div>
+                    </div>
+                    <div class="content-list" id="storyList">
+                        <div class="empty">Yuklanmoqda...</div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        const form = document.getElementById('uploadForm');
-        const contentList = document.getElementById('contentList');
+        // ===== TAB SWITCHING =====
+        function switchTab(tab) {
+            const multfilmTab = document.getElementById('multfilmTab');
+            const ertakTab = document.getElementById('ertakTab');
+            const tabMultfilm = document.getElementById('tabMultfilm');
+            const tabErtak = document.getElementById('tabErtak');
 
-        // Toast notification
+            tabMultfilm.className = 'tab-btn';
+            tabErtak.className = 'tab-btn';
+            multfilmTab.classList.remove('active');
+            ertakTab.classList.remove('active');
+
+            if (tab === 'multfilm') {
+                tabMultfilm.classList.add('active-multfilm');
+                multfilmTab.classList.add('active');
+            } else {
+                tabErtak.classList.add('active-ertak');
+                ertakTab.classList.add('active');
+                loadStories();
+            }
+        }
+
+        // ===== TOAST =====
         function showToast(message, type = 'success') {
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
@@ -405,7 +653,12 @@
             setTimeout(() => toast.remove(), 3000);
         }
 
-        // Kontentlarni yuklash
+        // ===========================
+        // MULTFILM (Content) Functions
+        // ===========================
+        const form = document.getElementById('uploadForm');
+        const contentList = document.getElementById('contentList');
+
         async function loadContents() {
             try {
                 const res = await fetch('/api/contents');
@@ -442,7 +695,6 @@
             }
         }
 
-        // Yangi kontent qo'shish
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(form);
@@ -470,7 +722,6 @@
             }
         });
 
-        // Kontentni o'chirish
         async function deleteContent(id) {
             if (!confirm('Rostdan o\'chirmoqchimisiz?')) return;
 
@@ -486,9 +737,6 @@
                 showToast('❌ Xato: ' + error.message, 'error');
             }
         }
-
-        // Sahifa yuklanganda
-        loadContents();
 
         // Bunny.net dan video ma'lumotlarini olish
         async function fetchVideoInfo() {
@@ -508,12 +756,10 @@
                 const data = await res.json();
 
                 if (data.success) {
-                    // Maydonlarni to'ldirish
-                    document.querySelector('input[name="duration"]').value = data.video.duration || '';
-                    document.querySelector('input[name="thumbnail"]').value = data.video.thumbnail || '';
+                    document.querySelector('#uploadForm input[name="duration"]').value = data.video.duration || '';
+                    document.querySelector('#uploadForm input[name="thumbnail"]').value = data.video.thumbnail || '';
 
-                    // Agar title bo'sh bo'lsa, Bunny'dagi nomini qo'yish
-                    const titleInput = document.querySelector('input[name="title"]');
+                    const titleInput = document.querySelector('#uploadForm input[name="title"]');
                     if (!titleInput.value && data.video.title) {
                         titleInput.value = data.video.title;
                     }
@@ -532,6 +778,110 @@
                 showToast('❌ Xato: ' + error.message, 'error');
             }
         }
+
+        // ===========================
+        // ERTAK (Story) Functions
+        // ===========================
+        const storyForm = document.getElementById('storyForm');
+        const storyList = document.getElementById('storyList');
+        const storyTextArea = document.getElementById('storyTextArea');
+        const charCount = document.getElementById('charCount');
+
+        // Character counter
+        storyTextArea.addEventListener('input', () => {
+            const len = storyTextArea.value.length;
+            charCount.textContent = `${len} belgi`;
+        });
+
+        const typeLabels = {
+            ertak: '📖 Ertak',
+            masal: '🦊 Masal',
+            hikoya: '📝 Hikoya',
+            "she'r": '🎵 She\'r'
+        };
+
+        async function loadStories() {
+            try {
+                const res = await fetch('/api/stories');
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('storyTotalCount').textContent = data.count;
+                    document.getElementById('ertakCount').textContent = data.stories.filter(s => s.type === 'ertak').length;
+                    document.getElementById('masalCount').textContent = data.stories.filter(s => s.type === 'masal').length;
+
+                    if (data.stories.length === 0) {
+                        storyList.innerHTML = '<div class="empty">Hali ertak yo\'q. Yuqoridagi formadan qo\'shing!</div>';
+                        return;
+                    }
+
+                    storyList.innerHTML = data.stories.map(s => `
+                        <div class="content-item">
+                            <div class="content-info">
+                                <h3>${s.title}</h3>
+                                <div class="content-meta">
+                                    <span class="badge ${s.type}">${typeLabels[s.type] || s.type}</span>
+                                    <span>🌐 ${s.language === 'uz' ? "O'zbek" : s.language === 'ru' ? 'Rus' : 'Ingliz'}</span>
+                                    <span>👶 ${s.ageRange?.min || 3}-${s.ageRange?.max || 12} yosh</span>
+                                    <span>📝 ${s.storyText ? s.storyText.length + ' belgi' : '-'}</span>
+                                </div>
+                                <div class="story-preview">${s.storyText ? s.storyText.substring(0, 100) + '...' : ''}</div>
+                            </div>
+                            <button class="btn btn-danger" onclick="deleteStory('${s._id}')">🗑️</button>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                storyList.innerHTML = '<div class="empty">Xato: ' + error.message + '</div>';
+            }
+        }
+
+        storyForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(storyForm);
+            const data = Object.fromEntries(formData);
+            data.isFeatured = storyForm.querySelector('#storyFeatured').checked;
+
+            try {
+                const res = await fetch('/api/stories', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await res.json();
+
+                if (result.success) {
+                    showToast('📖 Ertak qo\'shildi!');
+                    storyForm.reset();
+                    charCount.textContent = '0 belgi';
+                    loadStories();
+                } else {
+                    showToast('❌ ' + result.message, 'error');
+                }
+            } catch (error) {
+                showToast('❌ Xato: ' + error.message, 'error');
+            }
+        });
+
+        async function deleteStory(id) {
+            if (!confirm('Rostdan o\'chirmoqchimisiz?')) return;
+
+            try {
+                const res = await fetch(`/api/stories/${id}`, { method: 'DELETE' });
+                const result = await res.json();
+
+                if (result.success) {
+                    showToast('🗑️ O\'chirildi!');
+                    loadStories();
+                }
+            } catch (error) {
+                showToast('❌ Xato: ' + error.message, 'error');
+            }
+        }
+
+        // ===== INIT =====
+        loadContents();
     </script>
 </body>
 

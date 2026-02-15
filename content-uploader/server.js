@@ -16,7 +16,7 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE']
 }));
 
-// MongoDB Content Schema
+// MongoDB Content Schema (Multfilm/Video)
 const contentSchema = new mongoose.Schema({
     title: { type: String, required: true, trim: true, maxlength: 100 },
     type: { type: String, enum: ['cartoon', 'game', 'story', 'quest'], required: true },
@@ -40,18 +40,41 @@ const contentSchema = new mongoose.Schema({
 
 const Content = mongoose.model('Content', contentSchema);
 
+<<<<<<< Updated upstream
 // Error handler middleware
 function asyncHandler(fn) {
     return (req, res, next) => {
         Promise.resolve(fn(req, res, next)).catch(next);
     };
 }
+=======
+// MongoDB Story Schema (Ertak)
+const storySchema = new mongoose.Schema({
+    title: { type: String, required: true, trim: true, maxlength: 200 },
+    type: { type: String, enum: ['ertak', 'masal', 'hikoya', 'she\'r'], default: 'ertak' },
+    storyText: { type: String, required: true },
+    ageRange: {
+        min: { type: Number, default: 3, min: 1 },
+        max: { type: Number, default: 12, max: 18 }
+    },
+    thumbnail: String,
+    language: { type: String, default: 'uz' },
+    order: { type: Number, default: 0 },
+    isFeatured: { type: Boolean, default: false },
+    isActive: { type: Boolean, default: true },
+    views: { type: Number, default: 0 },
+    likes: { type: Number, default: 0 }
+}, { timestamps: true });
+
+const Story = mongoose.model('Story', storySchema);
+>>>>>>> Stashed changes
 
 // Routes
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+<<<<<<< Updated upstream
 // GET - Barcha kontentlarni olish (filter bilan)
 app.get('/api/contents', asyncHandler(async (req, res) => {
     const { type, category, isFeatured, isActive, page = 1, limit = 50 } = req.query;
@@ -84,6 +107,19 @@ app.get('/api/contents/:id', asyncHandler(async (req, res) => {
     const content = await Content.findById(req.params.id);
     if (!content) {
         return res.status(404).json({ success: false, message: 'Kontent topilmadi' });
+=======
+// ==========================================
+// CONTENT (Multfilm/Video) API
+// ==========================================
+
+// GET - Barcha kontentlarni olish
+app.get('/api/contents', async (req, res) => {
+    try {
+        const contents = await Content.find().sort({ createdAt: -1 });
+        res.json({ success: true, contents, count: contents.length });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+>>>>>>> Stashed changes
     }
     res.json({ success: true, content });
 }));
@@ -287,6 +323,51 @@ app.use((err, req, res, _next) => {
     }
 
     res.status(500).json({ success: false, message: 'Ichki server xatosi' });
+});
+
+// ==========================================
+// STORY (Ertak) API
+// ==========================================
+
+// GET - Barcha ertaklarni olish
+app.get('/api/stories', async (req, res) => {
+    try {
+        const stories = await Story.find().sort({ createdAt: -1 });
+        res.json({ success: true, stories, count: stories.length });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// POST - Yangi ertak qo'shish
+app.post('/api/stories', async (req, res) => {
+    try {
+        const { title, type, storyText, ageMin, ageMax, thumbnail, isFeatured, language } = req.body;
+
+        const story = await Story.create({
+            title,
+            type: type || 'ertak',
+            storyText,
+            ageRange: { min: parseInt(ageMin) || 3, max: parseInt(ageMax) || 12 },
+            thumbnail,
+            isFeatured: isFeatured === 'true' || isFeatured === true,
+            language: language || 'uz'
+        });
+
+        res.json({ success: true, message: 'Ertak muvaffaqiyatli qo\'shildi!', story });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+});
+
+// DELETE - Ertakni o'chirish
+app.delete('/api/stories/:id', async (req, res) => {
+    try {
+        await Story.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: 'O\'chirildi!' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
 });
 
 // MongoDB ulanish va server ishga tushirish

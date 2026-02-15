@@ -47,4 +47,11 @@ class AppConfig {
     if (isProduction) return 'https://$apiHost/api/v1';
     return 'http://$apiHost:$_apiPort/api/v1';
   }
+
+  /// Content Uploader URL (ertak, multfilm yuklash uchun)
+  static String get contentUploaderUrl {
+    if (isProduction) return 'https://qadamcha-content-uploader.up.railway.app';
+    // Development da Android emulator 10.0.2.2, iOS localhost
+    return 'http://${Platform.isAndroid ? '10.0.2.2' : 'localhost'}:4000';
+  }
 }

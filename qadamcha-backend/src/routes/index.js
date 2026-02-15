@@ -20,6 +20,11 @@ module.exports = async function (fastify) {
     // AI Routes
     fastify.register(require('./ai.routes'), { prefix: '/ai' });
 
+<<<<<<< Updated upstream
     // Payme Subscribe API (karta + to'lov endpointlar)
     fastify.register(require('./payme.routes'), { prefix: '/payme' });
+=======
+    // Story Routes
+    fastify.register(require('./story.routes'), { prefix: '/stories' });
+>>>>>>> Stashed changes
 };

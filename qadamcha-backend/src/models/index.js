@@ -9,5 +9,9 @@ module.exports = {
     Content: require('./Content'),
     Activity: require('./Activity'),
     ContentLike: require('./ContentLike'),
+<<<<<<< Updated upstream
     PaymeTransaction: require('./PaymeTransaction'),
+=======
+    Story: require('./Story'),
+>>>>>>> Stashed changes
 };
