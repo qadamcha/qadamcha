@@ -78,24 +78,12 @@ module.exports = {
         });
 
         const orderId = subscription._id.toString();
-        const amountTiyin = planData.price * 100; // Payme tiyin da kutadi
 
-        // Payme checkout URL generatsiya
-        const params = Buffer.from(JSON.stringify({
-            m: config.PAYME_MERCHANT_ID,
-            ac: { order_id: orderId },
-            a: amountTiyin,
-            l: 'uz',
-            ct: 600000, // 10 min timeout
-        })).toString('base64');
-
-        const checkoutUrl = `${config.PAYME_CHECKOUT_URL}/${params}`;
-
+        // Subscribe API: to'lov /payme/pay endpoint orqali amalga oshiriladi
         return {
             success: true,
             orderId,
             amount: planData.price,
-            checkoutUrl,
             message: 'To\'lov kutilmoqda'
         };
     },

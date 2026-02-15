@@ -17,6 +17,11 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     on<CheckOrderEvent>(_onCheckOrder);
     on<CancelSubscriptionEvent>(_onCancelSubscription);
     on<ResetPaymentEvent>(_onResetPayment);
+    // Subscribe API events
+    on<CreateCardTokenEvent>(_onCreateCardToken);
+    on<GetVerifyCodeEvent>(_onGetVerifyCode);
+    on<VerifyCardEvent>(_onVerifyCard);
+    on<PayWithTokenEvent>(_onPayWithToken);
   }
 
   Future<void> _onLoadSubscription(
@@ -123,6 +128,110 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     emit(state.copyWith(
       paymentStatus: PaymentStatus.initial,
       clearPaymentOrder: true,
+      clearCardToken: true,
+      clearVerifyCodeResult: true,
+      clearPaymentResult: true,
     ));
+  }
+
+  // ============= Subscribe API Handlers =============
+
+  Future<void> _onCreateCardToken(
+    CreateCardTokenEvent event,
+    Emitter<SubscriptionState> emit,
+  ) async {
+    emit(state.copyWith(paymentStatus: PaymentStatus.creatingCardToken));
+
+    final result = await repository.createCardToken(
+      cardNumber: event.cardNumber,
+      expire: event.expire,
+    );
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        paymentStatus: PaymentStatus.failed,
+        errorMessage: failure.message,
+      )),
+      (cardToken) => emit(state.copyWith(
+        paymentStatus: PaymentStatus.cardTokenCreated,
+        cardToken: cardToken,
+      )),
+    );
+  }
+
+  Future<void> _onGetVerifyCode(
+    GetVerifyCodeEvent event,
+    Emitter<SubscriptionState> emit,
+  ) async {
+    emit(state.copyWith(paymentStatus: PaymentStatus.sendingVerifyCode));
+
+    final result = await repository.getVerifyCode(event.token);
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        paymentStatus: PaymentStatus.failed,
+        errorMessage: failure.message,
+      )),
+      (verifyResult) => emit(state.copyWith(
+        paymentStatus: PaymentStatus.verifyCodeSent,
+        verifyCodeResult: verifyResult,
+      )),
+    );
+  }
+
+  Future<void> _onVerifyCard(
+    VerifyCardEvent event,
+    Emitter<SubscriptionState> emit,
+  ) async {
+    emit(state.copyWith(paymentStatus: PaymentStatus.verifyingCard));
+
+    final result = await repository.verifyCard(
+      token: event.token,
+      code: event.code,
+    );
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        paymentStatus: PaymentStatus.failed,
+        errorMessage: failure.message,
+      )),
+      (cardToken) => emit(state.copyWith(
+        paymentStatus: PaymentStatus.cardVerified,
+        cardToken: cardToken,
+      )),
+    );
+  }
+
+  Future<void> _onPayWithToken(
+    PayWithTokenEvent event,
+    Emitter<SubscriptionState> emit,
+  ) async {
+    emit(state.copyWith(paymentStatus: PaymentStatus.paying));
+
+    final result = await repository.payWithToken(
+      orderId: event.orderId,
+      token: event.token,
+    );
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        paymentStatus: PaymentStatus.failed,
+        errorMessage: failure.message,
+      )),
+      (paymentResult) {
+        if (paymentResult.success) {
+          emit(state.copyWith(
+            paymentStatus: PaymentStatus.success,
+            paymentResult: paymentResult,
+            currentSubscription: paymentResult.subscription,
+          ));
+        } else {
+          emit(state.copyWith(
+            paymentStatus: PaymentStatus.failed,
+            errorMessage: paymentResult.message ?? 'To\'lov amalga oshmadi',
+          ));
+        }
+      },
+    );
   }
 }

@@ -1,7 +1,22 @@
 part of 'subscription_bloc.dart';
 
 enum SubscriptionLoadStatus { initial, loading, loaded, error }
-enum PaymentStatus { initial, creatingOrder, orderCreated, checking, success, failed }
+
+enum PaymentStatus {
+  initial,
+  creatingOrder,
+  orderCreated,
+  creatingCardToken,
+  cardTokenCreated,
+  sendingVerifyCode,
+  verifyCodeSent,
+  verifyingCard,
+  cardVerified,
+  paying,
+  checking,
+  success,
+  failed,
+}
 
 class SubscriptionState extends Equatable {
   final SubscriptionLoadStatus status;
@@ -10,6 +25,9 @@ class SubscriptionState extends Equatable {
   final SubscriptionPlan? selectedPlan;
   final PaymentStatus paymentStatus;
   final PaymentOrder? paymentOrder;
+  final CardToken? cardToken;
+  final VerifyCodeResult? verifyCodeResult;
+  final PaymentResult? paymentResult;
   final String? errorMessage;
 
   const SubscriptionState({
@@ -19,6 +37,9 @@ class SubscriptionState extends Equatable {
     this.selectedPlan,
     this.paymentStatus = PaymentStatus.initial,
     this.paymentOrder,
+    this.cardToken,
+    this.verifyCodeResult,
+    this.paymentResult,
     this.errorMessage,
   });
 
@@ -31,6 +52,12 @@ class SubscriptionState extends Equatable {
     PaymentStatus? paymentStatus,
     PaymentOrder? paymentOrder,
     bool clearPaymentOrder = false,
+    CardToken? cardToken,
+    bool clearCardToken = false,
+    VerifyCodeResult? verifyCodeResult,
+    bool clearVerifyCodeResult = false,
+    PaymentResult? paymentResult,
+    bool clearPaymentResult = false,
     String? errorMessage,
   }) {
     return SubscriptionState(
@@ -40,6 +67,9 @@ class SubscriptionState extends Equatable {
       selectedPlan: selectedPlan ?? this.selectedPlan,
       paymentStatus: paymentStatus ?? this.paymentStatus,
       paymentOrder: clearPaymentOrder ? null : (paymentOrder ?? this.paymentOrder),
+      cardToken: clearCardToken ? null : (cardToken ?? this.cardToken),
+      verifyCodeResult: clearVerifyCodeResult ? null : (verifyCodeResult ?? this.verifyCodeResult),
+      paymentResult: clearPaymentResult ? null : (paymentResult ?? this.paymentResult),
       errorMessage: errorMessage,
     );
   }
@@ -56,6 +86,9 @@ class SubscriptionState extends Equatable {
     selectedPlan,
     paymentStatus,
     paymentOrder,
+    cardToken,
+    verifyCodeResult,
+    paymentResult,
     errorMessage,
   ];
 }

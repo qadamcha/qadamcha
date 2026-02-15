@@ -59,7 +59,6 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
       final data = response.data;
       return Right(PaymentOrder(
         orderId: data['orderId'] ?? '',
-        checkoutUrl: data['checkoutUrl'] ?? '',
         amount: data['amount'] ?? 0,
       ));
     } on ServerException catch (e) {
@@ -73,7 +72,7 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   Future<Either<Failure, OrderStatus>> checkOrder(String orderId) async {
     try {
       final response =
-          await apiClient.dio.get('/subscription/check/$orderId');
+          await apiClient.dio.get('/payme/status/$orderId');
       final data = response.data;
       Subscription? subscription;
       if (data['subscription'] != null) {
@@ -101,6 +100,109 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
       return Left(ServerFailure(e.message));
     } catch (e) {
       return Left(ServerFailure('Obunani bekor qilishda xatolik: $e'));
+    }
+  }
+
+  // ============= Subscribe API Methods =============
+
+  @override
+  Future<Either<Failure, CardToken>> createCardToken({
+    required String cardNumber,
+    required String expire,
+  }) async {
+    try {
+      final response = await apiClient.dio.post('/payme/card/create', data: {
+        'cardNumber': cardNumber,
+        'expire': expire,
+      });
+      final data = response.data;
+      return Right(CardToken(
+        token: data['token'] ?? '',
+        maskedNumber: data['card']?['number'] ?? '',
+        expire: data['card']?['expire'] ?? '',
+        type: data['card']?['type'] ?? 'unknown',
+        recurrent: data['card']?['recurrent'] ?? false,
+      ));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Karta tokenini yaratishda xatolik: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, VerifyCodeResult>> getVerifyCode(String token) async {
+    try {
+      final response = await apiClient.dio.post('/payme/card/verify-code', data: {
+        'token': token,
+      });
+      final data = response.data;
+      return Right(VerifyCodeResult(
+        sent: data['sent'] ?? false,
+        phone: data['phone'] ?? '',
+        wait: data['wait'] ?? 60,
+      ));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('SMS kod yuborishda xatolik: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, CardToken>> verifyCard({
+    required String token,
+    required String code,
+  }) async {
+    try {
+      final response = await apiClient.dio.post('/payme/card/verify', data: {
+        'token': token,
+        'code': code,
+      });
+      final data = response.data;
+      final card = data['card'] ?? {};
+      return Right(CardToken(
+        token: card['token'] ?? token,
+        maskedNumber: card['number'] ?? '',
+        expire: card['expire'] ?? '',
+        type: card['type'] ?? 'unknown',
+        recurrent: card['recurrent'] ?? false,
+      ));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Kartani tasdiqlashda xatolik: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, PaymentResult>> payWithToken({
+    required String orderId,
+    required String token,
+  }) async {
+    try {
+      final response = await apiClient.dio.post('/payme/pay', data: {
+        'orderId': orderId,
+        'token': token,
+      });
+      final data = response.data;
+      Subscription? subscription;
+      if (data['subscription'] != null) {
+        subscription =
+            SubscriptionModel.fromJson(data['subscription']).toEntity();
+      }
+      return Right(PaymentResult(
+        success: data['success'] == true,
+        transactionId: data['transaction']?['id'],
+        receiptId: data['transaction']?['receiptId'],
+        state: data['transaction']?['state'],
+        message: data['message'],
+        subscription: subscription,
+      ));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('To\'lovda xatolik: $e'));
     }
   }
 }

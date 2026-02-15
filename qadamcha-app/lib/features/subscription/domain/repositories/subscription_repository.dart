@@ -7,7 +7,7 @@ abstract class SubscriptionRepository {
   Future<Either<Failure, List<Subscription>>> getSubscriptionHistory();
   Future<Either<Failure, List<SubscriptionPlan>>> getAvailablePlans();
 
-  /// Buyurtma yaratish — checkout URL qaytaradi
+  /// Buyurtma yaratish — orderId va amount qaytaradi
   Future<Either<Failure, PaymentOrder>> createOrder({
     required SubscriptionPlan plan,
   });
@@ -16,16 +16,37 @@ abstract class SubscriptionRepository {
   Future<Either<Failure, OrderStatus>> checkOrder(String orderId);
 
   Future<Either<Failure, void>> cancelSubscription();
+
+  // ============= Subscribe API Methods =============
+
+  /// Karta tokenini yaratish
+  Future<Either<Failure, CardToken>> createCardToken({
+    required String cardNumber,
+    required String expire,
+  });
+
+  /// SMS tasdiqlash kodini so'rash
+  Future<Either<Failure, VerifyCodeResult>> getVerifyCode(String token);
+
+  /// Kartani SMS kod bilan tasdiqlash
+  Future<Either<Failure, CardToken>> verifyCard({
+    required String token,
+    required String code,
+  });
+
+  /// To'lov qilish (karta tokeni bilan)
+  Future<Either<Failure, PaymentResult>> payWithToken({
+    required String orderId,
+    required String token,
+  });
 }
 
 class PaymentOrder {
   final String orderId;
-  final String checkoutUrl;
   final int amount;
 
   const PaymentOrder({
     required this.orderId,
-    required this.checkoutUrl,
     required this.amount,
   });
 }

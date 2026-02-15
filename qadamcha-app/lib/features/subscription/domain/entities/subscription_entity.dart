@@ -144,3 +144,81 @@ class PlanFeatures {
     ],
   };
 }
+
+// ============= Subscribe API Entity Classes =============
+
+/// Karta token ma'lumotlari
+class CardToken extends Equatable {
+  final String token;
+  final String maskedNumber; // 860006******6311
+  final String expire;
+  final String type; // uzcard, humo
+  final bool recurrent;
+
+  const CardToken({
+    required this.token,
+    required this.maskedNumber,
+    required this.expire,
+    required this.type,
+    this.recurrent = false,
+  });
+
+  factory CardToken.fromJson(Map<String, dynamic> json) {
+    return CardToken(
+      token: json['token'] ?? '',
+      maskedNumber: json['number'] ?? json['maskedNumber'] ?? '',
+      expire: json['expire'] ?? '',
+      type: json['type'] ?? 'unknown',
+      recurrent: json['recurrent'] ?? false,
+    );
+  }
+
+  @override
+  List<Object?> get props => [token, maskedNumber];
+}
+
+/// SMS tasdiqlash kodi natijasi
+class VerifyCodeResult extends Equatable {
+  final bool sent;
+  final String phone; // Maskirovka qilingan: 99890*****12
+  final int wait; // Qayta yuborish vaqti (soniya)
+
+  const VerifyCodeResult({
+    required this.sent,
+    required this.phone,
+    required this.wait,
+  });
+
+  factory VerifyCodeResult.fromJson(Map<String, dynamic> json) {
+    return VerifyCodeResult(
+      sent: json['sent'] ?? false,
+      phone: json['phone'] ?? '',
+      wait: json['wait'] ?? 60,
+    );
+  }
+
+  @override
+  List<Object?> get props => [sent, phone, wait];
+}
+
+/// To'lov natijasi
+class PaymentResult extends Equatable {
+  final bool success;
+  final String? transactionId;
+  final String? receiptId;
+  final int? state;
+  final String? message;
+  final Subscription? subscription;
+
+  const PaymentResult({
+    required this.success,
+    this.transactionId,
+    this.receiptId,
+    this.state,
+    this.message,
+    this.subscription,
+  });
+
+  @override
+  List<Object?> get props => [success, transactionId, receiptId, state];
+}

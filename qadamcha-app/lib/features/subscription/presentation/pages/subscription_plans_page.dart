@@ -37,22 +37,16 @@ class _SubscriptionPlansPageState extends State<SubscriptionPlansPage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => PaymentPage(
-                  plan: plan,
-                  order: order,
-                  checkOrderStatus: () async {
-                    final result =
-                        await bloc.repository.checkOrder(order.orderId);
-                    return result.fold(
-                      (failure) => const OrderStatus(
-                          status: 'error', paid: false),
-                      (status) => status,
-                    );
-                  },
+                builder: (_) => BlocProvider.value(
+                  value: bloc,
+                  child: PaymentPage(
+                    plan: plan,
+                    orderId: order.orderId,
+                  ),
                 ),
               ),
             ).then((_) {
-              // WebView yopilganda obuna holatini yangilash
+              // To'lov sahifasi yopilganda obuna holatini yangilash
               bloc.add(ResetPaymentEvent());
               bloc.add(LoadSubscriptionEvent());
             });

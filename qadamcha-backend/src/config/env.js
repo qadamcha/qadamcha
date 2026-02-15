@@ -76,7 +76,7 @@ module.exports = {
     // Payme
     PAYME_MERCHANT_ID: process.env.PAYME_MERCHANT_ID,
     PAYME_KEY: process.env.PAYME_KEY,
-    PAYME_CHECKOUT_URL: process.env.PAYME_CHECKOUT_URL || 'https://test.paycom.uz',
+    PAYME_API_URL: process.env.PAYME_API_URL || 'https://checkout.test.paycom.uz/api',
 
     // Gemini AI
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,

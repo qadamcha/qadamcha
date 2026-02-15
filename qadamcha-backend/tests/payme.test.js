@@ -1,628 +1,458 @@
 /**
- * Payme Controller Tests
- * Payme to'lov tizimi integratsiyasi uchun testlar
+ * Payme Subscribe API — Controller Integration Tests
+ *
+ * Endpointlar uchun integration testlar (payme.service mock bilan):
+ * - Authentication (JWT)
+ * - Input validation (TypeBox)
+ * - Card CRUD (create, verify-code, verify, check, remove)
+ * - Payment (pay, cancel, status)
+ * - Ownership checks
  */
 
-const { buildTestServer, closeTestServer } = require('./helpers/testServer');
+const { buildTestServer, closeTestServer, createTestToken } = require('./helpers/testServer');
 
-// Mock models
-jest.mock('../src/models', () => ({
-    PaymeTransaction: {
-        findOne: jest.fn(),
-        create: jest.fn(),
-        find: jest.fn()
-    },
-    Subscription: {
-        findById: jest.fn()
-    }
+// ============= MOCKS =============
+
+jest.mock('../src/services/payme.service', () => ({
+    createCardToken: jest.fn(),
+    getVerifyCode: jest.fn(),
+    verifyCard: jest.fn(),
+    checkCard: jest.fn(),
+    removeCard: jest.fn(),
+    createReceipt: jest.fn(),
+    payReceipt: jest.fn(),
+    cancelReceipt: jest.fn(),
+    checkReceipt: jest.fn(),
 }));
 
-// Mock config — PAYME_KEY nomi controller da ishlatiladi
+jest.mock('../src/models', () => {
+    return {
+        PaymeTransaction: { create: jest.fn(), findOne: jest.fn() },
+        Subscription: { findById: jest.fn() },
+        User: jest.fn(), Child: jest.fn(), Device: jest.fn(),
+        Content: jest.fn(), Activity: jest.fn(), ContentLike: jest.fn(),
+    };
+});
+
 jest.mock('../src/config/env', () => ({
-    PAYME_KEY: 'test-payme-key',
+    PAYME_MERCHANT_ID: 'test-merchant-id',
+    PAYME_KEY: 'test-key',
+    PAYME_API_URL: 'https://checkout.test.paycom.uz/api',
     PLANS: {
-        monthly: { name: 'Oylik', price: 29900, days: 30 },
-        yearly: { name: 'Yillik', price: 214900, days: 365 },
-        lifetime: { name: 'Umrbod', price: 499900, days: 36500 }
+        monthly: { price: 49000, days: 30, name: 'Oylik' },
+        yearly: { price: 399000, days: 365, name: 'Yillik' },
+        lifetime: { price: 990000, days: 36500, name: 'Umrbod' },
     },
-    NODE_ENV: 'test'
 }));
 
+const paymeService = require('../src/services/payme.service');
 const { PaymeTransaction, Subscription } = require('../src/models');
-const paymeController = require('../src/controllers/payme.controller');
 
-// Payme Basic Auth header yaratish
-function createPaymeAuth(login = 'Paycom', key = 'test-payme-key') {
-    const encoded = Buffer.from(`${login}:${key}`).toString('base64');
-    return `Basic ${encoded}`;
-}
+let app;
+let authToken;
+const TEST_USER_ID = '507f1f77bcf86cd799439011';
+const TEST_ORDER_ID = '507f1f77bcf86cd799439022';
 
-describe('Payme Controller', () => {
-    let app;
+beforeAll(async () => {
+    app = await buildTestServer();
+    await app.register(require('../src/routes/payme.routes'), { prefix: '/payme' });
+    await app.ready();
+    authToken = createTestToken(app, { userId: TEST_USER_ID });
+});
 
-    beforeAll(async () => {
-        app = await buildTestServer();
+afterAll(async () => {
+    await closeTestServer(app);
+});
 
-        // Register Payme route
-        app.post('/payme', async (request, reply) => paymeController.handle(request, reply));
+beforeEach(() => {
+    jest.clearAllMocks();
+});
 
-        await app.ready();
+// ============= AUTHENTICATION =============
+
+describe('Autentifikatsiya', () => {
+    test('JWT tokensiz — 401', async () => {
+        const res = await app.inject({
+            method: 'POST', url: '/payme/card/create',
+            payload: { cardNumber: '8600069195406311', expire: '0399' },
+        });
+        expect(res.statusCode).toBe(401);
     });
 
-    afterAll(async () => {
-        await closeTestServer(app);
+    test('Noto\'g\'ri JWT — 401', async () => {
+        const res = await app.inject({
+            method: 'POST', url: '/payme/card/create',
+            payload: { cardNumber: '8600069195406311', expire: '0399' },
+            headers: { Authorization: 'Bearer invalid' },
+        });
+        expect(res.statusCode).toBe(401);
     });
 
-    beforeEach(() => {
-        jest.clearAllMocks();
+    test('Barcha endpointlar JWT talab qiladi', async () => {
+        const endpoints = [
+            { method: 'POST', url: '/payme/card/create', payload: { cardNumber: '8600069195406311', expire: '0399' } },
+            { method: 'POST', url: '/payme/card/verify-code', payload: { token: 'x' } },
+            { method: 'POST', url: '/payme/card/verify', payload: { token: 'x', code: '666666' } },
+            { method: 'POST', url: '/payme/card/check', payload: { token: 'x' } },
+            { method: 'DELETE', url: '/payme/card/test' },
+            { method: 'POST', url: '/payme/pay', payload: { orderId: 'x', token: 'x' } },
+            { method: 'POST', url: '/payme/cancel', payload: { orderId: 'x' } },
+            { method: 'GET', url: '/payme/status/test' },
+        ];
+        for (const ep of endpoints) {
+            const res = await app.inject(ep);
+            expect(res.statusCode).toBe(401);
+        }
+    });
+});
+
+// ============= INPUT VALIDATION =============
+
+describe('Input validatsiyasi', () => {
+    test('Karta raqami qisqa — 400', async () => {
+        const res = await app.inject({
+            method: 'POST', url: '/payme/card/create',
+            payload: { cardNumber: '1234', expire: '0399' },
+            headers: { Authorization: `Bearer ${authToken}` },
+        });
+        expect(res.statusCode).toBe(400);
     });
 
-    // =====================================================
-    // Basic Auth tekshiruvi
-    // =====================================================
-    describe('Authentication', () => {
-        it('should reject requests without auth header', async () => {
-            const response = await app.inject({
-                method: 'POST',
-                url: '/payme',
-                payload: {
-                    method: 'CheckPerformTransaction',
-                    params: {},
-                    id: 1
-                }
-            });
-
-            const data = JSON.parse(response.body);
-            expect(data.error).toBeDefined();
-            expect(data.error.code).toBe(-32504);
+    test('Karta raqami harflar bilan — 400', async () => {
+        const res = await app.inject({
+            method: 'POST', url: '/payme/card/create',
+            payload: { cardNumber: '8600abcd95406311', expire: '0399' },
+            headers: { Authorization: `Bearer ${authToken}` },
         });
-
-        it('should reject requests with wrong credentials', async () => {
-            const response = await app.inject({
-                method: 'POST',
-                url: '/payme',
-                headers: { authorization: createPaymeAuth('Paycom', 'wrong-key') },
-                payload: {
-                    method: 'CheckPerformTransaction',
-                    params: {},
-                    id: 1
-                }
-            });
-
-            const data = JSON.parse(response.body);
-            expect(data.error).toBeDefined();
-            expect(data.error.code).toBe(-32504);
-        });
-
-        it('should accept valid credentials', async () => {
-            Subscription.findById.mockResolvedValue({
-                _id: 'sub123',
-                status: 'pending',
-                price: 29900,
-                plan: 'monthly'
-            });
-
-            const response = await app.inject({
-                method: 'POST',
-                url: '/payme',
-                headers: { authorization: createPaymeAuth() },
-                payload: {
-                    method: 'CheckPerformTransaction',
-                    params: {
-                        amount: 2990000,
-                        account: { order_id: 'sub123' }
-                    },
-                    id: 1
-                }
-            });
-
-            const data = JSON.parse(response.body);
-            expect(data.error).toBeUndefined();
-            expect(data.result).toBeDefined();
-        });
+        expect(res.statusCode).toBe(400);
     });
 
-    // =====================================================
-    // CheckPerformTransaction
-    // =====================================================
-    describe('CheckPerformTransaction', () => {
-        const makeRequest = (params) => ({
-            method: 'POST',
-            url: '/payme',
-            headers: { authorization: createPaymeAuth() },
-            payload: {
-                method: 'CheckPerformTransaction',
-                params,
-                id: 1
-            }
+    test('Expire qisqa — 400', async () => {
+        const res = await app.inject({
+            method: 'POST', url: '/payme/card/create',
+            payload: { cardNumber: '8600069195406311', expire: '03' },
+            headers: { Authorization: `Bearer ${authToken}` },
         });
-
-        it('should return allow:true for valid order', async () => {
-            Subscription.findById.mockResolvedValue({
-                _id: 'sub123',
-                status: 'pending',
-                price: 29900,
-                plan: 'monthly'
-            });
-
-            const response = await app.inject(makeRequest({
-                amount: 2990000,
-                account: { order_id: 'sub123' }
-            }));
-
-            const data = JSON.parse(response.body);
-            expect(data.result).toBeDefined();
-            expect(data.result.allow).toBe(true);
-        });
-
-        it('should return error for non-existent order', async () => {
-            Subscription.findById.mockResolvedValue(null);
-
-            const response = await app.inject(makeRequest({
-                amount: 2990000,
-                account: { order_id: 'nonexistent' }
-            }));
-
-            const data = JSON.parse(response.body);
-            expect(data.error).toBeDefined();
-            expect(data.error.code).toBe(-31050);
-        });
-
-        it('should return error for wrong amount', async () => {
-            Subscription.findById.mockResolvedValue({
-                _id: 'sub123',
-                status: 'pending',
-                price: 29900,
-                plan: 'monthly'
-            });
-
-            const response = await app.inject(makeRequest({
-                amount: 5000000, // Noto'g'ri summa
-                account: { order_id: 'sub123' }
-            }));
-
-            const data = JSON.parse(response.body);
-            expect(data.error).toBeDefined();
-            expect(data.error.code).toBe(-31001);
-        });
-
-        it('should reject non-pending subscription', async () => {
-            Subscription.findById.mockResolvedValue({
-                _id: 'sub123',
-                status: 'active', // Allaqachon faol
-                price: 29900,
-                plan: 'monthly'
-            });
-
-            const response = await app.inject(makeRequest({
-                amount: 2990000,
-                account: { order_id: 'sub123' }
-            }));
-
-            const data = JSON.parse(response.body);
-            expect(data.error).toBeDefined();
-            expect(data.error.code).toBe(-31008);
-        });
+        expect(res.statusCode).toBe(400);
     });
 
-    // =====================================================
-    // CreateTransaction
-    // =====================================================
-    describe('CreateTransaction', () => {
-        const makeRequest = (params) => ({
-            method: 'POST',
-            url: '/payme',
-            headers: { authorization: createPaymeAuth() },
-            payload: {
-                method: 'CreateTransaction',
-                params,
-                id: 2
-            }
+    test('SMS kod 6 dan kam — 400', async () => {
+        const res = await app.inject({
+            method: 'POST', url: '/payme/card/verify',
+            payload: { token: 'test', code: '12' },
+            headers: { Authorization: `Bearer ${authToken}` },
         });
-
-        it('should create new transaction', async () => {
-            PaymeTransaction.findOne
-                .mockResolvedValueOnce(null) // paymeId qidiruv
-                .mockResolvedValueOnce(null); // orderId uchun active tx qidiruv
-
-            Subscription.findById.mockResolvedValue({
-                _id: 'sub123',
-                userId: 'user123',
-                status: 'pending',
-                price: 29900,
-                plan: 'monthly'
-            });
-
-            const now = Date.now();
-            PaymeTransaction.create.mockResolvedValue({
-                _id: { toString: () => 'tx-id-1' },
-                paymeId: 'payme-tx-1',
-                orderId: 'sub123',
-                state: 1,
-                amount: 2990000,
-                createTime: now
-            });
-
-            const response = await app.inject(makeRequest({
-                id: 'payme-tx-1',
-                time: now,
-                amount: 2990000,
-                account: { order_id: 'sub123' }
-            }));
-
-            const data = JSON.parse(response.body);
-            expect(data.result).toBeDefined();
-            expect(data.result.state).toBe(1);
-            expect(data.result.create_time).toBeDefined();
-            expect(data.result.transaction).toBe('tx-id-1');
-        });
-
-        it('should return existing transaction if already created', async () => {
-            const existingTx = {
-                _id: { toString: () => 'tx-id-existing' },
-                paymeId: 'payme-tx-1',
-                orderId: 'sub123',
-                state: 1,
-                amount: 2990000,
-                createTime: Date.now()
-            };
-            PaymeTransaction.findOne.mockResolvedValue(existingTx);
-
-            const response = await app.inject(makeRequest({
-                id: 'payme-tx-1',
-                time: Date.now(),
-                amount: 2990000,
-                account: { order_id: 'sub123' }
-            }));
-
-            const data = JSON.parse(response.body);
-            expect(data.result).toBeDefined();
-            expect(data.result.state).toBe(1);
-            expect(data.result.transaction).toBe('tx-id-existing');
-        });
-
-        it('should timeout expired transaction', async () => {
-            const expiredTx = {
-                _id: { toString: () => 'tx-expired' },
-                paymeId: 'payme-tx-old',
-                orderId: 'sub123',
-                state: 1,
-                amount: 2990000,
-                createTime: Date.now() - 50000000, // 50000 sec ago > 12 hours
-                save: jest.fn().mockResolvedValue(true)
-            };
-            PaymeTransaction.findOne.mockResolvedValue(expiredTx);
-
-            const response = await app.inject(makeRequest({
-                id: 'payme-tx-old',
-                time: Date.now(),
-                amount: 2990000,
-                account: { order_id: 'sub123' }
-            }));
-
-            const data = JSON.parse(response.body);
-            expect(data.error).toBeDefined();
-            expect(data.error.code).toBe(-31008);
-            expect(expiredTx.state).toBe(-1);
-            expect(expiredTx.save).toHaveBeenCalled();
-        });
+        expect(res.statusCode).toBe(400);
     });
 
-    // =====================================================
-    // PerformTransaction
-    // =====================================================
-    describe('PerformTransaction', () => {
-        const makeRequest = (params) => ({
-            method: 'POST',
-            url: '/payme',
-            headers: { authorization: createPaymeAuth() },
-            payload: {
-                method: 'PerformTransaction',
-                params,
-                id: 3
-            }
+    test('SMS kod harflar bilan — 400', async () => {
+        const res = await app.inject({
+            method: 'POST', url: '/payme/card/verify',
+            payload: { token: 'test', code: 'abcdef' },
+            headers: { Authorization: `Bearer ${authToken}` },
         });
-
-        it('should perform transaction and activate subscription', async () => {
-            const mockTx = {
-                _id: { toString: () => 'tx-id-perf' },
-                paymeId: 'payme-tx-1',
-                orderId: 'sub123',
-                state: 1,
-                createTime: Date.now(),
-                performTime: 0,
-                save: jest.fn().mockResolvedValue(true)
-            };
-            PaymeTransaction.findOne.mockResolvedValue(mockTx);
-
-            const mockSub = {
-                _id: 'sub123',
-                status: 'pending',
-                plan: 'monthly',
-                endDate: new Date(),
-                save: jest.fn().mockResolvedValue(true)
-            };
-            Subscription.findById.mockResolvedValue(mockSub);
-
-            const response = await app.inject(makeRequest({
-                id: 'payme-tx-1'
-            }));
-
-            const data = JSON.parse(response.body);
-            expect(data.result).toBeDefined();
-            expect(data.result.state).toBe(2);
-            expect(data.result.perform_time).toBeGreaterThan(0);
-            expect(mockTx.state).toBe(2);
-            expect(mockTx.save).toHaveBeenCalled();
-            expect(mockSub.status).toBe('active');
-        });
-
-        it('should return result for already performed transaction', async () => {
-            PaymeTransaction.findOne.mockResolvedValue({
-                _id: { toString: () => 'tx-id-done' },
-                paymeId: 'payme-tx-1',
-                state: 2,
-                performTime: Date.now()
-            });
-
-            const response = await app.inject(makeRequest({
-                id: 'payme-tx-1'
-            }));
-
-            const data = JSON.parse(response.body);
-            expect(data.result).toBeDefined();
-            expect(data.result.state).toBe(2);
-        });
-
-        it('should return error for not found transaction', async () => {
-            PaymeTransaction.findOne.mockResolvedValue(null);
-
-            const response = await app.inject(makeRequest({
-                id: 'nonexistent'
-            }));
-
-            const data = JSON.parse(response.body);
-            expect(data.error).toBeDefined();
-            expect(data.error.code).toBe(-31003);
-        });
-
-        it('should reject non-state-1 transaction', async () => {
-            PaymeTransaction.findOne.mockResolvedValue({
-                _id: { toString: () => 'tx-cancelled' },
-                paymeId: 'payme-tx-1',
-                state: -1
-            });
-
-            const response = await app.inject(makeRequest({
-                id: 'payme-tx-1'
-            }));
-
-            const data = JSON.parse(response.body);
-            expect(data.error).toBeDefined();
-            expect(data.error.code).toBe(-31008);
-        });
+        expect(res.statusCode).toBe(400);
     });
 
-    // =====================================================
-    // CancelTransaction
-    // =====================================================
-    describe('CancelTransaction', () => {
-        const makeRequest = (params) => ({
-            method: 'POST',
-            url: '/payme',
-            headers: { authorization: createPaymeAuth() },
-            payload: {
-                method: 'CancelTransaction',
-                params,
-                id: 4
-            }
+    test('Pay — token yo\'q — 400', async () => {
+        const res = await app.inject({
+            method: 'POST', url: '/payme/pay',
+            payload: { orderId: 'test-id' },
+            headers: { Authorization: `Bearer ${authToken}` },
+        });
+        expect(res.statusCode).toBe(400);
+    });
+});
+
+// ============= CARD ENDPOINTS =============
+
+describe('POST /payme/card/create', () => {
+    test('Muvaffaqiyatli', async () => {
+        paymeService.createCardToken.mockResolvedValue({
+            token: 'test-token',
+            card: { number: '860006******6311', expire: '03/99', type: 'uzcard', recurrent: true, verify: false },
         });
 
-        it('should cancel state=1 transaction', async () => {
-            const mockTx = {
-                _id: { toString: () => 'tx-cancel-1' },
-                paymeId: 'payme-tx-1',
-                orderId: 'sub123',
-                state: 1,
-                cancelTime: 0,
-                save: jest.fn().mockResolvedValue(true)
-            };
-            PaymeTransaction.findOne.mockResolvedValue(mockTx);
-
-            const mockSub = {
-                _id: 'sub123',
-                status: 'pending',
-                save: jest.fn().mockResolvedValue(true)
-            };
-            Subscription.findById.mockResolvedValue(mockSub);
-
-            const response = await app.inject(makeRequest({
-                id: 'payme-tx-1',
-                reason: 1
-            }));
-
-            const data = JSON.parse(response.body);
-            expect(data.result).toBeDefined();
-            expect(data.result.state).toBe(-1);
-            expect(mockTx.state).toBe(-1);
-            expect(mockSub.status).toBe('cancelled');
+        const res = await app.inject({
+            method: 'POST', url: '/payme/card/create',
+            payload: { cardNumber: '8600069195406311', expire: '0399' },
+            headers: { Authorization: `Bearer ${authToken}` },
         });
 
-        it('should cancel state=2 transaction (refund)', async () => {
-            const mockTx = {
-                _id: { toString: () => 'tx-refund-1' },
-                paymeId: 'payme-tx-1',
-                orderId: 'sub123',
-                state: 2,
-                cancelTime: 0,
-                save: jest.fn().mockResolvedValue(true)
-            };
-            PaymeTransaction.findOne.mockResolvedValue(mockTx);
-
-            const mockSub = {
-                _id: 'sub123',
-                status: 'active',
-                save: jest.fn().mockResolvedValue(true)
-            };
-            Subscription.findById.mockResolvedValue(mockSub);
-
-            const response = await app.inject(makeRequest({
-                id: 'payme-tx-1',
-                reason: 2
-            }));
-
-            const data = JSON.parse(response.body);
-            expect(data.result).toBeDefined();
-            expect(data.result.state).toBe(-2);
-            expect(mockSub.status).toBe('cancelled');
-        });
-
-        it('should return error for not found transaction', async () => {
-            PaymeTransaction.findOne.mockResolvedValue(null);
-
-            const response = await app.inject(makeRequest({
-                id: 'nonexistent',
-                reason: 1
-            }));
-
-            const data = JSON.parse(response.body);
-            expect(data.error).toBeDefined();
-            expect(data.error.code).toBe(-31003);
-        });
+        const body = JSON.parse(res.body);
+        expect(res.statusCode).toBe(200);
+        expect(body.success).toBe(true);
+        expect(body.token).toBe('test-token');
+        expect(body.card.number).toBe('860006******6311');
+        expect(paymeService.createCardToken).toHaveBeenCalledWith('8600069195406311', '0399');
     });
 
-    // =====================================================
-    // CheckTransaction
-    // =====================================================
-    describe('CheckTransaction', () => {
-        it('should return transaction status', async () => {
-            PaymeTransaction.findOne.mockResolvedValue({
-                _id: { toString: () => 'tx-check-1' },
-                paymeId: 'payme-tx-1',
-                state: 2,
-                createTime: Date.now() - 10000,
-                performTime: Date.now(),
-                cancelTime: 0,
-                reason: null
-            });
+    test('Payme xatosi — 400', async () => {
+        paymeService.createCardToken.mockRejectedValue(
+            Object.assign(new Error('Karta noto\'g\'ri'), { code: -31300 })
+        );
 
-            const response = await app.inject({
-                method: 'POST',
-                url: '/payme',
-                headers: { authorization: createPaymeAuth() },
-                payload: {
-                    method: 'CheckTransaction',
-                    params: { id: 'payme-tx-1' },
-                    id: 5
-                }
-            });
-
-            const data = JSON.parse(response.body);
-            expect(data.result).toBeDefined();
-            expect(data.result.state).toBe(2);
-            expect(data.result.transaction).toBe('tx-check-1');
+        const res = await app.inject({
+            method: 'POST', url: '/payme/card/create',
+            payload: { cardNumber: '8600069195406311', expire: '0399' },
+            headers: { Authorization: `Bearer ${authToken}` },
         });
 
-        it('should return error for unknown transaction', async () => {
-            PaymeTransaction.findOne.mockResolvedValue(null);
+        const body = JSON.parse(res.body);
+        expect(res.statusCode).toBe(400);
+        expect(body.code).toBe(-31300);
+    });
+});
 
-            const response = await app.inject({
-                method: 'POST',
-                url: '/payme',
-                headers: { authorization: createPaymeAuth() },
-                payload: {
-                    method: 'CheckTransaction',
-                    params: { id: 'unknown' },
-                    id: 5
-                }
-            });
+describe('POST /payme/card/verify-code', () => {
+    test('Muvaffaqiyatli SMS', async () => {
+        paymeService.getVerifyCode.mockResolvedValue({ sent: true, phone: '99890*****12', wait: 60 });
 
-            const data = JSON.parse(response.body);
-            expect(data.error).toBeDefined();
-            expect(data.error.code).toBe(-31003);
+        const res = await app.inject({
+            method: 'POST', url: '/payme/card/verify-code',
+            payload: { token: 'test-token' },
+            headers: { Authorization: `Bearer ${authToken}` },
         });
+
+        const body = JSON.parse(res.body);
+        expect(res.statusCode).toBe(200);
+        expect(body.sent).toBe(true);
+        expect(body.wait).toBe(60);
+    });
+});
+
+describe('POST /payme/card/verify', () => {
+    test('Muvaffaqiyatli tasdiqlash', async () => {
+        paymeService.verifyCard.mockResolvedValue({
+            verified: true,
+            card: { number: '860006******6311', expire: '03/99', token: 'v-token', recurrent: true, type: 'uzcard' },
+        });
+
+        const res = await app.inject({
+            method: 'POST', url: '/payme/card/verify',
+            payload: { token: 'test-token', code: '666666' },
+            headers: { Authorization: `Bearer ${authToken}` },
+        });
+
+        const body = JSON.parse(res.body);
+        expect(res.statusCode).toBe(200);
+        expect(body.verified).toBe(true);
+    });
+});
+
+describe('POST /payme/card/check', () => {
+    test('Tasdiqlangan karta', async () => {
+        paymeService.checkCard.mockResolvedValue({
+            verified: true,
+            card: { number: '860006******6311', expire: '03/99', type: 'uzcard', recurrent: true },
+        });
+
+        const res = await app.inject({
+            method: 'POST', url: '/payme/card/check',
+            payload: { token: 'test-token' },
+            headers: { Authorization: `Bearer ${authToken}` },
+        });
+
+        expect(JSON.parse(res.body).verified).toBe(true);
+    });
+});
+
+describe('DELETE /payme/card/:token', () => {
+    test('Karta o\'chirildi', async () => {
+        paymeService.removeCard.mockResolvedValue({ success: true });
+
+        const res = await app.inject({
+            method: 'DELETE', url: '/payme/card/test-token',
+            headers: { Authorization: `Bearer ${authToken}` },
+        });
+
+        expect(JSON.parse(res.body).success).toBe(true);
+    });
+});
+
+// ============= PAYMENT ENDPOINT =============
+
+describe('POST /payme/pay', () => {
+    const mockOrder = {
+        _id: TEST_ORDER_ID,
+        userId: { toString: () => TEST_USER_ID },
+        status: 'pending', plan: 'monthly', price: 49000,
+        paymentMethod: null, transactionId: null,
+        startDate: null, endDate: new Date(),
+        save: jest.fn(),
+    };
+
+    test('Muvaffaqiyatli to\'lov', async () => {
+        const save = jest.fn();
+        Subscription.findById.mockResolvedValue({ ...mockOrder, save });
+        paymeService.createReceipt.mockResolvedValue({ receiptId: 'r-123', state: 0 });
+        paymeService.payReceipt.mockResolvedValue({ receiptId: 'r-123', state: 4 });
+        PaymeTransaction.create.mockResolvedValue({
+            _id: { toString: () => 'tx-123' }, receiptId: 'r-123', state: 4, amount: 4900000,
+        });
+
+        const res = await app.inject({
+            method: 'POST', url: '/payme/pay',
+            payload: { orderId: TEST_ORDER_ID, token: 'card-token' },
+            headers: { Authorization: `Bearer ${authToken}` },
+        });
+
+        const body = JSON.parse(res.body);
+        expect(res.statusCode).toBe(200);
+        expect(body.success).toBe(true);
+        expect(body.subscription.status).toBe('active');
+        expect(paymeService.createReceipt).toHaveBeenCalledWith(4900000, TEST_ORDER_ID);
+        expect(paymeService.payReceipt).toHaveBeenCalledWith('r-123', 'card-token');
+        expect(save).toHaveBeenCalled();
     });
 
-    // =====================================================
-    // GetStatement
-    // =====================================================
-    describe('GetStatement', () => {
-        it('should return transactions in time range', async () => {
-            const now = Date.now();
-            PaymeTransaction.find.mockResolvedValue([
-                {
-                    _id: { toString: () => 'tx-stmt-1' },
-                    paymeId: 'tx-1',
-                    orderId: { toString: () => 'sub1' },
-                    amount: 2990000,
-                    state: 2,
-                    createTime: now - 3600000,
-                    performTime: now - 3000000,
-                    cancelTime: 0,
-                    reason: null
-                }
-            ]);
-
-            const response = await app.inject({
-                method: 'POST',
-                url: '/payme',
-                headers: { authorization: createPaymeAuth() },
-                payload: {
-                    method: 'GetStatement',
-                    params: {
-                        from: now - 86400000,
-                        to: now
-                    },
-                    id: 6
-                }
-            });
-
-            const data = JSON.parse(response.body);
-            expect(data.result).toBeDefined();
-            expect(data.result.transactions).toHaveLength(1);
-            expect(data.result.transactions[0].id).toBe('tx-1');
-            expect(data.result.transactions[0].state).toBe(2);
+    test('Buyurtma topilmadi — 404', async () => {
+        Subscription.findById.mockResolvedValue(null);
+        const res = await app.inject({
+            method: 'POST', url: '/payme/pay',
+            payload: { orderId: 'none', token: 'x' },
+            headers: { Authorization: `Bearer ${authToken}` },
         });
-
-        it('should return empty array for no transactions', async () => {
-            PaymeTransaction.find.mockResolvedValue([]);
-
-            const response = await app.inject({
-                method: 'POST',
-                url: '/payme',
-                headers: { authorization: createPaymeAuth() },
-                payload: {
-                    method: 'GetStatement',
-                    params: { from: 0, to: Date.now() },
-                    id: 6
-                }
-            });
-
-            const data = JSON.parse(response.body);
-            expect(data.result).toBeDefined();
-            expect(data.result.transactions).toHaveLength(0);
-        });
+        expect(res.statusCode).toBe(404);
     });
 
-    // =====================================================
-    // Invalid Method
-    // =====================================================
-    describe('Invalid Methods', () => {
-        it('should return error for unknown method', async () => {
-            const response = await app.inject({
-                method: 'POST',
-                url: '/payme',
-                headers: { authorization: createPaymeAuth() },
-                payload: {
-                    method: 'UnknownMethod',
-                    params: {},
-                    id: 99
-                }
-            });
-
-            const data = JSON.parse(response.body);
-            expect(data.error).toBeDefined();
-            expect(data.error.code).toBe(-32601);
+    test('Boshqa foydalanuvchi — 403', async () => {
+        Subscription.findById.mockResolvedValue({
+            ...mockOrder, userId: { toString: () => 'other' },
         });
+        const res = await app.inject({
+            method: 'POST', url: '/payme/pay',
+            payload: { orderId: TEST_ORDER_ID, token: 'x' },
+            headers: { Authorization: `Bearer ${authToken}` },
+        });
+        expect(res.statusCode).toBe(403);
+        expect(paymeService.createReceipt).not.toHaveBeenCalled();
+    });
+
+    test('Allaqachon active — 400', async () => {
+        Subscription.findById.mockResolvedValue({ ...mockOrder, status: 'active' });
+        const res = await app.inject({
+            method: 'POST', url: '/payme/pay',
+            payload: { orderId: TEST_ORDER_ID, token: 'x' },
+            headers: { Authorization: `Bearer ${authToken}` },
+        });
+        expect(res.statusCode).toBe(400);
+    });
+
+    test('Mablag\' yetarli emas — 400 (-31008)', async () => {
+        Subscription.findById.mockResolvedValue({ ...mockOrder, save: jest.fn() });
+        paymeService.createReceipt.mockResolvedValue({ receiptId: 'r-456', state: 0 });
+        paymeService.payReceipt.mockRejectedValue(
+            Object.assign(new Error('Insufficient'), { code: -31008 })
+        );
+
+        const res = await app.inject({
+            method: 'POST', url: '/payme/pay',
+            payload: { orderId: TEST_ORDER_ID, token: 'x' },
+            headers: { Authorization: `Bearer ${authToken}` },
+        });
+
+        expect(res.statusCode).toBe(400);
+        expect(JSON.parse(res.body).code).toBe(-31008);
+    });
+});
+
+// ============= CANCEL =============
+
+describe('POST /payme/cancel', () => {
+    test('Muvaffaqiyatli bekor qilish', async () => {
+        const txSave = jest.fn();
+        PaymeTransaction.findOne.mockResolvedValue({
+            _id: 'tx-1', receiptId: 'r-1', orderId: TEST_ORDER_ID,
+            userId: TEST_USER_ID, state: 4, cancelTime: 0, save: txSave,
+        });
+        paymeService.cancelReceipt.mockResolvedValue({ receiptId: 'r-1', state: 50 });
+
+        const orderSave = jest.fn();
+        Subscription.findById.mockResolvedValue({
+            status: 'active', cancelledAt: null, cancelReason: null, save: orderSave,
+        });
+
+        const res = await app.inject({
+            method: 'POST', url: '/payme/cancel',
+            payload: { orderId: TEST_ORDER_ID },
+            headers: { Authorization: `Bearer ${authToken}` },
+        });
+
+        const body = JSON.parse(res.body);
+        expect(res.statusCode).toBe(200);
+        expect(body.state).toBe(50);
+        expect(txSave).toHaveBeenCalled();
+        expect(orderSave).toHaveBeenCalled();
+    });
+
+    test('Tranzaksiya topilmadi — 404', async () => {
+        PaymeTransaction.findOne.mockResolvedValue(null);
+        const res = await app.inject({
+            method: 'POST', url: '/payme/cancel',
+            payload: { orderId: TEST_ORDER_ID },
+            headers: { Authorization: `Bearer ${authToken}` },
+        });
+        expect(res.statusCode).toBe(404);
+    });
+});
+
+// ============= STATUS =============
+
+describe('GET /payme/status/:orderId', () => {
+    test('To\'langan — Payme dan real-time check', async () => {
+        const tx = {
+            _id: { toString: () => 'tx-1' }, receiptId: 'r-1', state: 4,
+            amount: 4900000, createTime: Date.now(), performTime: Date.now(),
+            save: jest.fn(),
+        };
+        PaymeTransaction.findOne.mockReturnValue({ sort: jest.fn().mockResolvedValue(tx) });
+        paymeService.checkReceipt.mockResolvedValue({ receiptId: 'r-1', state: 4 });
+        Subscription.findById.mockResolvedValue({
+            plan: 'monthly', status: 'active', startDate: new Date(), endDate: new Date(),
+        });
+
+        const res = await app.inject({
+            method: 'GET', url: `/payme/status/${TEST_ORDER_ID}`,
+            headers: { Authorization: `Bearer ${authToken}` },
+        });
+
+        const body = JSON.parse(res.body);
+        expect(body.paid).toBe(true);
+        expect(body.state).toBe(4);
+    });
+
+    test('Tranzaksiya yo\'q — paid: false', async () => {
+        PaymeTransaction.findOne.mockReturnValue({ sort: jest.fn().mockResolvedValue(null) });
+
+        const res = await app.inject({
+            method: 'GET', url: `/payme/status/${TEST_ORDER_ID}`,
+            headers: { Authorization: `Bearer ${authToken}` },
+        });
+
+        expect(JSON.parse(res.body).paid).toBe(false);
+    });
+
+    test('Payme API xatosi — graceful degradation', async () => {
+        const tx = {
+            _id: { toString: () => 'tx-1' }, receiptId: 'r-1', state: 4,
+            amount: 4900000, createTime: Date.now(), performTime: Date.now(),
+            save: jest.fn(),
+        };
+        PaymeTransaction.findOne.mockReturnValue({ sort: jest.fn().mockResolvedValue(tx) });
+        paymeService.checkReceipt.mockRejectedValue(new Error('Network error'));
+        Subscription.findById.mockResolvedValue({
+            plan: 'monthly', status: 'active', startDate: new Date(), endDate: new Date(),
+        });
+
+        const res = await app.inject({
+            method: 'GET', url: `/payme/status/${TEST_ORDER_ID}`,
+            headers: { Authorization: `Bearer ${authToken}` },
+        });
+
+        // Xato bo'lsa ham lokal holat qaytariladi
+        const body = JSON.parse(res.body);
+        expect(body.paid).toBe(true);
+        expect(body.state).toBe(4);
     });
 });
