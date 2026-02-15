@@ -13,7 +13,7 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   @override
   Future<Either<Failure, Subscription?>> getCurrentSubscription() async {
     try {
-      final response = await apiClient.dio.get('/subscription');
+      final response = await apiClient.get('/subscription');
       if (response.data['hasSubscription'] != true ||
           response.data['subscription'] == null) {
         return const Right(null);
@@ -31,7 +31,7 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   @override
   Future<Either<Failure, List<Subscription>>> getSubscriptionHistory() async {
     try {
-      final response = await apiClient.dio.get('/subscription/history');
+      final response = await apiClient.get('/subscription/history');
       final List<dynamic> data = response.data['subscriptions'] ?? [];
       final subscriptions =
           data.map((json) => SubscriptionModel.fromJson(json).toEntity()).toList();
@@ -53,7 +53,7 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     required SubscriptionPlan plan,
   }) async {
     try {
-      final response = await apiClient.dio.post('/subscription/create', data: {
+      final response = await apiClient.post('/subscription/create', data: {
         'plan': plan.value,
       });
       final data = response.data;
@@ -111,7 +111,7 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     required String expire,
   }) async {
     try {
-      final response = await apiClient.dio.post('/payme/card/create', data: {
+      final response = await apiClient.post('/payme/card/create', data: {
         'cardNumber': cardNumber,
         'expire': expire,
       });
@@ -133,7 +133,7 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   @override
   Future<Either<Failure, VerifyCodeResult>> getVerifyCode(String token) async {
     try {
-      final response = await apiClient.dio.post('/payme/card/verify-code', data: {
+      final response = await apiClient.post('/payme/card/verify-code', data: {
         'token': token,
       });
       final data = response.data;
@@ -155,7 +155,7 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     required String code,
   }) async {
     try {
-      final response = await apiClient.dio.post('/payme/card/verify', data: {
+      final response = await apiClient.post('/payme/card/verify', data: {
         'token': token,
         'code': code,
       });
@@ -181,7 +181,7 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     required String token,
   }) async {
     try {
-      final response = await apiClient.dio.post('/payme/pay', data: {
+      final response = await apiClient.post('/payme/pay', data: {
         'orderId': orderId,
         'token': token,
       });
