@@ -61,9 +61,10 @@ async function _callPayme(method, params = {}) {
 
         // Payme xato qaytargan bo'lsa
         if (data.error) {
-            const err = new Error(
-                _getPaymeErrorMessage(data.error.code) || data.error.message || 'Payme xatosi'
-            );
+            const errorMsg = _getPaymeErrorMessage(data.error.code) || data.error.message || 'Payme xatosi';
+            const errorDetail = data.error.data ? ` [${data.error.data}]` : '';
+
+            const err = new Error(errorMsg + errorDetail);
             err.code = data.error.code;
             err.paymeData = data.error.data;
             err._isPaymeError = true; // Payme xatosini aniq belgilash
@@ -95,7 +96,7 @@ async function _callPayme(method, params = {}) {
 function _getPaymeErrorMessage(code) {
     const errors = {
         // Avtorizatsiya xatolari
-        '-32504': 'Avtorizatsiya xatosi',
+        '-32504': 'Payme avtorizatsiya xatosi (ID yoki Key noto\'g\'ri/serverda topilmadi)',
         '-32600': 'Noto\'g\'ri so\'rov formati',
         '-32601': 'Metod topilmadi',
         '-32602': 'Noto\'g\'ri parametrlar',
@@ -105,7 +106,7 @@ function _getPaymeErrorMessage(code) {
         '-31300': 'Karta raqami noto\'g\'ri',
         '-31301': 'Karta muddati o\'tgan',
         '-31302': 'Karta topilmadi',
-        '-31303': 'Karta bloklangan',
+        '-31303': 'Karta saqlash xizmati ruxsat etilmagan (yoki karta bloklangan)',
         '-31304': 'SMS kod noto\'g\'ri',
         '-31305': 'SMS kod muddati o\'tgan',
         '-31306': 'SMS kodini qayta yuborish uchun kutib turing',

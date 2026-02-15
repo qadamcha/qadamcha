@@ -88,7 +88,7 @@ module.exports = {
 
     // Subscription Plans (UZS)
     PLANS: {
-        monthly: { price: 49000, days: 30, name: 'Oylik' },
+        monthly: { price: 1000, days: 30, name: 'Oylik (Test)' },
         yearly: { price: 399000, days: 365, name: 'Yillik' },
         lifetime: { price: 990000, days: 36500, name: 'Umrbod' }
     }
