@@ -13,7 +13,7 @@ class AiService {
                 this.model = genAI.getGenerativeModel({
                     model: 'gemini-3-flash-preview',
                     generationConfig: {
-                        maxOutputTokens: 1024,
+                        maxOutputTokens: 10192,
                         temperature: 0.7,
                     }
                 });
