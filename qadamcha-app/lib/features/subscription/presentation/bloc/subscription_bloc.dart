@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/subscription_entity.dart';
 import '../../domain/repositories/subscription_repository.dart';
+import '../../../../core/services/local_monitoring_service.dart';
 
 part 'subscription_event.dart';
 part 'subscription_state.dart';
@@ -34,16 +35,56 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     final result = await repository.getCurrentSubscription();
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: SubscriptionLoadStatus.error,
-        errorMessage: failure.message,
-      )),
-      (subscription) => emit(state.copyWith(
-        status: SubscriptionLoadStatus.loaded,
-        currentSubscription: subscription,
-        clearSubscription: subscription == null,
-      )),
+      (failure) {
+        // Backend xato — local'dan yuklash
+        final localSub = LocalMonitoringService.instance.getSubscription();
+        if (localSub != null) {
+          try {
+            final sub = Subscription(
+              id: localSub['id'] ?? '',
+              userId: localSub['userId'] ?? '',
+              plan: SubscriptionPlan.fromString(localSub['plan'] ?? 'monthly'),
+              status: SubscriptionStatus.fromString(localSub['status'] ?? 'active'),
+              startDate: DateTime.tryParse(localSub['startDate'] ?? '') ?? DateTime.now(),
+              endDate: DateTime.tryParse(localSub['endDate'] ?? '') ?? DateTime.now(),
+              createdAt: DateTime.tryParse(localSub['createdAt'] ?? '') ?? DateTime.now(),
+            );
+            emit(state.copyWith(
+              status: SubscriptionLoadStatus.loaded,
+              currentSubscription: sub,
+            ));
+            return;
+          } catch (_) {}
+        }
+        emit(state.copyWith(
+          status: SubscriptionLoadStatus.error,
+          errorMessage: failure.message,
+        ));
+      },
+      (subscription) {
+        // Local'ga saqlash
+        if (subscription != null) {
+          _saveSubscriptionLocally(subscription);
+        }
+        emit(state.copyWith(
+          status: SubscriptionLoadStatus.loaded,
+          currentSubscription: subscription,
+          clearSubscription: subscription == null,
+        ));
+      },
     );
+  }
+
+  void _saveSubscriptionLocally(Subscription sub) {
+    LocalMonitoringService.instance.saveSubscription({
+      'id': sub.id,
+      'userId': sub.userId,
+      'plan': sub.plan.value,
+      'status': sub.status.value,
+      'startDate': sub.startDate.toIso8601String(),
+      'endDate': sub.endDate.toIso8601String(),
+      'createdAt': sub.createdAt.toIso8601String(),
+    });
   }
 
   Future<void> _onLoadPlans(
@@ -150,6 +191,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
       endDate: now.add(const Duration(days: 30)),
       createdAt: now,
     );
+    _saveSubscriptionLocally(subscription);
     emit(state.copyWith(
       status: SubscriptionLoadStatus.loaded,
       currentSubscription: subscription,
@@ -242,6 +284,9 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
       )),
       (paymentResult) {
         if (paymentResult.success) {
+          if (paymentResult.subscription != null) {
+            _saveSubscriptionLocally(paymentResult.subscription!);
+          }
           emit(state.copyWith(
             paymentStatus: PaymentStatus.success,
             paymentResult: paymentResult,

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// LocalMonitoringService — Monitoring ma'lumotlarini local saqlash
@@ -6,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// - Har 10 soniyada SharedPreferences ga auto-save
 /// - Monitoring page bu service'dan o'qiydi
 /// - Har 5 daqiqada backend'ga sync qilinadi (ChildBloc orqali)
+/// - Activity log, weekly stats, last watched, subscription ham saqlanadi
 class LocalMonitoringService {
   LocalMonitoringService._internal();
   static final LocalMonitoringService instance = LocalMonitoringService._internal();
@@ -24,6 +26,12 @@ class LocalMonitoringService {
   int _storiesRead = 0;
   String? _childId;
   
+  // Activity logs (local)
+  List<Map<String, dynamic>> _activityLogs = [];
+  
+  // Weekly stats (local)
+  List<int> _weeklyMinutes = [0, 0, 0, 0, 0, 0, 0];
+  
   // Prefix for SharedPreferences keys
   static const _keyPrefix = 'monitoring_';
   static const _keyMinutes = '${_keyPrefix}minutesUsed';
@@ -31,8 +39,11 @@ class LocalMonitoringService {
   static const _keyGames = '${_keyPrefix}gamesPlayed';
   static const _keyStories = '${_keyPrefix}storiesRead';
   static const _keyChildId = '${_keyPrefix}childId';
-  static const _keyLastSync = '${_keyPrefix}lastSync';
   static const _keyDate = '${_keyPrefix}date';
+  static const _keyActivityLogs = '${_keyPrefix}activityLogs';
+  static const _keyWeeklyMinutes = '${_keyPrefix}weeklyMinutes';
+  static const _keyLastWatched = '${_keyPrefix}lastWatched';
+  static const _keySubscription = '${_keyPrefix}subscription';
 
   /// Service'ni boshlash (app startup da chaqiriladi)
   Future<void> initialize() async {
@@ -50,20 +61,31 @@ class LocalMonitoringService {
     final today = DateTime.now().toIso8601String().split('T')[0];
     
     if (savedDate != today) {
-      // Yangi kun — counters'ni reset
+      // Yangi kun — kunlik counters'ni reset
       _minutesUsed = 0;
       _videosWatched = 0;
       _gamesPlayed = 0;
       _storiesRead = 0;
-      saveToLocal(); // Reset qiymatlarni saqlash
+      
+      // Haftalik stats'ni yangilash — bugungi kunni reset
+      _loadWeeklyMinutes();
+      final todayIndex = DateTime.now().weekday - 1;
+      if (todayIndex >= 0 && todayIndex < 7) {
+        _weeklyMinutes[todayIndex] = 0;
+      }
+      _saveWeeklyMinutes();
+      
+      saveToLocal();
       _prefs!.setString(_keyDate, today);
     } else {
       _minutesUsed = _prefs!.getInt(_keyMinutes) ?? 0;
       _videosWatched = _prefs!.getInt(_keyVideos) ?? 0;
       _gamesPlayed = _prefs!.getInt(_keyGames) ?? 0;
       _storiesRead = _prefs!.getInt(_keyStories) ?? 0;
+      _loadWeeklyMinutes();
     }
     _childId = _prefs!.getString(_keyChildId);
+    _loadActivityLogs();
   }
 
   /// Auto-save timer boshlash (har 10 soniyada)
@@ -85,6 +107,13 @@ class LocalMonitoringService {
       _prefs!.setString(_keyChildId, _childId!);
     }
     _prefs!.setString(_keyDate, DateTime.now().toIso8601String().split('T')[0]);
+    
+    // Haftalik stats'da bugungi kunni yangilash
+    final todayIndex = DateTime.now().weekday - 1;
+    if (todayIndex >= 0 && todayIndex < 7) {
+      _weeklyMinutes[todayIndex] = _minutesUsed;
+      _saveWeeklyMinutes();
+    }
   }
 
   /// Backend sync timer boshlash (har 5 daqiqada)
@@ -105,6 +134,120 @@ class LocalMonitoringService {
         'storiesRead': _storiesRead,
       });
     }
+  }
+
+  // ─── Activity Logs ──────────────────────────────────────────────────
+
+  void _loadActivityLogs() {
+    final json = _prefs?.getString(_keyActivityLogs);
+    if (json != null) {
+      try {
+        final list = jsonDecode(json) as List;
+        _activityLogs = list.cast<Map<String, dynamic>>();
+      } catch (_) {
+        _activityLogs = [];
+      }
+    }
+  }
+
+  void _saveActivityLogs() {
+    if (_prefs == null) return;
+    // Oxirgi 20 ta logni saqlash (ko'p bo'lmasin)
+    final toSave = _activityLogs.take(20).toList();
+    _prefs!.setString(_keyActivityLogs, jsonEncode(toSave));
+  }
+
+  /// Yangi faoliyat qo'shish
+  void addActivityLog({
+    required String activityType,
+    required String contentTitle,
+    required int durationMinutes,
+  }) {
+    _activityLogs.insert(0, {
+      'activityType': activityType,
+      'contentTitle': contentTitle,
+      'durationMinutes': durationMinutes,
+      'startedAt': DateTime.now().toIso8601String(),
+    });
+    // Oxirgi 20 ta logni saqlash
+    if (_activityLogs.length > 20) {
+      _activityLogs = _activityLogs.sublist(0, 20);
+    }
+    _saveActivityLogs();
+  }
+
+  /// Local activity loglarni olish
+  List<Map<String, dynamic>> get activityLogs => _activityLogs;
+
+  // ─── Weekly Stats ───────────────────────────────────────────────────
+
+  void _loadWeeklyMinutes() {
+    final json = _prefs?.getString(_keyWeeklyMinutes);
+    if (json != null) {
+      try {
+        final list = jsonDecode(json) as List;
+        _weeklyMinutes = list.cast<int>();
+        if (_weeklyMinutes.length != 7) {
+          _weeklyMinutes = [0, 0, 0, 0, 0, 0, 0];
+        }
+      } catch (_) {
+        _weeklyMinutes = [0, 0, 0, 0, 0, 0, 0];
+      }
+    }
+  }
+
+  void _saveWeeklyMinutes() {
+    if (_prefs == null) return;
+    _prefs!.setString(_keyWeeklyMinutes, jsonEncode(_weeklyMinutes));
+  }
+
+  /// Haftalik daqiqalar (Du=0 ... Ya=6)
+  List<int> get weeklyMinutes => List.unmodifiable(_weeklyMinutes);
+
+  /// Haftalik jami daqiqalar
+  int get weeklyTotalMinutes => _weeklyMinutes.fold(0, (a, b) => a + b);
+
+  // ─── Last Watched ──────────────────────────────────────────────────
+
+  /// Oxirgi ko'rilgan kontentni saqlash
+  void saveLastWatched(Map<String, dynamic> contentJson) {
+    if (_prefs == null) return;
+    _prefs!.setString(_keyLastWatched, jsonEncode(contentJson));
+  }
+
+  /// Oxirgi ko'rilgan kontentni olish
+  Map<String, dynamic>? getLastWatched() {
+    final json = _prefs?.getString(_keyLastWatched);
+    if (json == null) return null;
+    try {
+      return jsonDecode(json) as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // ─── Subscription Persistence ──────────────────────────────────────
+
+  /// Obuna holatini local saqlash
+  void saveSubscription(Map<String, dynamic> subscriptionJson) {
+    if (_prefs == null) return;
+    _prefs!.setString(_keySubscription, jsonEncode(subscriptionJson));
+  }
+
+  /// Obuna holatini olish
+  Map<String, dynamic>? getSubscription() {
+    final json = _prefs?.getString(_keySubscription);
+    if (json == null) return null;
+    try {
+      return jsonDecode(json) as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Obuna holatini tozalash
+  void clearSubscription() {
+    _prefs?.remove(_keySubscription);
   }
 
   // ─── Data setters ───────────────────────────────────────────────────

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/services/session_tracker.dart';
+import '../../../../core/services/local_monitoring_service.dart';
 import '../bloc/child_bloc.dart';
 import '../../../content/domain/entities/content_entity.dart';
 import '../../../content/presentation/bloc/content_bloc.dart';
@@ -50,6 +51,35 @@ class _ContentPageState extends State<ContentPage> {
     SessionTracker.instance.startSession('content');
     context.read<ContentBloc>().add(const LoadContentEvent(refresh: true));
     _scrollController.addListener(_onScroll);
+    
+    // Oxirgi ko'rilganni local'dan yuklash
+    _loadLastWatched();
+  }
+
+  void _loadLastWatched() {
+    final saved = LocalMonitoringService.instance.getLastWatched();
+    if (saved != null) {
+      try {
+        setState(() {
+          _lastWatched = ContentEntity(
+            id: saved['id'] ?? '',
+            title: saved['title'] ?? '',
+            type: saved['type'] ?? 'cartoon',
+            category: saved['category'] ?? '',
+            videoId: saved['videoId'] ?? '',
+            streamUrl: saved['streamUrl'],
+            thumbnailUrl: saved['thumbnailUrl'],
+            duration: saved['duration'] ?? 0,
+            views: saved['views'] ?? 0,
+            likes: saved['likes'] ?? 0,
+            isFeatured: saved['isFeatured'] ?? false,
+            language: saved['language'] ?? 'uz',
+            ageMin: saved['ageMin'] ?? 3,
+            ageMax: saved['ageMax'] ?? 12,
+          );
+        });
+      } catch (_) {}
+    }
   }
 
   void _onScroll() {
@@ -977,10 +1007,35 @@ class _ContentPageState extends State<ContentPage> {
   }
 
   void _navigateToPlayer(BuildContext context, ContentEntity content) {
-    // Oxirgi ko'rilgan sifatida saqlash
+    // Oxirgi ko'rilgan sifatida saqlash (in-memory)
     setState(() {
       _lastWatched = content;
     });
+
+    // Local'ga ham saqlash (sahifa qayta ochilganda ham ko'rinadi)
+    LocalMonitoringService.instance.saveLastWatched({
+      'id': content.id,
+      'title': content.title,
+      'type': content.type,
+      'category': content.category,
+      'videoId': content.videoId,
+      'streamUrl': content.streamUrl,
+      'thumbnailUrl': content.thumbnailUrl,
+      'duration': content.duration,
+      'views': content.views,
+      'likes': content.likes,
+      'isFeatured': content.isFeatured,
+      'language': content.language,
+      'ageMin': content.ageMin,
+      'ageMax': content.ageMax,
+    });
+
+    // Activity log ga qo'shish
+    LocalMonitoringService.instance.addActivityLog(
+      activityType: 'video_watch',
+      contentTitle: content.title,
+      durationMinutes: (content.duration / 60).round(),
+    );
 
     final streamUrl = content.streamUrl ??
         'https://vz-b4d1a082-e06.b-cdn.net/${content.videoId}/playlist.m3u8';

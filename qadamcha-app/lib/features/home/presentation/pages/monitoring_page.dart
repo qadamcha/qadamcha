@@ -242,9 +242,15 @@ class _MonitoringPageState extends State<MonitoringPage> {
   Widget _buildUsageChart(ChildState state) {
     final weeklyStats = state.weeklyStats;
     final dayLabels = ['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'];
+    final localWeekly = LocalMonitoringService.instance.weeklyMinutes;
 
-    // Backend'dan kelgan dailyMinutes yoki nol
-    final dailyMinutes = weeklyStats?.dailyMinutes ?? [0, 0, 0, 0, 0, 0, 0];
+    // Backend yoki local — kattasini olish
+    final backendDaily = weeklyStats?.dailyMinutes ?? [0, 0, 0, 0, 0, 0, 0];
+    final dailyMinutes = List.generate(7, (i) {
+      final b = i < backendDaily.length ? backendDaily[i] : 0;
+      final l = i < localWeekly.length ? localWeekly[i] : 0;
+      return b > l ? b : l;
+    });
 
     // Eng yuqori qiymatni topish (chart scaling uchun)
     final maxMinutes = dailyMinutes.reduce((a, b) => a > b ? a : b);
@@ -283,16 +289,15 @@ class _MonitoringPageState extends State<MonitoringPage> {
                 ),
               ),
               const Spacer(),
-              if (weeklyStats != null)
-                Text(
-                  'Jami: ${_formatMinutes(weeklyStats.totalMinutes)}',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
-                    fontFamily: 'Nunito',
-                  ),
+              Text(
+                'Jami: ${_formatMinutes(dailyMinutes.fold(0, (a, b) => a + b))}',
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                  fontFamily: 'Nunito',
                 ),
+              ),
             ],
           ),
           SizedBox(height: 20.h),
@@ -375,13 +380,34 @@ class _MonitoringPageState extends State<MonitoringPage> {
   // ─── Recent Activity ────────────────────────────────────────────────
 
   Widget _buildRecentActivity(ChildState state) {
-    // Faqat video va game faolliklarini filtrlash
-    final allLogs = state.activityLogs;
+    // Backend'dan va local'dan loglarni birlashtirish
+    final backendLogs = state.activityLogs;
+    final localLogs = LocalMonitoringService.instance.activityLogs;
+
+    // Agar backend loglar bo'sh bo'lsa, local loglardan foydalanish
+    List<ActivityLog> allLogs;
+    if (backendLogs.isNotEmpty) {
+      allLogs = backendLogs;
+    } else {
+      // Local loglarni ActivityLog'ga map qilish
+      allLogs = localLogs.map((log) {
+        return ActivityLog(
+          id: 'local_${log['startedAt']}',
+          childId: LocalMonitoringService.instance.childId ?? '',
+          contentId: '',
+          contentTitle: log['contentTitle'] ?? '',
+          activityType: log['activityType'] ?? '',
+          durationMinutes: log['durationMinutes'] ?? 0,
+          startedAt: DateTime.tryParse(log['startedAt'] ?? '') ?? DateTime.now(),
+        );
+      }).toList();
+    }
+
     final filteredLogs = allLogs.where((log) {
       final type = log.activityType.toLowerCase();
       return type == 'video' || type == 'video_watch' ||
              type == 'game' || type == 'game_play' ||
-             type == 'cartoon';
+             type == 'cartoon' || type == 'app_usage';
     }).take(5).toList();
 
     return Container(
@@ -544,33 +570,27 @@ class _MonitoringPageState extends State<MonitoringPage> {
   // ─── Category Breakdown ─────────────────────────────────────────────
 
   Widget _buildCategoryBreakdown(ChildState state) {
+    final localStats = LocalMonitoringService.instance;
     final children = state.children;
 
-    // Umumiy vaqt
-    final totalMinutes = children.fold<int>(
-      0,
-      (sum, child) => sum + child.todayUsage.minutesUsed,
-    );
+    // Backend + local data
+    final backendMinutes = children.fold<int>(
+      0, (sum, child) => sum + child.todayUsage.minutesUsed);
+    final totalMinutes = backendMinutes > localStats.minutesUsed
+        ? backendMinutes : localStats.minutesUsed;
 
-    // Multfilm vaqti: videosWatched * o'rtacha 5 daqiqa yoki UsageStats dan
-    final videoMinutes = children.fold<int>(
-      0,
-      (sum, child) => sum + child.todayUsage.videosWatched * 5,
-    );
+    // Video va game vaqtlari (local data'dan)
+    final videoCount = localStats.videosWatched;
+    final gameCount = localStats.gamesPlayed;
+    final totalActivities = videoCount + gameCount;
 
-    // O'yin vaqti
-    final gameMinutes = children.fold<int>(
-      0,
-      (sum, child) => sum + child.todayUsage.gamesPlayed * 5,
-    );
-
-    // Foizlarni hisoblash (total dan ulushi)
-    final videoPercent = totalMinutes > 0
-        ? ((videoMinutes / totalMinutes) * 100).clamp(0, 100).round()
-        : 0;
-    final gamePercent = totalMinutes > 0
-        ? ((gameMinutes / totalMinutes) * 100).clamp(0, 100).round()
-        : 0;
+    // Foizlarni hisoblash
+    final videoPercent = totalActivities > 0
+        ? ((videoCount / totalActivities) * 100).clamp(0, 100).round()
+        : (totalMinutes > 0 ? 50 : 0);
+    final gamePercent = totalActivities > 0
+        ? ((gameCount / totalActivities) * 100).clamp(0, 100).round()
+        : (totalMinutes > 0 ? 50 : 0);
 
     return Container(
       padding: EdgeInsets.all(20.w),
