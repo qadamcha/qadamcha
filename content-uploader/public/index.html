@@ -44,6 +44,7 @@
             margin-bottom: 0.5rem;
             background: linear-gradient(135deg, var(--primary), #a855f7);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -435,15 +436,10 @@
                                 <label>Turi *</label>
                                 <select name="type" required>
                                     <option value="">Tanlang...</option>
-                                    <option value="cartoon">🎬 Multfilm</option>
-                                    <option value="game">🎮 O'yin</option>
-                                    <option value="story">📖 Hikoya</option>
-                                    <option value="quest">🧩 Topshiriq</option>
+                                    <option value="talimiy">📚 Ta'limiy</option>
+                                    <option value="ozbek">🇺🇿 O'zbek</option>
+                                    <option value="jahon">🌍 Jahon</option>
                                 </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Kategoriya</label>
-                                <input type="text" name="category" placeholder="Masalan: Ta'lim, Ertak">
                             </div>
                         </div>
 
@@ -548,10 +544,9 @@
                         <div class="form-group">
                             <label>Turi *</label>
                             <select name="type" required>
-                                <option value="ertak">📖 Ertak</option>
-                                <option value="masal">🦊 Masal</option>
-                                <option value="hikoya">📝 Hikoya</option>
-                                <option value="she'r">🎵 She'r</option>
+                                <option value="ozbek">🇺🇿 O'zbek</option>
+                                <option value="jahon">🌍 Jahon</option>
+                                <option value="islomiy">☪️ Islomiy</option>
                             </select>
                         </div>
 
@@ -606,11 +601,11 @@
                         </div>
                         <div class="stat">
                             <div class="stat-number orange" id="ertakCount">0</div>
-                            <div class="stat-label">Ertak</div>
+                            <div class="stat-label">O'zbek</div>
                         </div>
                         <div class="stat">
                             <div class="stat-number orange" id="masalCount">0</div>
-                            <div class="stat-label">Masal</div>
+                            <div class="stat-label">Jahon</div>
                         </div>
                     </div>
                     <div class="content-list" id="storyList">
@@ -794,10 +789,9 @@
         });
 
         const typeLabels = {
-            ertak: '📖 Ertak',
-            masal: '🦊 Masal',
-            hikoya: '📝 Hikoya',
-            "she'r": '🎵 She\'r'
+            ozbek: "🇺🇿 O'zbek",
+            jahon: '🌍 Jahon',
+            islomiy: '☪️ Islomiy'
         };
 
         async function loadStories() {
@@ -807,8 +801,8 @@
 
                 if (data.success) {
                     document.getElementById('storyTotalCount').textContent = data.count;
-                    document.getElementById('ertakCount').textContent = data.stories.filter(s => s.type === 'ertak').length;
-                    document.getElementById('masalCount').textContent = data.stories.filter(s => s.type === 'masal').length;
+                    document.getElementById('ertakCount').textContent = data.stories.filter(s => s.type === 'ozbek').length;
+                    document.getElementById('masalCount').textContent = data.stories.filter(s => s.type === 'jahon').length;
 
                     if (data.stories.length === 0) {
                         storyList.innerHTML = '<div class="empty">Hali ertak yo\'q. Yuqoridagi formadan qo\'shing!</div>';

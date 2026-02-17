@@ -9,8 +9,8 @@ const storySchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['ertak', 'masal', 'hikoya', "she'r"],
-        default: 'ertak'
+        enum: ['jahon', 'ozbek', 'islomiy'],
+        default: 'ozbek'
     },
     storyText: {
         type: String,

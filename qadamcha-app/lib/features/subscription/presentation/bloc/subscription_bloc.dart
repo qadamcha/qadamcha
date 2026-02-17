@@ -17,6 +17,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     on<CheckOrderEvent>(_onCheckOrder);
     on<CancelSubscriptionEvent>(_onCancelSubscription);
     on<ResetPaymentEvent>(_onResetPayment);
+    on<ActivateSubscriptionDirectlyEvent>(_onActivateDirectly);
     // Subscribe API events
     on<CreateCardTokenEvent>(_onCreateCardToken);
     on<GetVerifyCodeEvent>(_onGetVerifyCode);
@@ -131,6 +132,27 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
       clearCardToken: true,
       clearVerifyCodeResult: true,
       clearPaymentResult: true,
+    ));
+  }
+
+  /// To'g'ridan-to'g'ri obunani faollashtirish (to'lovsiz)
+  void _onActivateDirectly(
+    ActivateSubscriptionDirectlyEvent event,
+    Emitter<SubscriptionState> emit,
+  ) {
+    final now = DateTime.now();
+    final subscription = Subscription(
+      id: 'local_${now.millisecondsSinceEpoch}',
+      userId: 'local_user',
+      plan: SubscriptionPlan.monthly,
+      status: SubscriptionStatus.active,
+      startDate: now,
+      endDate: now.add(const Duration(days: 30)),
+      createdAt: now,
+    );
+    emit(state.copyWith(
+      status: SubscriptionLoadStatus.loaded,
+      currentSubscription: subscription,
     ));
   }
 

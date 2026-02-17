@@ -91,3 +91,31 @@ class LoadActivityLogsEvent extends ChildEvent {
   @override
   List<Object?> get props => [childId];
 }
+
+/// Haftalik statistikani yuklash
+class LoadWeeklyStatsEvent extends ChildEvent {
+  final String childId;
+  
+  const LoadWeeklyStatsEvent(this.childId);
+  
+  @override
+  List<Object?> get props => [childId];
+}
+
+/// Faoliyatni backendga yozish (vaqt tracking)
+class RecordActivityEvent extends ChildEvent {
+  final String childId;
+  final String contentId;
+  final String activityType;
+  final int durationMinutes;
+  
+  const RecordActivityEvent({
+    required this.childId,
+    required this.contentId,
+    required this.activityType,
+    required this.durationMinutes,
+  });
+  
+  @override
+  List<Object?> get props => [childId, contentId, activityType, durationMinutes];
+}

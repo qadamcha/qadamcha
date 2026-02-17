@@ -61,4 +61,10 @@ module.exports = async function (fastify) {
 
     // GET /children/:id/activities
     fastify.get('/:id/activities', childrenController.getActivities);
+
+    // GET /children/:id/stats/weekly
+    fastify.get('/:id/stats/weekly', childrenController.getWeeklyStatsEndpoint);
+
+    // POST /children/:id/activity — Faoliyatni yozish (vaqt tracking)
+    fastify.post('/:id/activity', childrenController.recordActivity);
 };

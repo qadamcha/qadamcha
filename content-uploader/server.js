@@ -19,7 +19,7 @@ app.use(cors({
 // MongoDB Content Schema (Multfilm/Video)
 const contentSchema = new mongoose.Schema({
     title: { type: String, required: true, trim: true, maxlength: 100 },
-    type: { type: String, enum: ['cartoon', 'game', 'story', 'quest'], required: true },
+    type: { type: String, enum: ['cartoon', 'game', 'story', 'quest', 'talimiy', 'ozbek', 'jahon'], required: true },
     category: { type: String },
     description: { type: String, maxlength: 500 },
     ageRange: {
@@ -40,14 +40,6 @@ const contentSchema = new mongoose.Schema({
 
 const Content = mongoose.model('Content', contentSchema);
 
-<<<<<<< Updated upstream
-// Error handler middleware
-function asyncHandler(fn) {
-    return (req, res, next) => {
-        Promise.resolve(fn(req, res, next)).catch(next);
-    };
-}
-=======
 // MongoDB Story Schema (Ertak)
 const storySchema = new mongoose.Schema({
     title: { type: String, required: true, trim: true, maxlength: 200 },
@@ -67,14 +59,23 @@ const storySchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const Story = mongoose.model('Story', storySchema);
->>>>>>> Stashed changes
+
+// Error handler middleware
+function asyncHandler(fn) {
+    return (req, res, next) => {
+        Promise.resolve(fn(req, res, next)).catch(next);
+    };
+}
 
 // Routes
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-<<<<<<< Updated upstream
+// ==========================================
+// CONTENT (Multfilm/Video) API
+// ==========================================
+
 // GET - Barcha kontentlarni olish (filter bilan)
 app.get('/api/contents', asyncHandler(async (req, res) => {
     const { type, category, isFeatured, isActive, page = 1, limit = 50 } = req.query;
@@ -107,19 +108,6 @@ app.get('/api/contents/:id', asyncHandler(async (req, res) => {
     const content = await Content.findById(req.params.id);
     if (!content) {
         return res.status(404).json({ success: false, message: 'Kontent topilmadi' });
-=======
-// ==========================================
-// CONTENT (Multfilm/Video) API
-// ==========================================
-
-// GET - Barcha kontentlarni olish
-app.get('/api/contents', async (req, res) => {
-    try {
-        const contents = await Content.find().sort({ createdAt: -1 });
-        res.json({ success: true, contents, count: contents.length });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
->>>>>>> Stashed changes
     }
     res.json({ success: true, content });
 }));

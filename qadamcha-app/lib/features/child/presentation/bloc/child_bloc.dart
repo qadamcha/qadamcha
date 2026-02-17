@@ -17,6 +17,8 @@ class ChildBloc extends Bloc<ChildEvent, ChildState> {
     on<DeleteChildEvent>(_onDeleteChild);
     on<SetTimeLimitsEvent>(_onSetTimeLimits);
     on<LoadActivityLogsEvent>(_onLoadActivityLogs);
+    on<LoadWeeklyStatsEvent>(_onLoadWeeklyStats);
+    on<RecordActivityEvent>(_onRecordActivity);
   }
   
   Future<void> _onLoadChildren(
@@ -179,6 +181,32 @@ class ChildBloc extends Bloc<ChildEvent, ChildState> {
     result.fold(
       (failure) => emit(state.copyWith(errorMessage: failure.message)),
       (logs) => emit(state.copyWith(activityLogs: logs)),
+    );
+  }
+
+  Future<void> _onLoadWeeklyStats(
+    LoadWeeklyStatsEvent event,
+    Emitter<ChildState> emit,
+  ) async {
+    final result = await repository.getWeeklyStats(event.childId);
+    
+    result.fold(
+      (failure) => emit(state.copyWith(errorMessage: failure.message)),
+      (stats) => emit(state.copyWith(weeklyStats: stats)),
+    );
+  }
+
+  Future<void> _onRecordActivity(
+    RecordActivityEvent event,
+    Emitter<ChildState> emit,
+  ) async {
+    if (event.durationMinutes <= 0) return;
+    
+    await repository.recordActivity(
+      childId: event.childId,
+      contentId: event.contentId,
+      activityType: event.activityType,
+      durationMinutes: event.durationMinutes,
     );
   }
 }

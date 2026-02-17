@@ -217,5 +217,118 @@ module.exports = {
             .limit(parsedLimit);
 
         return { success: true, activities };
+    },
+
+    // GET /children/:id/stats/weekly - Haftalik statistika
+    async getWeeklyStatsEndpoint(request, reply) {
+        const { userId } = request.user;
+        const { id } = request.params;
+
+        // Bola ota-onaga tegishliligini tekshirish
+        const child = await Child.findOne({ _id: id, parentId: userId });
+        if (!child) {
+            return reply.status(404).send({
+                success: false,
+                message: ERRORS.NOT_FOUND
+            });
+        }
+
+        const weeklyData = await Activity.getWeeklyStats(child._id);
+
+        // Kunlik daqiqalarni to'ldirish (Du-Yak, 7 kun)
+        const dailyMinutes = [0, 0, 0, 0, 0, 0, 0];
+        let totalMinutes = 0;
+        let videosWatched = 0;
+        let gamesPlayed = 0;
+
+        // Haftalik ma'lumotlarni qayta ishlash
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+        for (const day of weeklyData) {
+            const date = new Date(day._id);
+            // 0=Yakshanba, 1=Dushanba, ..., 6=Shanba -> Du=0, Se=1, ..., Yak=6
+            let dayIndex = date.getDay() - 1;
+            if (dayIndex < 0) dayIndex = 6; // Yakshanba
+            dailyMinutes[dayIndex] = Math.round((day.totalDuration || 0) / 60);
+            totalMinutes += Math.round((day.totalDuration || 0) / 60);
+        }
+
+        // Haftalik video va o'yin sanash
+        const today = new Date().toISOString().split('T')[0];
+        const weekStart = new Date();
+        weekStart.setDate(weekStart.getDate() - 7);
+        const weekStartStr = weekStart.toISOString().split('T')[0];
+
+        const activities = await Activity.find({
+            childId: child._id,
+            date: { $gte: weekStartStr, $lte: today }
+        });
+
+        for (const act of activities) {
+            if (act.contentType === 'video' || act.contentType === 'cartoon') {
+                videosWatched++;
+            } else if (act.contentType === 'game') {
+                gamesPlayed++;
+            }
+        }
+
+        return {
+            success: true,
+            stats: {
+                totalMinutes,
+                videosWatched,
+                gamesPlayed,
+                storiesRead: 0,
+                dailyMinutes
+            }
+        };
+    },
+
+    // POST /children/:id/activity - Faoliyatni yozish (vaqt tracking)
+    async recordActivity(request, reply) {
+        const { userId } = request.user;
+        const { id } = request.params;
+        const { contentId, activityType, durationMinutes } = request.body;
+
+        // Bola ota-onaga tegishliligini tekshirish
+        const child = await Child.findOne({ _id: id, parentId: userId });
+        if (!child) {
+            return reply.status(404).send({
+                success: false,
+                message: ERRORS.NOT_FOUND
+            });
+        }
+
+        const now = new Date();
+        const today = now.toISOString().split('T')[0];
+        const durationSeconds = (durationMinutes || 1) * 60;
+
+        // Activity yozish
+        const activity = await Activity.create({
+            childId: child._id,
+            contentType: activityType,
+            contentTitle: activityType === 'video_watch' ? 'Multfilm ko\'rish' :
+                activityType === 'game_play' ? 'O\'yin o\'ynash' :
+                    'Ilova foydalanish',
+            duration: durationSeconds,
+            date: today,
+            startedAt: new Date(now.getTime() - durationSeconds * 1000),
+            endedAt: now,
+        });
+
+        // Bolaning bugungi foydalanishini yangilash
+        await Child.updateOne(
+            { _id: child._id },
+            {
+                $inc: {
+                    'todayUsage.minutesUsed': durationMinutes || 1,
+                    ...(activityType === 'video_watch' ? { 'todayUsage.videosWatched': 1 } : {}),
+                    ...(activityType === 'game_play' ? { 'todayUsage.gamesPlayed': 1 } : {}),
+                }
+            }
+        );
+
+        return { success: true, activity };
     }
 };

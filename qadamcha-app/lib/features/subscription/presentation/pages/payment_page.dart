@@ -120,13 +120,27 @@ class _PaymentPageState extends State<PaymentPage> {
             break;
 
           case PaymentStatus.success:
-            // Muvaffaqiyat — success sahifaga o'tish
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => PaymentSuccessPage(plan: widget.plan),
+            // Muvaffaqiyat — ota-ona paneliga qaytish
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    const Text('✅', style: TextStyle(fontSize: 18)),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Obuna muvaffaqiyatli faollashtirildi!',
+                      style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+                backgroundColor: AppColors.success,
+                behavior: SnackBarBehavior.floating,
+                margin: const EdgeInsets.all(16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                duration: const Duration(seconds: 3),
               ),
             );
+            Navigator.pop(context);
             break;
 
           case PaymentStatus.failed:

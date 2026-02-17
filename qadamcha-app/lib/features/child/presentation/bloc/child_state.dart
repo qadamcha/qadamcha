@@ -7,6 +7,7 @@ class ChildState extends Equatable {
   final List<Child> children;
   final Child? selectedChild;
   final List<ActivityLog> activityLogs;
+  final WeeklyStats? weeklyStats;
   final String? errorMessage;
   
   const ChildState({
@@ -14,6 +15,7 @@ class ChildState extends Equatable {
     this.children = const [],
     this.selectedChild,
     this.activityLogs = const [],
+    this.weeklyStats,
     this.errorMessage,
   });
   
@@ -22,6 +24,7 @@ class ChildState extends Equatable {
     List<Child>? children,
     Child? selectedChild,
     List<ActivityLog>? activityLogs,
+    WeeklyStats? weeklyStats,
     String? errorMessage,
   }) {
     return ChildState(
@@ -29,6 +32,7 @@ class ChildState extends Equatable {
       children: children ?? this.children,
       selectedChild: selectedChild ?? this.selectedChild,
       activityLogs: activityLogs ?? this.activityLogs,
+      weeklyStats: weeklyStats ?? this.weeklyStats,
       errorMessage: errorMessage,
     );
   }
@@ -37,5 +41,5 @@ class ChildState extends Equatable {
   bool get hasSelectedChild => selectedChild != null;
   
   @override
-  List<Object?> get props => [status, children, selectedChild, activityLogs, errorMessage];
+  List<Object?> get props => [status, children, selectedChild, activityLogs, weeklyStats, errorMessage];
 }

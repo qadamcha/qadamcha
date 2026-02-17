@@ -4,7 +4,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../subscription/presentation/bloc/subscription_bloc.dart';
-// import '../../../subscription/presentation/pages/subscription_plans_page.dart';
 import '../../../device/presentation/pages/device_linking_page.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -13,299 +12,499 @@ class SettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sozlamalar'),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.w),
+      backgroundColor: const Color(0xFFF8F9FA),
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Profile Section
-            _buildProfileSection(context),
-            SizedBox(height: 24.h),
-            
-            // Subscription
-            _buildSubscriptionSection(context),
-            SizedBox(height: 24.h),
-            
-            // Settings Groups
-            _buildSettingsGroup(
-              title: 'Umumiy',
-              items: [
-                _SettingsItem(
-                  icon: Icons.notifications_outlined,
-                  title: 'Bildirishnomalar',
-                  subtitle: 'Push xabarnomalar',
-                  onTap: () {},
+            // Header
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 6.h),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
                 ),
-                _SettingsItem(
-                  icon: Icons.language,
-                  title: 'Til',
-                  subtitle: 'O\'zbek',
-                  onTap: () {},
-                ),
-                _SettingsItem(
-                  icon: Icons.dark_mode_outlined,
-                  title: 'Mavzu',
-                  subtitle: 'Tizim bo\'yicha',
-                  onTap: () {},
-                ),
-              ],
-            ),
-            SizedBox(height: 16.h),
-            
-            _buildSettingsGroup(
-              title: 'Qurilmalar',
-              items: [
-                _SettingsItem(
-                  icon: Icons.devices,
-                  title: 'Ulangan qurilmalar',
-                  subtitle: 'Barcha qurilmalarni boshqarish',
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const DeviceLinkingPage()),
+              ),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 34.w,
+                      height: 34.w,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8F9FA),
+                        borderRadius: BorderRadius.circular(10.r),
+                      ),
+                      child: Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        size: 16.sp,
+                        color: const Color(0xFF1A1A2E),
+                      ),
+                    ),
                   ),
-                ),
-                _SettingsItem(
-                  icon: Icons.security,
-                  title: 'Xavfsizlik',
-                  subtitle: 'PIN kodni o\'zgartirish',
-                  onTap: () {},
-                ),
-              ],
-            ),
-            SizedBox(height: 16.h),
-            
-            _buildSettingsGroup(
-              title: 'Yordam',
-              items: [
-                _SettingsItem(
-                  icon: Icons.help_outline,
-                  title: 'Yordam markazi',
-                  subtitle: 'Savollar va javoblar',
-                  onTap: () {},
-                ),
-                _SettingsItem(
-                  icon: Icons.privacy_tip_outlined,
-                  title: 'Maxfiylik siyosati',
-                  onTap: () {},
-                ),
-                _SettingsItem(
-                  icon: Icons.description_outlined,
-                  title: 'Foydalanish shartlari',
-                  onTap: () {},
-                ),
-              ],
-            ),
-            SizedBox(height: 24.h),
-            
-            // Logout Button
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () => _showLogoutConfirmation(context),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.error,
-                  side: const BorderSide(color: AppColors.error),
-                  padding: EdgeInsets.symmetric(vertical: 14.h),
-                ),
-                icon: const Icon(Icons.logout),
-                label: const Text('Chiqish'),
+                  SizedBox(width: 10.w),
+                  Text(
+                    'Sozlamalar ⚙️',
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF1A1A2E),
+                      fontFamily: 'Nunito',
+                    ),
+                  ),
+                ],
               ),
             ),
-            SizedBox(height: 16.h),
-            
-            // App Info
-            Center(
-              child: Text(
-                'Qadamcha v1.0.0',
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  color: AppColors.textSecondary,
+
+            // Content
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(16.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Profile Card
+                    _buildProfileCard(context),
+                    SizedBox(height: 12.h),
+
+                    // Subscription Info
+                    _buildSubscriptionInfo(context),
+                    SizedBox(height: 12.h),
+
+                    // Umumiy Section
+                    _buildSectionTitle('Umumiy'),
+                    SizedBox(height: 8.h),
+                    _buildSettingsCard([
+                      _SettingsRow(
+                        emoji: '👤',
+                        bgColor: const Color(0xFF2D6A9F).withOpacity(0.08),
+                        title: 'Profilni tahrirlash',
+                        trailing: _arrowIcon(),
+                        onTap: () {},
+                      ),
+                      _SettingsRow(
+                        emoji: '📱',
+                        bgColor: const Color(0xFF7C4DFF).withOpacity(0.08),
+                        title: 'Qurilmalarni boshqarish',
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF2D6A9F).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              child: Text(
+                                '2/3',
+                                style: TextStyle(
+                                  fontSize: 10.sp,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF2D6A9F),
+                                  fontFamily: 'Nunito',
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 6.w),
+                            _arrowIcon(),
+                          ],
+                        ),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const DeviceLinkingPage()),
+                        ),
+                      ),
+                      _SettingsRow(
+                        emoji: '🔒',
+                        bgColor: const Color(0xFF22C55E).withOpacity(0.08),
+                        title: 'PIN kodni o\'zgartirish',
+                        trailing: _arrowIcon(),
+                        onTap: () {},
+                      ),
+                      _SettingsRow(
+                        emoji: '🔔',
+                        bgColor: const Color(0xFFFF6D00).withOpacity(0.08),
+                        title: 'Bildirishnomalar',
+                        trailing: _buildSwitch(true),
+                        onTap: () {},
+                        showDivider: false,
+                      ),
+                    ]),
+                    SizedBox(height: 12.h),
+
+                    // Boshqa Section
+                    _buildSectionTitle('Boshqa'),
+                    SizedBox(height: 8.h),
+                    _buildSettingsCard([
+                      _SettingsRow(
+                        emoji: '🛡️',
+                        bgColor: const Color(0xFF6B7280).withOpacity(0.08),
+                        title: 'Maxfiylik siyosati',
+                        trailing: _arrowIcon(),
+                        onTap: () {},
+                      ),
+                      _SettingsRow(
+                        emoji: '❓',
+                        bgColor: const Color(0xFF6B7280).withOpacity(0.08),
+                        title: 'Yordam markazi',
+                        trailing: _arrowIcon(),
+                        onTap: () {},
+                      ),
+                      _SettingsRow(
+                        emoji: 'ℹ️',
+                        bgColor: const Color(0xFF6B7280).withOpacity(0.08),
+                        title: 'Ilova haqida',
+                        trailing: Text(
+                          'v1.0.0',
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: const Color(0xFF9CA3AF),
+                            fontFamily: 'Nunito',
+                          ),
+                        ),
+                        onTap: () {},
+                        showDivider: false,
+                      ),
+                    ]),
+                    SizedBox(height: 16.h),
+
+                    // Logout Button
+                    _buildLogoutButton(context),
+                    SizedBox(height: 32.h),
+                  ],
                 ),
               ),
             ),
-            SizedBox(height: 32.h),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildProfileSection(BuildContext context) {
+  Widget _buildProfileCard(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
+        borderRadius: BorderRadius.circular(18.r),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: 12,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 32.r,
-            backgroundColor: AppColors.primary,
-            child: Text(
-              '👤',
-              style: TextStyle(fontSize: 28.sp),
+          Container(
+            width: 60.w,
+            height: 60.w,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                colors: [Color(0xFF2D6A9F), Color(0xFF4A90D9)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF2D6A9F).withOpacity(0.3),
+                  blurRadius: 14,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Center(
+              child: Text('👤', style: TextStyle(fontSize: 28.sp)),
             ),
           ),
-          SizedBox(width: 16.w),
+          SizedBox(width: 14.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Ota-ona',
+                  'Abdulloh',
                   style: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    fontSize: 17.sp,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF1A1A2E),
+                    fontFamily: 'Nunito',
                   ),
                 ),
-                SizedBox(height: 4.h),
+                SizedBox(height: 2.h),
                 Text(
                   '+998 90 123 45 67',
                   style: TextStyle(
-                    fontSize: 14.sp,
-                    color: AppColors.textSecondary,
+                    fontSize: 12.sp,
+                    color: const Color(0xFF6B7280),
+                    fontFamily: 'Nunito',
                   ),
                 ),
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            onPressed: () {},
-            color: AppColors.textSecondary,
+          BlocBuilder<SubscriptionBloc, SubscriptionState>(
+            builder: (context, state) {
+              if (state.isPremium) {
+                return Container(
+                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFFF59E0B).withOpacity(0.1),
+                        const Color(0xFFFBBF24).withOpacity(0.15),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('👑', style: TextStyle(fontSize: 12.sp)),
+                      SizedBox(width: 3.w),
+                      Text(
+                        'Premium',
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFFF59E0B),
+                          fontFamily: 'Nunito',
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSubscriptionSection(BuildContext context) {
+  Widget _buildSubscriptionInfo(BuildContext context) {
     return BlocBuilder<SubscriptionBloc, SubscriptionState>(
       builder: (context, state) {
-        return GestureDetector(
-          onTap: () {
-            // Navigator.pop(context); // Asosiy sahifaga qaytish
-          },
-          child: Container(
-            padding: EdgeInsets.all(16.w),
-            decoration: BoxDecoration(
-              gradient: state.isPremium 
-                  ? AppColors.sunsetGradient 
-                  : AppColors.primaryGradient,
-              borderRadius: BorderRadius.circular(16.r),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(12.w),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    state.isPremium ? '💎' : '⭐',
-                    style: TextStyle(fontSize: 24.sp),
-                  ),
-                ),
-                SizedBox(width: 16.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        state.currentPlan?.label ?? 'Obuna yo\'q',
-                        style: TextStyle(
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        state.isPremium
-                            ? '${state.currentSubscription?.remainingDays ?? 0} kun qoldi'
-                            : 'Premium imkoniyatlarni oching',
-                        style: TextStyle(
-                          fontSize: 13.sp,
-                          color: Colors.white.withOpacity(0.9),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  color: Colors.white.withOpacity(0.7),
-                  size: 18.sp,
-                ),
+        return Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16.r),
+            gradient: LinearGradient(
+              colors: [
+                const Color(0xFFF59E0B).withOpacity(0.04),
+                const Color(0xFFFBBF24).withOpacity(0.08),
               ],
             ),
+            border: Border.all(
+              color: const Color(0xFFF59E0B).withOpacity(0.15),
+              width: 1.5,
+            ),
+          ),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '👑 Obuna holati',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF1A1A2E),
+                      fontFamily: 'Nunito',
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 3.h),
+                    decoration: BoxDecoration(
+                      color: state.isPremium
+                          ? const Color(0xFF22C55E).withOpacity(0.1)
+                          : const Color(0xFFEF4444).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Text(
+                      state.isPremium ? 'Faol' : 'Faol emas',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w700,
+                        color: state.isPremium
+                            ? const Color(0xFF22C55E)
+                            : const Color(0xFFEF4444),
+                        fontFamily: 'Nunito',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 10.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Tarif',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: const Color(0xFF6B7280),
+                      fontFamily: 'Nunito',
+                    ),
+                  ),
+                  Text(
+                    state.currentPlan?.label ?? 'Tanlanmagan',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF1A1A2E),
+                      fontFamily: 'Nunito',
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 4.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Tugash sanasi',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: const Color(0xFF6B7280),
+                      fontFamily: 'Nunito',
+                    ),
+                  ),
+                  Text(
+                    state.currentSubscription != null
+                        ? '${state.currentSubscription!.endDate.day.toString().padLeft(2, '0')}.${state.currentSubscription!.endDate.month.toString().padLeft(2, '0')}.${state.currentSubscription!.endDate.year}'
+                        : '—',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF1A1A2E),
+                      fontFamily: 'Nunito',
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         );
       },
     );
   }
 
-  Widget _buildSettingsGroup({
-    required String title,
-    required List<_SettingsItem> items,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 13.sp,
+        fontWeight: FontWeight.w700,
+        color: const Color(0xFF1A1A2E),
+        fontFamily: 'Nunito',
+      ),
+    );
+  }
+
+  Widget _buildSettingsCard(List<_SettingsRow> items) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
-        ),
-        SizedBox(height: 8.h),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16.r),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.03),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            children: items.asMap().entries.map((entry) {
-              final index = entry.key;
-              final item = entry.value;
-              return Column(
-                children: [
-                  item,
-                  if (index < items.length - 1)
-                    Divider(
-                      height: 1,
-                      indent: 56.w,
-                      color: AppColors.divider,
-                    ),
+        ],
+      ),
+      child: Column(
+        children: items,
+      ),
+    );
+  }
+
+  Widget _buildSwitch(bool value) {
+    return Container(
+      width: 42.w,
+      height: 24.h,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12.r),
+        color: value ? const Color(0xFF22C55E) : const Color(0xFFE5E7EB),
+      ),
+      child: Stack(
+        children: [
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 200),
+            right: value ? 2.w : null,
+            left: value ? null : 2.w,
+            top: 2.h,
+            child: Container(
+              width: 20.w,
+              height: 20.h,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 3,
+                    offset: const Offset(0, 1),
+                  ),
                 ],
-              );
-            }).toList(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _arrowIcon() {
+    return Text(
+      '→',
+      style: TextStyle(
+        fontSize: 14.sp,
+        color: const Color(0xFF9CA3AF),
+      ),
+    );
+  }
+
+  Widget _buildLogoutButton(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _showLogoutConfirmation(context),
+      child: Container(
+        width: double.infinity,
+        height: 54.h,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(13.r),
+          gradient: const LinearGradient(
+            colors: [Color(0xFFEF4444), Color(0xFFF87171)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFEF4444).withOpacity(0.35),
+              blurRadius: 20,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Text(
+            'Chiqish 🚪',
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              fontFamily: 'Nunito',
+            ),
           ),
         ),
-      ],
+      ),
     );
   }
 
@@ -313,23 +512,48 @@ class SettingsPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Chiqish'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        title: Text(
+          'Chiqish',
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            fontFamily: 'Nunito',
+            fontSize: 18.sp,
+          ),
+        ),
         content: const Text('Haqiqatan ham chiqishni xohlaysizmi?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Bekor qilish'),
+            child: Text(
+              'Bekor qilish',
+              style: TextStyle(
+                color: const Color(0xFF6B7280),
+                fontFamily: 'Nunito',
+                fontWeight: FontWeight.w600,
+                fontSize: 14.sp,
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
               context.read<AuthBloc>().add(LogoutEvent());
               Navigator.pop(context);
-              // Navigate to splash/login
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
+              backgroundColor: const Color(0xFFEF4444),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
             ),
-            child: const Text('Chiqish'),
+            child: Text(
+              'Chiqish',
+              style: TextStyle(
+                color: Colors.white,
+                fontFamily: 'Nunito',
+                fontWeight: FontWeight.w700,
+                fontSize: 14.sp,
+              ),
+            ),
           ),
         ],
       ),
@@ -337,51 +561,63 @@ class SettingsPage extends StatelessWidget {
   }
 }
 
-class _SettingsItem extends StatelessWidget {
-  final IconData icon;
+class _SettingsRow extends StatelessWidget {
+  final String emoji;
+  final Color bgColor;
   final String title;
-  final String? subtitle;
+  final Widget trailing;
   final VoidCallback onTap;
+  final bool showDivider;
 
-  const _SettingsItem({
-    required this.icon,
+  const _SettingsRow({
+    required this.emoji,
+    required this.bgColor,
     required this.title,
-    this.subtitle,
+    required this.trailing,
     required this.onTap,
+    this.showDivider = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
+    return GestureDetector(
       onTap: onTap,
-      leading: Container(
-        padding: EdgeInsets.all(8.w),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         decoration: BoxDecoration(
-          color: AppColors.surfaceVariant,
-          borderRadius: BorderRadius.circular(8.r),
+          border: showDivider
+              ? const Border(bottom: BorderSide(color: Color(0xFFF3F4F6), width: 1))
+              : null,
         ),
-        child: Icon(icon, size: 20.sp, color: AppColors.textPrimary),
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontSize: 15.sp,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      subtitle: subtitle != null
-          ? Text(
-              subtitle!,
-              style: TextStyle(
-                fontSize: 13.sp,
-                color: AppColors.textSecondary,
+        child: Row(
+          children: [
+            Container(
+              width: 36.w,
+              height: 36.w,
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius: BorderRadius.circular(10.r),
               ),
-            )
-          : null,
-      trailing: Icon(
-        Icons.arrow_forward_ios,
-        size: 16.sp,
-        color: AppColors.textSecondary,
+              child: Center(
+                child: Text(emoji, style: TextStyle(fontSize: 18.sp)),
+              ),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF1A1A2E),
+                  fontFamily: 'Nunito',
+                ),
+              ),
+            ),
+            trailing,
+          ],
+        ),
       ),
     );
   }

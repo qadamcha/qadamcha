@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/services/session_tracker.dart';
 import '../../../child/presentation/bloc/child_bloc.dart';
-import '../../../content/presentation/pages/content_page.dart';
+import '../../../child/presentation/pages/content_page.dart';
 import '../../../child/presentation/pages/games_page.dart';
 import '../../../auth/presentation/pages/role_selection_page.dart';
 import '../../../subscription/presentation/bloc/subscription_bloc.dart';
@@ -11,8 +12,40 @@ import '../../../subscription/presentation/bloc/subscription_bloc.dart';
 /// Child Home Page — full_architecture.html dizaynida
 /// Gradient fon + 2 ta katta kategoriya: Multfilmlar va O'yinlar
 /// Obuna tekshirishi bilan — obuna bo'lmasa kiritilmaydi
-class ChildHomePage extends StatelessWidget {
+/// Umumiy vaqt tracking: kirishda boshlaydi, chiqishda to'xtaydi
+class ChildHomePage extends StatefulWidget {
   const ChildHomePage({super.key});
+
+  @override
+  State<ChildHomePage> createState() => _ChildHomePageState();
+}
+
+class _ChildHomePageState extends State<ChildHomePage> {
+  @override
+  void initState() {
+    super.initState();
+    // Umumiy vaqt tracking boshlash
+    SessionTracker.instance.startSession('child_home');
+  }
+
+  @override
+  void dispose() {
+    // Tracking to'xtatish va backendga yuborish
+    final minutes = SessionTracker.instance.endSession();
+    if (minutes > 0) {
+      final childState = context.read<ChildBloc>().state;
+      final childId = childState.selectedChild?.id;
+      if (childId != null) {
+        context.read<ChildBloc>().add(RecordActivityEvent(
+          childId: childId,
+          contentId: 'app_session',
+          activityType: 'app_usage',
+          durationMinutes: minutes,
+        ));
+      }
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

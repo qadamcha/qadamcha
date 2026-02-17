@@ -27,8 +27,7 @@ class Subscription extends Equatable {
       status == SubscriptionStatus.active &&
       DateTime.now().isBefore(endDate);
 
-  bool get isPremium =>
-      isActive && plan != SubscriptionPlan.monthly;
+  bool get isPremium => isActive;
 
   int get remainingDays {
     final diff = endDate.difference(DateTime.now());

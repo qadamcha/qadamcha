@@ -21,14 +21,12 @@ class StoryDetailPage extends StatelessWidget {
 
   String get _typeEmoji {
     switch (type) {
-      case 'ertak':
-        return '📖';
-      case 'masal':
-        return '🦊';
-      case 'hikoya':
-        return '📝';
-      case "she'r":
-        return '🎵';
+      case 'jahon':
+        return '🌍';
+      case 'ozbek':
+        return '🇺🇿';
+      case 'islomiy':
+        return '☪️';
       default:
         return '📖';
     }
@@ -36,14 +34,12 @@ class StoryDetailPage extends StatelessWidget {
 
   String get _typeLabel {
     switch (type) {
-      case 'ertak':
-        return 'Ertak';
-      case 'masal':
-        return 'Masal';
-      case 'hikoya':
-        return 'Hikoya';
-      case "she'r":
-        return "She'r";
+      case 'jahon':
+        return 'Jahon';
+      case 'ozbek':
+        return "O'zbek";
+      case 'islomiy':
+        return 'Islomiy';
       default:
         return 'Ertak';
     }

@@ -2,11 +2,46 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/back_button_box.dart';
+import '../../../../core/services/session_tracker.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../bloc/child_bloc.dart';
 
 /// O'yinlar sahifasi — full_architecture.html dizaynida
 /// 2x3 grid: Matematika, Alifbo, Pazl, Ranglar, Musiqa, Geografiya
-class GamesPage extends StatelessWidget {
+/// O'yin vaqt tracking: kirishda boshlaydi, chiqishda to'xtaydi
+class GamesPage extends StatefulWidget {
   const GamesPage({super.key});
+
+  @override
+  State<GamesPage> createState() => _GamesPageState();
+}
+
+class _GamesPageState extends State<GamesPage> {
+  @override
+  void initState() {
+    super.initState();
+    // O'yin vaqt tracking boshlash
+    SessionTracker.instance.startSession('games');
+  }
+
+  @override
+  void dispose() {
+    // O'yin vaqt tracking to'xtatish va backendga yuborish
+    final minutes = SessionTracker.instance.endSession();
+    if (minutes > 0) {
+      final childState = context.read<ChildBloc>().state;
+      final childId = childState.selectedChild?.id;
+      if (childId != null) {
+        context.read<ChildBloc>().add(RecordActivityEvent(
+          childId: childId,
+          contentId: 'games_browse',
+          activityType: 'game_play',
+          durationMinutes: minutes,
+        ));
+      }
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
