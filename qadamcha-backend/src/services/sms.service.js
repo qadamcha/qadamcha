@@ -87,70 +87,83 @@ class SmsService {
             return { success: false, error: 'SMS xizmati vaqtincha ishlamayapti' };
         }
 
-        // 2. SMS matnini tayyorlash (Eskiz rasmiy faollashtirilgan)
+        // 2. SMS matnini tayyorlash
         const smsMessages = {
             'register': `Kodni hech kimga bermang! QADAMCHA ilovasiga ro'yxatdan o'tish uchun tasdiqlash kodi: ${code}`,
             'reset-pin': `Kodni hech kimga bermang! QADAMCHA ilovasida parolni qayta tiklash uchun tasdiqlash kodi: ${code}`,
         };
 
-        const message = smsMessages[purpose] || smsMessages['register'];
+        const realMessage = smsMessages[purpose] || smsMessages['register'];
 
-        // 3. FormData tayyorlash
-        const formData = new FormData();
-        formData.append('mobile_phone', this.formatPhone(phone));
-        formData.append('message', message);
-        formData.append('from', '4546');
+        // 3. SMS yuborish funksiyasi
+        const doSend = async (msg, authToken) => {
+            const fd = new FormData();
+            fd.append('mobile_phone', this.formatPhone(phone));
+            fd.append('message', msg);
+            fd.append('from', '4546');
+
+            const resp = await fetch(`${this.baseUrl}/message/sms/send`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${authToken}` },
+                body: fd
+            });
+            return resp.json();
+        };
 
         console.log('📤 SMS yuborish:', {
             to: this.formatPhone(phone),
-            message: message,
+            message: realMessage,
             from: '4546',
-            url: `${this.baseUrl}/message/sms/send`
         });
 
         // 4. Eskiz API ga yuborish
         try {
-            const response = await fetch(`${this.baseUrl}/message/sms/send`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` },
-                body: formData
-            });
-
-            const data = await response.json();
-
-            // To'liq javobni log qilish
+            let data = await doSend(realMessage, token);
             console.log('📨 Eskiz javob:', JSON.stringify(data, null, 2));
 
-            if (data.status === 'waiting' || data.id) {
+            // ✅ Muvaffaqiyat
+            if (data.status === 'waiting') {
                 console.log('✅ SMS muvaffaqiyatli yuborildi! ID:', data.id);
                 return { success: true, messageId: data.id };
             }
 
-            // Token muddati tugagan bo'lishi mumkin — yangilash va qayta urinish
-            if (data.status === 'token-invalid' || response.status === 401) {
-                console.log('🔄 Token yaroqsiz — yangilab qayta yuborish...');
-                // Cache dan o'chirish
-                if (this.redis) {
-                    await this.redis.del(this.tokenKey);
-                }
-                // Yangi token bilan qayta urinish
-                const newToken = await this.getToken();
-                const retryResponse = await fetch(`${this.baseUrl}/message/sms/send`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${newToken}` },
-                    body: formData
-                });
-                const retryData = await retryResponse.json();
-                console.log('📨 Qayta urinish javob:', JSON.stringify(retryData, null, 2));
+            // ❌ Error tekshirish
+            if (data.status === 'error') {
+                // Eskiz hali test rejimda — test matni bilan qayta urinish
+                if (data.message && data.message.includes('тест')) {
+                    console.log('⚠️ Eskiz hali TEST rejimda — test matni bilan qayta yuborish...');
+                    console.log('📌 OTP kod faqat TERMINALDA ko\'rinadi: ' + code);
 
-                if (retryData.status === 'waiting' || retryData.id) {
-                    console.log('✅ SMS qayta urinishda yuborildi! ID:', retryData.id);
-                    return { success: true, messageId: retryData.id };
+                    const testData = await doSend('Bu Eskiz dan test', token);
+                    console.log('📨 Test SMS javob:', JSON.stringify(testData, null, 2));
+
+                    if (testData.status === 'waiting') {
+                        console.log('✅ Test SMS yuborildi (OTP kodi SMS da emas, terminalda!)');
+                        return { success: true, messageId: testData.id, note: 'Eskiz test rejim — OTP faqat terminalda' };
+                    }
                 }
+
+                // Token yaroqsiz
+                if (data.message && (data.message.includes('token') || data.message.includes('auth'))) {
+                    console.log('🔄 Token yaroqsiz — yangilab qayta yuborish...');
+                    if (this.redis) await this.redis.del(this.tokenKey);
+                    const newToken = await this.getToken();
+                    data = await doSend(realMessage, newToken);
+                    console.log('📨 Qayta urinish javob:', JSON.stringify(data, null, 2));
+
+                    if (data.status === 'waiting') {
+                        console.log('✅ SMS qayta urinishda yuborildi! ID:', data.id);
+                        return { success: true, messageId: data.id };
+                    }
+                }
+
+                console.error('❌ SMS yuborilmadi:', data.message);
+                return { success: false, error: data.message || 'SMS yuborib bo\'lmadi' };
             }
 
-            console.error('❌ SMS yuborilmadi:', JSON.stringify(data));
-            return { success: false, error: data.message || 'SMS yuborib bo\'lmadi' };
+            // Kutilmagan javob
+            console.error('❌ Kutilmagan Eskiz javob:', JSON.stringify(data));
+            return { success: false, error: 'SMS xizmati kutilmagan javob qaytardi' };
         } catch (error) {
             console.error('❌ SMS xatosi:', error.message);
             return { success: false, error: 'SMS xizmati vaqtincha ishlamayapti' };
