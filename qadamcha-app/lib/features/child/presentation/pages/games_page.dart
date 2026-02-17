@@ -17,9 +17,12 @@ class GamesPage extends StatefulWidget {
 }
 
 class _GamesPageState extends State<GamesPage> {
+  late final ChildBloc _childBloc;
+
   @override
   void initState() {
     super.initState();
+    _childBloc = context.read<ChildBloc>();
     // O'yin vaqt tracking boshlash
     SessionTracker.instance.startSession('games');
   }
@@ -29,10 +32,9 @@ class _GamesPageState extends State<GamesPage> {
     // O'yin vaqt tracking to'xtatish va backendga yuborish
     final minutes = SessionTracker.instance.endSession('games');
     if (minutes > 0) {
-      final childState = context.read<ChildBloc>().state;
-      final childId = childState.selectedChild?.id;
+      final childId = _childBloc.state.selectedChild?.id;
       if (childId != null) {
-        context.read<ChildBloc>().add(RecordActivityEvent(
+        _childBloc.add(RecordActivityEvent(
           childId: childId,
           contentId: 'games_browse',
           activityType: 'game_play',

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/services/session_tracker.dart';
+import '../../../../core/services/local_monitoring_service.dart';
 import '../../../child/presentation/bloc/child_bloc.dart';
 import '../../../child/presentation/pages/content_page.dart';
 import '../../../child/presentation/pages/games_page.dart';
@@ -21,22 +22,35 @@ class ChildHomePage extends StatefulWidget {
 }
 
 class _ChildHomePageState extends State<ChildHomePage> {
+  late final ChildBloc _childBloc;
+
   @override
   void initState() {
     super.initState();
+    // BLoC referensini saqlash (dispose da context ishlamasligi uchun)
+    _childBloc = context.read<ChildBloc>();
+    
+    // Child ID ni local monitoring'ga saqlash
+    final childId = _childBloc.state.selectedChild?.id;
+    if (childId != null) {
+      LocalMonitoringService.instance.setChildId(childId);
+    }
+    
+    // Backend sync timer boshlash
+    LocalMonitoringService.instance.startSyncTimer();
+    
     // Umumiy vaqt tracking boshlash
     SessionTracker.instance.startSession('child_home');
   }
 
   @override
   void dispose() {
-    // Tracking to'xtatish va backendga yuborish
+    // Tracking to'xtatish — local monitoring'ga avtomatik yoziladi
     final minutes = SessionTracker.instance.endSession('child_home');
     if (minutes > 0) {
-      final childState = context.read<ChildBloc>().state;
-      final childId = childState.selectedChild?.id;
+      final childId = _childBloc.state.selectedChild?.id;
       if (childId != null) {
-        context.read<ChildBloc>().add(RecordActivityEvent(
+        _childBloc.add(RecordActivityEvent(
           childId: childId,
           contentId: 'app_session',
           activityType: 'app_usage',

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/services/session_tracker.dart';
+import '../../../../core/services/local_monitoring_service.dart';
 import '../../../child/presentation/bloc/child_bloc.dart';
 import '../../../child/domain/repositories/child_repository.dart';
 
@@ -158,36 +159,70 @@ class _MonitoringPageState extends State<MonitoringPage> {
 
   Widget _buildSummarySection(BuildContext context, ChildState state) {
     final children = state.children;
+    final localStats = LocalMonitoringService.instance;
 
-    // Umumiy vaqt (barcha bolalar)
-    final totalMinutes = children.fold<int>(
+    // Backend'dan bolalar umumiy vaqti
+    final backendMinutes = children.fold<int>(
       0,
       (sum, child) => sum + child.todayUsage.minutesUsed,
     );
-    // Ko'rilgan videolar
-    final totalVideos = children.fold<int>(
+    final backendVideos = children.fold<int>(
       0,
       (sum, child) => sum + child.todayUsage.videosWatched,
     );
+    final backendGames = children.fold<int>(
+      0,
+      (sum, child) => sum + child.todayUsage.gamesPlayed,
+    );
 
-    return Row(
+    // Local + Backend: kattasini olish (local yangilangan bo'lishi mumkin)
+    final totalMinutes = backendMinutes > localStats.minutesUsed
+        ? backendMinutes
+        : localStats.minutesUsed;
+    final totalVideos = backendVideos > localStats.videosWatched
+        ? backendVideos
+        : localStats.videosWatched;
+    final totalGames = backendGames > localStats.gamesPlayed
+        ? backendGames
+        : localStats.gamesPlayed;
+
+    return Column(
       children: [
-        Expanded(
-          child: _SummaryCard(
-            icon: '⏱️',
-            title: 'Umumiy vaqt',
-            value: _formatMinutes(totalMinutes),
-            color: const Color(0xFF667eea),
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: _SummaryCard(
+                icon: '⏱️',
+                title: 'Umumiy vaqt',
+                value: _formatMinutes(totalMinutes),
+                color: const Color(0xFF667eea),
+              ),
+            ),
+            SizedBox(width: 14.w),
+            Expanded(
+              child: _SummaryCard(
+                icon: '🎬',
+                title: 'Video ko\'rildi',
+                value: '$totalVideos ta',
+                color: const Color(0xFFf093fb),
+              ),
+            ),
+          ],
         ),
-        SizedBox(width: 14.w),
-        Expanded(
-          child: _SummaryCard(
-            icon: '🎬',
-            title: 'Video ko\'rildi',
-            value: '$totalVideos ta',
-            color: const Color(0xFFf093fb),
-          ),
+        SizedBox(height: 14.h),
+        Row(
+          children: [
+            Expanded(
+              child: _SummaryCard(
+                icon: '🎮',
+                title: 'O\'yin o\'ynaldi',
+                value: '$totalGames ta',
+                color: const Color(0xFF4ecdc4),
+              ),
+            ),
+            SizedBox(width: 14.w),
+            const Expanded(child: SizedBox()),
+          ],
         ),
       ],
     );

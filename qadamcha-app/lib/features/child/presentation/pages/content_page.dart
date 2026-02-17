@@ -40,9 +40,12 @@ class _ContentPageState extends State<ContentPage> {
   // Oxirgi ko'rilgan
   ContentEntity? _lastWatched;
 
+  late final ChildBloc _childBloc;
+
   @override
   void initState() {
     super.initState();
+    _childBloc = context.read<ChildBloc>();
     // Multfilm vaqt tracking
     SessionTracker.instance.startSession('content');
     context.read<ContentBloc>().add(const LoadContentEvent(refresh: true));
@@ -64,10 +67,10 @@ class _ContentPageState extends State<ContentPage> {
     // Multfilm vaqt tracking to'xtatish va backendga yuborish
     final minutes = SessionTracker.instance.endSession('content');
     if (minutes > 0) {
-      final childState = context.read<ChildBloc>().state;
+      final childState = _childBloc.state;
       final childId = childState.selectedChild?.id;
       if (childId != null) {
-        context.read<ChildBloc>().add(RecordActivityEvent(
+        _childBloc.add(RecordActivityEvent(
           childId: childId,
           contentId: 'content_browse',
           activityType: 'video_watch',

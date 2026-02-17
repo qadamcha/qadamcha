@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'core/theme/app_theme.dart';
+import 'core/services/local_monitoring_service.dart';
 import 'injection.dart' as di;
 
 // BLoCs
@@ -20,6 +21,9 @@ void main() async {
   
   // Initialize dependencies
   await di.initializeDependencies();
+  
+  // Local monitoring service boshlash
+  await LocalMonitoringService.instance.initialize();
   
   // Set system UI
   SystemChrome.setSystemUIOverlayStyle(

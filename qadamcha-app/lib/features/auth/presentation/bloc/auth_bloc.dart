@@ -31,11 +31,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     if (isLoggedIn) {
       final result = await repository.getCachedUser();
       result.fold(
-        (failure) => emit(state.copyWith(status: AuthStatus.unauthenticated)),
-        (user) => emit(state.copyWith(
-          status: AuthStatus.authenticated,
-          user: user,
-        )),
+        (failure) async {
+          // User cache yo'q — lekin token bor bo'lishi mumkin
+          // Token refresh qilib ko'ramiz
+          final refreshResult = await repository.refreshToken();
+          refreshResult.fold(
+            (_) => emit(state.copyWith(status: AuthStatus.unauthenticated)),
+            (_) => emit(state.copyWith(status: AuthStatus.authenticated)),
+          );
+        },
+        (user) {
+          if (user != null) {
+            emit(state.copyWith(
+              status: AuthStatus.authenticated,
+              user: user,
+            ));
+          } else {
+            emit(state.copyWith(status: AuthStatus.unauthenticated));
+          }
+        },
       );
     } else {
       emit(state.copyWith(status: AuthStatus.unauthenticated));
