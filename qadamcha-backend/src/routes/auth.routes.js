@@ -5,7 +5,11 @@ const authController = require('../controllers/auth.controller');
 const PhoneSchema = Type.Object({
     phone: Type.String({
         pattern: '^\\+998[0-9]{9}$'
-    })
+    }),
+    purpose: Type.Optional(Type.Union([
+        Type.Literal('register'),
+        Type.Literal('reset-pin')
+    ]))
 });
 
 const OtpVerifySchema = Type.Object({

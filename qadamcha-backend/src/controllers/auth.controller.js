@@ -9,7 +9,7 @@ module.exports = {
 
     // POST /auth/send-otp
     async sendOtp(request, reply) {
-        const { phone } = request.body;
+        const { phone, purpose } = request.body;
         const redis = this.redis;
 
         // Rate limit check (test phone faqat development da bypass)
@@ -39,7 +39,7 @@ module.exports = {
 
         // Send SMS
         try {
-            await smsService.sendOtp(phone, code);
+            await smsService.sendOtp(phone, code, purpose || 'register');
         } catch (err) {
             request.log.error('SMS sending failed:', err);
             // Production da xato qaytarish — foydalanuvchini xabardor qilish

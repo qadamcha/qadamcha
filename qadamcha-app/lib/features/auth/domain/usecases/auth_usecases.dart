@@ -8,8 +8,8 @@ class SendOtpUseCase {
   
   SendOtpUseCase(this.repository);
   
-  Future<Either<Failure, String>> call(String phone) {
-    return repository.sendOtp(phone);
+  Future<Either<Failure, String>> call(String phone, {String? purpose}) {
+    return repository.sendOtp(phone, purpose: purpose);
   }
 }
 

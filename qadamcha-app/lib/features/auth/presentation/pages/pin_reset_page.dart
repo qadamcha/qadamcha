@@ -41,7 +41,7 @@ class _PinResetPageState extends State<PinResetPage> {
       _isLoading = true;
       _error = '';
     });
-    context.read<AuthBloc>().add(SendOtpEvent('+998$phone'));
+    context.read<AuthBloc>().add(SendOtpEvent('+998$phone', purpose: 'reset-pin'));
   }
 
   void _verifyOtp() {

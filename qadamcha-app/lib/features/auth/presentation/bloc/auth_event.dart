@@ -11,11 +11,12 @@ class CheckAuthStatusEvent extends AuthEvent {}
 
 class SendOtpEvent extends AuthEvent {
   final String phone;
+  final String? purpose;
   
-  const SendOtpEvent(this.phone);
+  const SendOtpEvent(this.phone, {this.purpose});
   
   @override
-  List<Object?> get props => [phone];
+  List<Object?> get props => [phone, purpose];
 }
 
 class VerifyOtpEvent extends AuthEvent {

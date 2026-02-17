@@ -2,7 +2,7 @@ import '../../../../core/network/api_client.dart';
 import '../models/auth_models.dart';
 
 abstract class AuthRemoteDataSource {
-  Future<String> sendOtp(String phone);
+  Future<String> sendOtp(String phone, {String? purpose});
   Future<OtpResultModel> verifyOtp(String phone, String code);
   Future<UserModel> register(String phone, String name, String pin);
   Future<(UserModel, AuthTokensModel)> login({
@@ -24,8 +24,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   AuthRemoteDataSourceImpl(this._client);
   
   @override
-  Future<String> sendOtp(String phone) async {
-    final response = await _client.post('/auth/send-otp', data: {'phone': phone});
+  Future<String> sendOtp(String phone, {String? purpose}) async {
+    final response = await _client.post('/auth/send-otp', data: {
+      'phone': phone,
+      if (purpose != null) 'purpose': purpose,
+    });
     return response.data['message'] ?? 'OTP yuborildi';
   }
   

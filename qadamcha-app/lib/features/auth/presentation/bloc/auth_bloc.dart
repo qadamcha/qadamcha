@@ -48,7 +48,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(state.copyWith(status: AuthStatus.loading, phone: event.phone));
     
-    final result = await repository.sendOtp(event.phone);
+    final result = await repository.sendOtp(event.phone, purpose: event.purpose);
     
     result.fold(
       (failure) => emit(state.copyWith(

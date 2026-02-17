@@ -4,7 +4,7 @@ import '../entities/user_entity.dart';
 
 abstract class AuthRepository {
   /// SMS OTP yuborish
-  Future<Either<Failure, String>> sendOtp(String phone);
+  Future<Either<Failure, String>> sendOtp(String phone, {String? purpose});
   
   /// OTP ni tekshirish
   Future<Either<Failure, OtpResult>> verifyOtp(String phone, String code);

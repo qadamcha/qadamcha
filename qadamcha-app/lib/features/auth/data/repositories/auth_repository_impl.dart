@@ -17,9 +17,9 @@ class AuthRepositoryImpl implements AuthRepository {
   });
   
   @override
-  Future<Either<Failure, String>> sendOtp(String phone) async {
+  Future<Either<Failure, String>> sendOtp(String phone, {String? purpose}) async {
     try {
-      final message = await remoteDataSource.sendOtp(phone);
+      final message = await remoteDataSource.sendOtp(phone, purpose: purpose);
       return Right(message);
     } on NetworkException catch (e) {
       return Left(NetworkFailure(e.message));

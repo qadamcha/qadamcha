@@ -56,7 +56,7 @@ class SmsService {
     }
 
     // OTP yuborish
-    async sendOtp(phone, code) {
+    async sendOtp(phone, code, purpose = 'register') {
         // Terminalda kodni ko'rsatish (development yoki Eskiz sozlanmagan bo'lsa)
         const eskizConfigured = config.ESKIZ_EMAIL && config.ESKIZ_PASSWORD
             && config.ESKIZ_EMAIL !== 'your_email@gmail.com'
@@ -66,6 +66,7 @@ class SmsService {
         console.log('\n' + '='.repeat(50));
         console.log('📱 OTP CODE FOR', phone);
         console.log('🔐 CODE:', code);
+        console.log('📋 PURPOSE:', purpose);
         console.log('='.repeat(50) + '\n');
 
         // Eskiz sozlanmagan bo'lsa — faqat logga chiqarib qaytarish
@@ -85,8 +86,14 @@ class SmsService {
             return { success: false, error: 'SMS xizmati vaqtincha ishlamayapti' };
         }
 
+        // Kontekstga mos SMS matnlari
+        const smsMessages = {
+            'register': `Kodni hech kimga bermang! QADAMCHA ilovasiga ro'yxatdan o'tish uchun tasdiqlash kodi: ${code}`,
+            'reset-pin': `Kodni hech kimga bermang! QADAMCHA ilovasida parolni qayta tiklash uchun tasdiqlash kodi: ${code}`,
+        };
+
         const message = this.isProduction
-            ? `Qadamcha: Tasdiqlash kodingiz: ${code}. 5 daqiqa amal qiladi.`
+            ? (smsMessages[purpose] || smsMessages['register'])
             : 'Bu Eskiz dan test';
 
         const formData = new FormData();
