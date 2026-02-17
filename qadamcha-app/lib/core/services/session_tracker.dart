@@ -1,52 +1,47 @@
-/// SessionTracker — Bola menusida vaqt tracking uchun singleton service
+/// SessionTracker — Bola menusida vaqt tracking uchun service
 /// 
-/// Foydalanish:
-/// - ChildHomePage: SessionTracker.instance.startSession('child_home')
-/// - ContentPage:   SessionTracker.instance.startSession('content')
-/// - GamesPage:     SessionTracker.instance.startSession('games')
+/// Stack-based: har bir sahifa alohida sessiya ochadi, alohida tugatadi.
+/// child_home, content, games — hammasi bir vaqtda kuzatiladi.
 class SessionTracker {
   SessionTracker._internal();
   static final SessionTracker instance = SessionTracker._internal();
 
-  DateTime? _sessionStart;
-  String? _currentSessionType;
+  /// Har bir sessiya turi uchun alohida start vaqt
+  final Map<String, DateTime> _sessions = {};
 
-  /// Sessiya boshlash
+  /// Sessiya boshlash (oldingi sessiyani o'chirmaydi)
   void startSession(String type) {
-    _currentSessionType = type;
-    _sessionStart = DateTime.now();
+    _sessions[type] = DateTime.now();
   }
 
   /// Sessiya tugatish va davomiylikni daqiqalarda qaytarish
   /// Minimal 1 daqiqa qaytaradi (agar sessiya boshlangan bo'lsa)
-  int endSession() {
-    if (_sessionStart == null) return 0;
+  int endSession(String type) {
+    final start = _sessions.remove(type);
+    if (start == null) return 0;
     
-    final duration = DateTime.now().difference(_sessionStart!);
+    final duration = DateTime.now().difference(start);
     // Minimal 1 daqiqa — qisqa sessiyalar ham hisobga olinsin
-    final minutes = duration.inMinutes < 1 ? 1 : duration.inMinutes;
-    
-    _sessionStart = null;
-    _currentSessionType = null;
-    
-    return minutes;
+    return duration.inMinutes < 1 ? 1 : duration.inMinutes;
   }
 
   /// Joriy sessiya davomiyligini sekundlarda qaytarish
-  int get currentDurationSeconds {
-    if (_sessionStart == null) return 0;
-    return DateTime.now().difference(_sessionStart!).inSeconds;
+  int currentDurationSeconds(String type) {
+    final start = _sessions[type];
+    if (start == null) return 0;
+    return DateTime.now().difference(start).inSeconds;
   }
 
   /// Joriy sessiya davomiyligini daqiqalarda qaytarish
-  int get currentDurationMinutes {
-    if (_sessionStart == null) return 0;
-    return DateTime.now().difference(_sessionStart!).inMinutes;
+  int currentDurationMinutes(String type) {
+    final start = _sessions[type];
+    if (start == null) return 0;
+    return DateTime.now().difference(start).inMinutes;
   }
 
-  /// Joriy sessiya turi
-  String? get currentType => _currentSessionType;
-
   /// Sessiya faolmi
-  bool get isActive => _sessionStart != null;
+  bool isActive(String type) => _sessions.containsKey(type);
+
+  /// Har qanday sessiya faolmi
+  bool get hasActiveSessions => _sessions.isNotEmpty;
 }

@@ -47,8 +47,10 @@ const childSchema = new mongoose.Schema({
         default: 0
     },
     todayUsage: {
-        type: Number,
-        default: 0
+        minutesUsed: { type: Number, default: 0 },
+        videosWatched: { type: Number, default: 0 },
+        gamesPlayed: { type: Number, default: 0 },
+        storiesRead: { type: Number, default: 0 },
     },
     lastUsageDate: String, // "2026-02-09"
     lastActive: Date,
@@ -75,14 +77,14 @@ childSchema.index({ parentId: 1, isActive: 1 });
 
 // Virtual - bugungi qolgan vaqt
 childSchema.virtual('remainingTime').get(function () {
-    return Math.max(0, this.dailyLimit - this.todayUsage);
+    return Math.max(0, this.dailyLimit - (this.todayUsage?.minutesUsed || 0));
 });
 
 // Kunlik statistikani yangilash
 childSchema.methods.resetDailyUsage = function () {
     const today = new Date().toISOString().split('T')[0];
     if (this.lastUsageDate !== today) {
-        this.todayUsage = 0;
+        this.todayUsage = { minutesUsed: 0, videosWatched: 0, gamesPlayed: 0, storiesRead: 0 };
         this.lastUsageDate = today;
     }
 };
