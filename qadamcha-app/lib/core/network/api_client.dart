@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../constants/app_constants.dart';
@@ -22,6 +23,7 @@ class ApiClient {
     );
     
     _dio.interceptors.addAll([
+      _RetryInterceptor(_dio),
       _AuthInterceptor(_storage, _dio),
       _LoggingInterceptor(),
     ]);
@@ -201,5 +203,44 @@ class _LoggingInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) {
     print('✖ ${err.response?.statusCode} ${err.requestOptions.path}');
     handler.next(err);
+  }
+}
+
+// Retry Interceptor — ulanish xatosida avtomatik qayta urinish
+class _RetryInterceptor extends Interceptor {
+  final Dio _dio;
+  static const int _maxRetries = 2;
+  static const Duration _retryDelay = Duration(seconds: 1);
+
+  _RetryInterceptor(this._dio);
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
+    // Faqat ulanish xatolarida qayta urinish
+    final isRetryable = err.type == DioExceptionType.connectionTimeout ||
+        err.type == DioExceptionType.sendTimeout ||
+        err.type == DioExceptionType.connectionError;
+
+    if (!isRetryable) {
+      return handler.next(err);
+    }
+
+    final retryCount = err.requestOptions.extra['retryCount'] ?? 0;
+
+    if (retryCount >= _maxRetries) {
+      print('⚠ Retry limit reached for ${err.requestOptions.path}');
+      return handler.next(err);
+    }
+
+    print('🔄 Retry ${retryCount + 1}/$_maxRetries: ${err.requestOptions.path}');
+    await Future.delayed(_retryDelay);
+
+    try {
+      err.requestOptions.extra['retryCount'] = retryCount + 1;
+      final response = await _dio.fetch(err.requestOptions);
+      return handler.resolve(response);
+    } on DioException catch (e) {
+      return handler.next(e);
+    }
   }
 }

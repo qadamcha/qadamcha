@@ -39,24 +39,29 @@ module.exports = {
 
         // Send SMS
         try {
-            await smsService.sendOtp(phone, code, purpose || 'register');
-        } catch (err) {
-            request.log.error('SMS sending failed:', err);
-            // Production da xato qaytarish — foydalanuvchini xabardor qilish
-            if (config.NODE_ENV === 'production') {
-                // OTP ni Redis dan tozalash — yuborilmagan kod ishlatilmasin
+            const smsResult = await smsService.sendOtp(phone, code, purpose || 'register');
+
+            // SMS yuborilmagan bo'lsa — OTPni o'chirish va xato qaytarish
+            if (!smsResult.success) {
                 await redis.del(otpKey);
                 return reply.status(503).send({
                     success: false,
-                    message: 'SMS xizmati vaqtincha ishlamayapti. Keyinroq urinib ko\'ring.'
+                    message: smsResult.error || 'SMS xizmati vaqtincha ishlamayapti'
                 });
             }
+        } catch (err) {
+            request.log.error('SMS sending failed:', err);
+            await redis.del(otpKey);
+            return reply.status(503).send({
+                success: false,
+                message: 'SMS xizmati vaqtincha ishlamayapti. Keyinroq urinib ko\'ring.'
+            });
         }
 
-        // Dev modeda kodni ko'rsatish
+        // Dev modeda OTP kodni ko'rsatish
         const response = { success: true, message: SUCCESS.OTP_SENT };
         if (config.NODE_ENV !== 'production') {
-            response.code = code; // Faqat development uchun!
+            response.code = code;
         }
 
         return response;
@@ -132,7 +137,13 @@ module.exports = {
         return {
             success: true,
             message: SUCCESS.REGISTERED,
-            userId: user._id
+            user: {
+                id: user._id,
+                phone: user.phone,
+                name: user.name,
+                role: user.role,
+                createdAt: user.createdAt,
+            }
         };
     },
 

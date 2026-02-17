@@ -5,8 +5,8 @@ class ApiConstants {
   /// Dinamik API URL — `--dart-define=API_HOST=x.x.x.x` orqali o'zgartiriladi.
   /// Default: Android emulator → 10.0.2.2, iOS → localhost.
   static String get baseUrl => AppConfig.baseUrl;
-  static const Duration connectTimeout = Duration(seconds: 30);
-  static const Duration receiveTimeout = Duration(seconds: 30);
+  static const Duration connectTimeout = Duration(seconds: 60);
+  static const Duration receiveTimeout = Duration(seconds: 45);
 }
 
 // Storage Keys
