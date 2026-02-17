@@ -149,7 +149,7 @@ class ChildRepositoryImpl implements ChildRepository {
       if (endDate != null) queryParams['endDate'] = endDate.toIso8601String();
       
       final response = await apiClient.dio.get(
-        '/children/$childId/activity',
+        '/children/$childId/activities',
         queryParameters: queryParams,
       );
       final List<dynamic> data = response.data['activities'] ?? [];
@@ -220,14 +220,20 @@ class ActivityLogModel {
   });
 
   factory ActivityLogModel.fromJson(Map<String, dynamic> json) {
+    // Backend 'duration' sekundlarda qaytaradi, biz daqiqaga aylantirish kerak
+    final durationSec = json['duration'] ?? 0;
+    final durationMin = json['durationMinutes'] ?? (durationSec / 60).round();
+    
     return ActivityLogModel(
       id: json['_id'] ?? json['id'] ?? '',
       childId: json['childId'] ?? '',
       contentId: json['contentId'] ?? '',
       contentTitle: json['contentTitle'] ?? '',
-      activityType: json['activityType'] ?? 'video',
-      durationMinutes: json['durationMinutes'] ?? 0,
-      startedAt: DateTime.parse(json['startedAt']),
+      activityType: json['contentType'] ?? json['activityType'] ?? 'video',
+      durationMinutes: durationMin,
+      startedAt: json['startedAt'] != null 
+          ? DateTime.parse(json['startedAt']) 
+          : (json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now()),
       endedAt: json['endedAt'] != null ? DateTime.parse(json['endedAt']) : null,
     );
   }

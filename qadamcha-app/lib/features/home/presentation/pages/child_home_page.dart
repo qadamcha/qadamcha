@@ -31,7 +31,7 @@ class _ChildHomePageState extends State<ChildHomePage> {
   @override
   void dispose() {
     // Tracking to'xtatish va backendga yuborish
-    final minutes = SessionTracker.instance.endSession();
+    final minutes = SessionTracker.instance.endSession('child_home');
     if (minutes > 0) {
       final childState = context.read<ChildBloc>().state;
       final childId = childState.selectedChild?.id;

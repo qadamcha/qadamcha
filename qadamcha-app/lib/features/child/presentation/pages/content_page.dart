@@ -62,7 +62,7 @@ class _ContentPageState extends State<ContentPage> {
   @override
   void dispose() {
     // Multfilm vaqt tracking to'xtatish va backendga yuborish
-    final minutes = SessionTracker.instance.endSession();
+    final minutes = SessionTracker.instance.endSession('content');
     if (minutes > 0) {
       final childState = context.read<ChildBloc>().state;
       final childId = childState.selectedChild?.id;

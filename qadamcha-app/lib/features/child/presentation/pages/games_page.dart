@@ -27,7 +27,7 @@ class _GamesPageState extends State<GamesPage> {
   @override
   void dispose() {
     // O'yin vaqt tracking to'xtatish va backendga yuborish
-    final minutes = SessionTracker.instance.endSession();
+    final minutes = SessionTracker.instance.endSession('games');
     if (minutes > 0) {
       final childState = context.read<ChildBloc>().state;
       final childId = childState.selectedChild?.id;
