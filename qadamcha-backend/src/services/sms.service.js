@@ -57,16 +57,18 @@ class SmsService {
 
     // OTP yuborish
     async sendOtp(phone, code, purpose = 'register') {
-        // Terminalda kodni ko'rsatish (development yoki Eskiz sozlanmagan bo'lsa)
+        // Eskiz credentials tekshirish
         const eskizConfigured = config.ESKIZ_EMAIL && config.ESKIZ_PASSWORD
             && config.ESKIZ_EMAIL !== 'your_email@gmail.com'
             && config.ESKIZ_PASSWORD !== 'your_eskiz_api_password';
 
-        // OTP kodni har doim logga chiqarish (test va debug uchun)
+        // OTP kodni har doim logga chiqarish (debug uchun)
         console.log('\n' + '='.repeat(50));
         console.log('📱 OTP CODE FOR', phone);
         console.log('🔐 CODE:', code);
         console.log('📋 PURPOSE:', purpose);
+        console.log('🌍 ENV:', config.NODE_ENV);
+        console.log('🔧 ESKIZ CONFIGURED:', eskizConfigured);
         console.log('='.repeat(50) + '\n');
 
         // Eskiz sozlanmagan bo'lsa — faqat logga chiqarib qaytarish
@@ -75,35 +77,38 @@ class SmsService {
             return { success: true, messageId: 'no-eskiz', note: 'Eskiz sozlanmagan — logda OTP ni ko\'ring' };
         }
 
+        // 1. Token olish
         let token;
         try {
             token = await this.getToken();
+            console.log('🔑 Eskiz token olindi ✓');
         } catch (err) {
             console.error('❌ Eskiz token olishda xato:', err.message);
-            if (!this.isProduction) {
-                return { success: true, messageId: 'dev-mode-no-token', note: 'Token olinmadi — terminalda OTP ni ko\'ring' };
-            }
             return { success: false, error: 'SMS xizmati vaqtincha ishlamayapti' };
         }
 
-        // Kontekstga mos SMS matnlari
+        // 2. SMS matnini tayyorlash (Eskiz rasmiy faollashtirilgan)
         const smsMessages = {
             'register': `Kodni hech kimga bermang! QADAMCHA ilovasiga ro'yxatdan o'tish uchun tasdiqlash kodi: ${code}`,
             'reset-pin': `Kodni hech kimga bermang! QADAMCHA ilovasida parolni qayta tiklash uchun tasdiqlash kodi: ${code}`,
         };
 
-        const message = this.isProduction
-            ? (smsMessages[purpose] || smsMessages['register'])
-            : 'Bu Eskiz dan test';
+        const message = smsMessages[purpose] || smsMessages['register'];
 
+        // 3. FormData tayyorlash
         const formData = new FormData();
         formData.append('mobile_phone', this.formatPhone(phone));
         formData.append('message', message);
+        formData.append('from', '4546');
 
-        if (this.isProduction) {
-            formData.append('from', '4546');
-        }
+        console.log('📤 SMS yuborish:', {
+            to: this.formatPhone(phone),
+            message: message,
+            from: '4546',
+            url: `${this.baseUrl}/message/sms/send`
+        });
 
+        // 4. Eskiz API ga yuborish
         try {
             const response = await fetch(`${this.baseUrl}/message/sms/send`, {
                 method: 'POST',
@@ -113,23 +118,41 @@ class SmsService {
 
             const data = await response.json();
 
+            // To'liq javobni log qilish
+            console.log('📨 Eskiz javob:', JSON.stringify(data, null, 2));
+
             if (data.status === 'waiting' || data.id) {
-                console.log('✅ SMS yuborildi:', data.id);
+                console.log('✅ SMS muvaffaqiyatli yuborildi! ID:', data.id);
                 return { success: true, messageId: data.id };
             }
 
-            if (!this.isProduction) {
-                console.warn('⚠️ SMS (dev mode):', data.message || 'Test message sent');
-                return { success: true, messageId: 'dev-mode', note: 'Development mode - terminalda OTP ni ko\'ring' };
+            // Token muddati tugagan bo'lishi mumkin — yangilash va qayta urinish
+            if (data.status === 'token-invalid' || response.status === 401) {
+                console.log('🔄 Token yaroqsiz — yangilab qayta yuborish...');
+                // Cache dan o'chirish
+                if (this.redis) {
+                    await this.redis.del(this.tokenKey);
+                }
+                // Yangi token bilan qayta urinish
+                const newToken = await this.getToken();
+                const retryResponse = await fetch(`${this.baseUrl}/message/sms/send`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${newToken}` },
+                    body: formData
+                });
+                const retryData = await retryResponse.json();
+                console.log('📨 Qayta urinish javob:', JSON.stringify(retryData, null, 2));
+
+                if (retryData.status === 'waiting' || retryData.id) {
+                    console.log('✅ SMS qayta urinishda yuborildi! ID:', retryData.id);
+                    return { success: true, messageId: retryData.id };
+                }
             }
 
-            console.error('❌ SMS yuborilmadi:', data.message);
-            return { success: false, error: 'SMS yuborib bo\'lmadi. Keyinroq urinib ko\'ring.' };
+            console.error('❌ SMS yuborilmadi:', JSON.stringify(data));
+            return { success: false, error: data.message || 'SMS yuborib bo\'lmadi' };
         } catch (error) {
             console.error('❌ SMS xatosi:', error.message);
-            if (!this.isProduction) {
-                return { success: true, messageId: 'dev-mode-error', note: 'Development mode - terminalda OTP ni ko\'ring' };
-            }
             return { success: false, error: 'SMS xizmati vaqtincha ishlamayapti' };
         }
     }
