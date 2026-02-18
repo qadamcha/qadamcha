@@ -65,6 +65,25 @@ class _ChildHomePageState extends State<ChildHomePage> {
   Widget build(BuildContext context) {
     return BlocBuilder<SubscriptionBloc, SubscriptionState>(
       builder: (context, subState) {
+        // Yuklash vaqtida spinner ko'rsatish (subscription tekshirilmoqda)
+        if (subState.status == SubscriptionLoadStatus.loading ||
+            subState.status == SubscriptionLoadStatus.initial) {
+          return Scaffold(
+            body: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFFE8F5E9), Color(0xFFF5F6FA), Colors.white],
+                ),
+              ),
+              child: const Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          );
+        }
+        
         if (!subState.isPremium) {
           return _buildNoSubscriptionScreen(context);
         }

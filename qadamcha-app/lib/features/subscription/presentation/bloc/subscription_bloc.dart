@@ -51,7 +51,11 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
           ));
         }
       } catch (_) {}
-    } else {
+    }
+    
+    // MUHIM: loading holatida mavjud subscription'ni SAQLAB qolish
+    // Aks holda ChildHomePage "Obuna faol emas" ko'rsatadi
+    if (state.currentSubscription == null && localSub == null) {
       emit(state.copyWith(status: SubscriptionLoadStatus.loading));
     }
 
@@ -60,29 +64,40 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
 
     result.fold(
       (failure) {
-        // Backend xato — agar local allaqachon yuklangan bo'lsa, shuni qoldiramiz
+        // Backend xato — mavjud subscription'ni saqlab qolish
+        // Agar local ham, state ham bo'sh bo'lsa, loaded sifatida belgilash
         if (state.status != SubscriptionLoadStatus.loaded) {
           emit(state.copyWith(
             status: SubscriptionLoadStatus.loaded,
-            clearSubscription: localSub == null,
           ));
         }
       },
       (subscription) {
-        // Backend javobini local'ga saqlash va state'ni yangilash
+        // Backend javobini davolash
         if (subscription != null) {
+          // Backend'da obuna bor — yangilash va local'ga saqlash
           _saveSubscriptionLocally(subscription);
           emit(state.copyWith(
             status: SubscriptionLoadStatus.loaded,
             currentSubscription: subscription,
           ));
         } else {
-          // Backend'da obuna yo'q — local keshni tozalash
-          LocalMonitoringService.instance.clearSubscription();
-          emit(state.copyWith(
-            status: SubscriptionLoadStatus.loaded,
-            clearSubscription: true,
-          ));
+          // Backend'da obuna yo'q — lekin local faol bo'lsa, SAQLAB QOLISH
+          // (Backend bilan sync muammosi bo'lishi mumkin)
+          final currentSub = state.currentSubscription;
+          if (currentSub != null && currentSub.isActive) {
+            // Local obuna hali faol — o'chirmaymiz
+            emit(state.copyWith(
+              status: SubscriptionLoadStatus.loaded,
+            ));
+          } else {
+            // Haqiqatan ham obuna yo'q
+            LocalMonitoringService.instance.clearSubscription();
+            emit(state.copyWith(
+              status: SubscriptionLoadStatus.loaded,
+              clearSubscription: true,
+            ));
+          }
         }
       },
     );
