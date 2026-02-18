@@ -103,6 +103,24 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     }
   }
 
+  @override
+  Future<Either<Failure, Subscription>> activateTestSubscription() async {
+    try {
+      final response = await apiClient.post('/subscription/activate-test');
+      final data = response.data;
+      if (data['subscription'] != null) {
+        final subscription =
+            SubscriptionModel.fromJson(data['subscription']).toEntity();
+        return Right(subscription);
+      }
+      return Left(ServerFailure('Obuna ma\'lumotlari kelmadi'));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Obunani faollashtirishda xatolik: $e'));
+    }
+  }
+
   // ============= Subscribe API Methods =============
 
   @override

@@ -8,13 +8,15 @@ class AiChatRepositoryImpl implements AiChatRepository {
       : _remoteDataSource = remoteDataSource;
 
   @override
-  Future<String> sendMessage({
+  Future<(String, int)> sendMessage({
     required String message,
     String? childId,
+    List<Map<String, String>>? history,
   }) {
     return _remoteDataSource.sendMessage(
       message: message,
       childId: childId,
+      history: history,
     );
   }
 

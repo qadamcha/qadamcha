@@ -20,6 +20,7 @@ class AuthState extends Equatable {
   final bool isNewUser;
   final String? verifiedToken;
   final String? phone;
+  final String deviceMode; // 'parent' or 'child'
   
   const AuthState({
     this.status = AuthStatus.initial,
@@ -28,6 +29,7 @@ class AuthState extends Equatable {
     this.isNewUser = false,
     this.verifiedToken,
     this.phone,
+    this.deviceMode = 'parent',
   });
   
   AuthState copyWith({
@@ -37,6 +39,7 @@ class AuthState extends Equatable {
     bool? isNewUser,
     String? verifiedToken,
     String? phone,
+    String? deviceMode,
   }) {
     return AuthState(
       status: status ?? this.status,
@@ -45,6 +48,7 @@ class AuthState extends Equatable {
       isNewUser: isNewUser ?? this.isNewUser,
       verifiedToken: verifiedToken ?? this.verifiedToken,
       phone: phone ?? this.phone,
+      deviceMode: deviceMode ?? this.deviceMode,
     );
   }
   
@@ -56,5 +60,6 @@ class AuthState extends Equatable {
     isNewUser, 
     verifiedToken, 
     phone,
+    deviceMode,
   ];
 }

@@ -364,7 +364,7 @@ describe('Xatolar bilan ishlash', () => {
             fail('Expected error');
         } catch (err) {
             expect(err.code).toBe(-32504);
-            expect(err.message).toContain('Avtorizatsiya');
+            expect(err.message).toContain('avtorizatsiya');
         }
     });
 });

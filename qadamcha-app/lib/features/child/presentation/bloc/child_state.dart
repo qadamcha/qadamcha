@@ -23,6 +23,7 @@ class ChildState extends Equatable {
     ChildStatus? status,
     List<Child>? children,
     Child? selectedChild,
+    bool clearSelectedChild = false,
     List<ActivityLog>? activityLogs,
     WeeklyStats? weeklyStats,
     String? errorMessage,
@@ -30,7 +31,7 @@ class ChildState extends Equatable {
     return ChildState(
       status: status ?? this.status,
       children: children ?? this.children,
-      selectedChild: selectedChild ?? this.selectedChild,
+      selectedChild: clearSelectedChild ? null : (selectedChild ?? this.selectedChild),
       activityLogs: activityLogs ?? this.activityLogs,
       weeklyStats: weeklyStats ?? this.weeklyStats,
       errorMessage: errorMessage,

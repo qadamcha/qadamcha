@@ -57,4 +57,9 @@ module.exports = async function (fastify) {
     fastify.get('/history', {
         preHandler: [fastify.authenticate]
     }, subscriptionController.getHistory);
+
+    // POST /subscription/activate-test - Test rejimida obunani faollashtirish
+    fastify.post('/activate-test', {
+        preHandler: [fastify.authenticate]
+    }, subscriptionController.activateTest);
 };

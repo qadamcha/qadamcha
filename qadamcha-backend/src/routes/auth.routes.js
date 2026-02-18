@@ -115,4 +115,14 @@ module.exports = async function (fastify) {
         preHandler: [fastify.authenticate]
     }, authController.logout);
 
+    // PUT /auth/profile - Profilni yangilash
+    const UpdateProfileSchema = Type.Object({
+        name: Type.Optional(Type.String({ minLength: 2, maxLength: 50 }))
+    });
+
+    fastify.put('/profile', {
+        schema: { body: UpdateProfileSchema },
+        preHandler: [fastify.authenticate]
+    }, authController.updateProfile);
+
 };

@@ -11,7 +11,7 @@ class AiService {
             try {
                 const genAI = new GoogleGenerativeAI(config.GEMINI_API_KEY);
                 this.model = genAI.getGenerativeModel({
-                    model: 'gemini-3-flash-preview',
+                    model: 'gemini-2.0-flash',
                     generationConfig: {
                         maxOutputTokens: 10192,
                         temperature: 0.7,
@@ -70,50 +70,76 @@ Sening asosiy vazifang — O'zbek ota-onalariga farzand tarbiyasi, rivojlanishi 
     }
 
     /**
-     * AI bilan suhbat
+     * AI bilan suhbat — conversation history bilan
+     * @param {string} message - Foydalanuvchi xabari
+     * @param {Array} history - Oldingi suhbat tarixi [{role: 'user'|'model', text: '...'}]
+     * @param {Object} context - Bola konteksti (ismi, yoshi, jinsi)
      */
-    async chat(message, context = {}) {
+    async chat(message, history = [], context = {}) {
         // AI sozlanmagan bo'lsa
         if (!this.isConfigured) {
             return {
                 success: false,
-                message: 'AI xizmati hozircha mavjud emas. Keyinroq urinib ko\'ring.'
+                message: 'AI xizmati hozircha mavjud emas. Keyinroq urinib ko\'ring.',
+                tokenCount: 0
             };
         }
 
         try {
-            // Promptni shakllantirish
-            let prompt = this.systemPrompt;
+            // System prompt + bola konteksti
+            let systemInstruction = this.systemPrompt;
 
-            // Kontekst qo'shish
             if (context.childAge) {
-                prompt += `\n\nBola yoshi: ${context.childAge} yosh`;
+                systemInstruction += `\n\nBola yoshi: ${context.childAge} yosh`;
             }
             if (context.childGender) {
-                prompt += `\nBola jinsi: ${context.childGender === 'male' ? 'O\'g\'il' : 'Qiz'}`;
+                systemInstruction += `\nBola jinsi: ${context.childGender === 'male' ? 'O\'g\'il' : 'Qiz'}`;
             }
             if (context.childName) {
-                prompt += `\nBola ismi: ${context.childName}`;
+                systemInstruction += `\nBola ismi: ${context.childName}`;
             }
 
-            prompt += `\n\nOta-ona savoli: ${message}`;
+            // Gemini contents array yaratish — suhbat tarixi
+            const contents = [];
 
-            // AI javob olish (10 soniya timeout bilan)
-            const AI_TIMEOUT = 10000;
+            // Oldingi suhbat tarixini qo'shish
+            if (history && history.length > 0) {
+                for (const msg of history) {
+                    contents.push({
+                        role: msg.role === 'user' ? 'user' : 'model',
+                        parts: [{ text: msg.text }]
+                    });
+                }
+            }
+
+            // Yangi xabarni qo'shish
+            contents.push({
+                role: 'user',
+                parts: [{ text: message }]
+            });
+
+            // AI javob olish (90 soniya timeout bilan)
+            const AI_TIMEOUT = 90000;
             const timeoutPromise = new Promise((_, reject) =>
                 setTimeout(() => reject(new Error('AI_TIMEOUT')), AI_TIMEOUT)
             );
+
             const result = await Promise.race([
-                this.model.generateContent(prompt),
+                this.model.generateContent({
+                    contents,
+                    systemInstruction: { parts: [{ text: systemInstruction }] }
+                }),
                 timeoutPromise
             ]);
+
             const response = result.response;
             const text = response.text();
+            const tokenCount = response.usageMetadata?.totalTokenCount || 0;
 
             return {
                 success: true,
                 message: text,
-                tokens: response.usageMetadata?.totalTokenCount || 0
+                tokenCount
             };
 
         } catch (error) {
@@ -122,20 +148,23 @@ Sening asosiy vazifang — O'zbek ota-onalariga farzand tarbiyasi, rivojlanishi 
             if (error.message === 'AI_TIMEOUT') {
                 return {
                     success: false,
-                    message: 'AI javobi juda uzoq davom etdi. Qayta urinib ko\'ring.'
+                    message: 'AI javobi juda uzoq davom etdi. Savolingizni qisqaroq qilib qayta yuboring.',
+                    tokenCount: 0
                 };
             }
 
             if (error.message.includes('quota')) {
                 return {
                     success: false,
-                    message: 'AI xizmati band. Bir ozdan keyin qayta urinib ko\'ring.'
+                    message: 'AI xizmati band. Bir ozdan keyin qayta urinib ko\'ring.',
+                    tokenCount: 0
                 };
             }
 
             return {
                 success: false,
-                message: 'Kechirasiz, hozir javob bera olmayapman. Keyinroq urinib ko\'ring.'
+                message: 'Kechirasiz, hozir javob bera olmayapman. Keyinroq urinib ko\'ring.',
+                tokenCount: 0
             };
         }
     }

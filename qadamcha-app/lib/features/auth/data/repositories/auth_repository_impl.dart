@@ -55,7 +55,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
       // Ro'yxatdan keyin avtomatik login — tokenlarni olish
       try {
-        final (loggedUser, tokens) = await remoteDataSource.login(
+        final (loggedUser, tokens, _) = await remoteDataSource.login(
           phone: phone,
           pin: pin,
           deviceId: 'default',
@@ -80,7 +80,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
   
   @override
-  Future<Either<Failure, (User, AuthTokens)>> login({
+  Future<Either<Failure, (User, AuthTokens, String)>> login({
     required String phone,
     required String pin,
     required String deviceId,
@@ -88,7 +88,7 @@ class AuthRepositoryImpl implements AuthRepository {
     String? deviceType,
   }) async {
     try {
-      final (user, tokens) = await remoteDataSource.login(
+      final (user, tokens, deviceMode) = await remoteDataSource.login(
         phone: phone,
         pin: pin,
         deviceId: deviceId,
@@ -102,8 +102,10 @@ class AuthRepositoryImpl implements AuthRepository {
       await localDataSource.setLoggedIn(true);
       // PIN hash'ni lokal saqlash (keyingi kirish tez bo'lishi uchun)
       await localDataSource.cachePinHash(pin);
+      // Device mode ni saqlash
+      await localDataSource.cacheDeviceMode(deviceMode);
       
-      return Right((user.toEntity(), tokens));
+      return Right((user.toEntity(), tokens, deviceMode));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(e.message));
     } on UnauthorizedException catch (e) {
@@ -201,6 +203,22 @@ class AuthRepositoryImpl implements AuthRepository {
       // Muvaffaqiyat — keyingi safar uchun lokal saqlash
       await localDataSource.cachePinHash(pin);
       return const Right(null);
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message, e.statusCode));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, User>> updateProfile({required String name}) async {
+    try {
+      final response = await remoteDataSource.updateProfile(name: name);
+      // Lokal cache yangilash
+      await localDataSource.cacheUser(response);
+      return Right(response.toEntity());
     } on NetworkException catch (e) {
       return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {

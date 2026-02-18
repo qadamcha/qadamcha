@@ -30,47 +30,60 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     LoadSubscriptionEvent event,
     Emitter<SubscriptionState> emit,
   ) async {
-    emit(state.copyWith(status: SubscriptionLoadStatus.loading));
+    // 1. Local-first: avval keshdan yuklash (tezkor UX)
+    final localSub = LocalMonitoringService.instance.getSubscription();
+    if (localSub != null) {
+      try {
+        final cachedSub = Subscription(
+          id: localSub['id'] ?? '',
+          userId: localSub['userId'] ?? '',
+          plan: SubscriptionPlan.fromString(localSub['plan'] ?? 'monthly'),
+          status: SubscriptionStatus.fromString(localSub['status'] ?? 'active'),
+          startDate: DateTime.tryParse(localSub['startDate'] ?? '') ?? DateTime.now(),
+          endDate: DateTime.tryParse(localSub['endDate'] ?? '') ?? DateTime.now(),
+          createdAt: DateTime.tryParse(localSub['createdAt'] ?? '') ?? DateTime.now(),
+        );
+        // Muddat o'tmaganmi tekshirish
+        if (cachedSub.isActive) {
+          emit(state.copyWith(
+            status: SubscriptionLoadStatus.loaded,
+            currentSubscription: cachedSub,
+          ));
+        }
+      } catch (_) {}
+    } else {
+      emit(state.copyWith(status: SubscriptionLoadStatus.loading));
+    }
 
+    // 2. Backend bilan sinxronlash
     final result = await repository.getCurrentSubscription();
 
     result.fold(
       (failure) {
-        // Backend xato — local'dan yuklash
-        final localSub = LocalMonitoringService.instance.getSubscription();
-        if (localSub != null) {
-          try {
-            final sub = Subscription(
-              id: localSub['id'] ?? '',
-              userId: localSub['userId'] ?? '',
-              plan: SubscriptionPlan.fromString(localSub['plan'] ?? 'monthly'),
-              status: SubscriptionStatus.fromString(localSub['status'] ?? 'active'),
-              startDate: DateTime.tryParse(localSub['startDate'] ?? '') ?? DateTime.now(),
-              endDate: DateTime.tryParse(localSub['endDate'] ?? '') ?? DateTime.now(),
-              createdAt: DateTime.tryParse(localSub['createdAt'] ?? '') ?? DateTime.now(),
-            );
-            emit(state.copyWith(
-              status: SubscriptionLoadStatus.loaded,
-              currentSubscription: sub,
-            ));
-            return;
-          } catch (_) {}
+        // Backend xato — agar local allaqachon yuklangan bo'lsa, shuni qoldiramiz
+        if (state.status != SubscriptionLoadStatus.loaded) {
+          emit(state.copyWith(
+            status: SubscriptionLoadStatus.loaded,
+            clearSubscription: localSub == null,
+          ));
         }
-        emit(state.copyWith(
-          status: SubscriptionLoadStatus.error,
-          errorMessage: failure.message,
-        ));
       },
       (subscription) {
-        // Local'ga saqlash
+        // Backend javobini local'ga saqlash va state'ni yangilash
         if (subscription != null) {
           _saveSubscriptionLocally(subscription);
+          emit(state.copyWith(
+            status: SubscriptionLoadStatus.loaded,
+            currentSubscription: subscription,
+          ));
+        } else {
+          // Backend'da obuna yo'q — local keshni tozalash
+          LocalMonitoringService.instance.clearSubscription();
+          emit(state.copyWith(
+            status: SubscriptionLoadStatus.loaded,
+            clearSubscription: true,
+          ));
         }
-        emit(state.copyWith(
-          status: SubscriptionLoadStatus.loaded,
-          currentSubscription: subscription,
-          clearSubscription: subscription == null,
-        ));
       },
     );
   }
@@ -176,26 +189,46 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     ));
   }
 
-  /// To'g'ridan-to'g'ri obunani faollashtirish (to'lovsiz)
-  void _onActivateDirectly(
+  /// To'g'ridan-to'g'ri obunani faollashtirish (test rejimi)
+  Future<void> _onActivateDirectly(
     ActivateSubscriptionDirectlyEvent event,
     Emitter<SubscriptionState> emit,
-  ) {
-    final now = DateTime.now();
-    final subscription = Subscription(
-      id: 'local_${now.millisecondsSinceEpoch}',
-      userId: 'local_user',
-      plan: SubscriptionPlan.monthly,
-      status: SubscriptionStatus.active,
-      startDate: now,
-      endDate: now.add(const Duration(days: 30)),
-      createdAt: now,
+  ) async {
+    emit(state.copyWith(paymentStatus: PaymentStatus.paying));
+
+    // Backend'ga so'rov yuborish
+    final result = await repository.activateTestSubscription();
+
+    result.fold(
+      (failure) {
+        // Backend xato — offline fallback (faqat local)
+        final now = DateTime.now();
+        final subscription = Subscription(
+          id: 'local_${now.millisecondsSinceEpoch}',
+          userId: 'local_user',
+          plan: SubscriptionPlan.monthly,
+          status: SubscriptionStatus.active,
+          startDate: now,
+          endDate: now.add(const Duration(days: 30)),
+          createdAt: now,
+        );
+        _saveSubscriptionLocally(subscription);
+        emit(state.copyWith(
+          status: SubscriptionLoadStatus.loaded,
+          paymentStatus: PaymentStatus.success,
+          currentSubscription: subscription,
+        ));
+      },
+      (subscription) {
+        // Backend muvaffaqiyatli — saqlash
+        _saveSubscriptionLocally(subscription);
+        emit(state.copyWith(
+          status: SubscriptionLoadStatus.loaded,
+          paymentStatus: PaymentStatus.success,
+          currentSubscription: subscription,
+        ));
+      },
     );
-    _saveSubscriptionLocally(subscription);
-    emit(state.copyWith(
-      status: SubscriptionLoadStatus.loaded,
-      currentSubscription: subscription,
-    ));
   }
 
   // ============= Subscribe API Handlers =============

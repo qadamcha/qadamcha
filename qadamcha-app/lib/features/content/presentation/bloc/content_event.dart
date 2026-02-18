@@ -24,4 +24,6 @@ class LoadContentEvent extends ContentEvent {
   List<Object?> get props => [refresh, type, category, age];
 }
 
-class LoadMoreContentEvent extends ContentEvent {}
+class LoadMoreContentEvent extends ContentEvent {
+  const LoadMoreContentEvent();
+}

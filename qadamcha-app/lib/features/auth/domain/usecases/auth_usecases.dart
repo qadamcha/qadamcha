@@ -42,7 +42,7 @@ class LoginUseCase {
   
   LoginUseCase(this.repository);
   
-  Future<Either<Failure, (User, AuthTokens)>> call({
+  Future<Either<Failure, (User, AuthTokens, String)>> call({
     required String phone,
     required String pin,
     required String deviceId,

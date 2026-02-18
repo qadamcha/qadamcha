@@ -5,7 +5,7 @@ abstract class AuthRemoteDataSource {
   Future<String> sendOtp(String phone, {String? purpose});
   Future<OtpResultModel> verifyOtp(String phone, String code);
   Future<UserModel> register(String phone, String name, String pin);
-  Future<(UserModel, AuthTokensModel)> login({
+  Future<(UserModel, AuthTokensModel, String)> login({
     required String phone,
     required String pin,
     required String deviceId,
@@ -16,6 +16,7 @@ abstract class AuthRemoteDataSource {
   Future<void> logout();
   Future<String> resetPin(String phone, String newPin);
   Future<void> verifyPin(String pin);
+  Future<UserModel> updateProfile({required String name});
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -52,7 +53,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
   
   @override
-  Future<(UserModel, AuthTokensModel)> login({
+  Future<(UserModel, AuthTokensModel, String)> login({
     required String phone,
     required String pin,
     required String deviceId,
@@ -69,8 +70,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     
     final user = UserModel.fromJson(response.data['user']);
     final tokens = AuthTokensModel.fromJson(response.data);
+    final deviceMode = response.data['deviceMode'] as String? ?? 'parent';
     
-    return (user, tokens);
+    return (user, tokens, deviceMode);
   }
   
   @override
@@ -98,5 +100,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> verifyPin(String pin) async {
     await _client.post('/auth/verify-pin', data: {'pin': pin});
+  }
+
+  @override
+  Future<UserModel> updateProfile({required String name}) async {
+    final response = await _client.put('/auth/profile', data: {
+      'name': name,
+    });
+    return UserModel.fromJson(response.data['user'] ?? response.data);
   }
 }

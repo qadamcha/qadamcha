@@ -3,14 +3,16 @@ import 'package:equatable/equatable.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../../../core/errors/failures.dart';
+import '../../data/datasources/auth_local_datasource.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository repository;
+  final AuthLocalDataSource? localDataSource;
   
-  AuthBloc({required this.repository}) : super(const AuthState()) {
+  AuthBloc({required this.repository, this.localDataSource}) : super(const AuthState()) {
     on<CheckAuthStatusEvent>(_onCheckAuthStatus);
     on<SendOtpEvent>(_onSendOtp);
     on<VerifyOtpEvent>(_onVerifyOtp);
@@ -20,6 +22,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<ResetAuthEvent>(_onReset);
     on<ResetPinEvent>(_onResetPin);
     on<AuthVerifyPinEvent>(_onVerifyPin);
+    on<UpdateProfileEvent>(_onUpdateProfile);
+    on<ChangePinEvent>(_onChangePin);
   }
   
   Future<void> _onCheckAuthStatus(
@@ -30,27 +34,31 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     
     if (isLoggedIn) {
       final result = await repository.getCachedUser();
-      result.fold(
-        (failure) async {
-          // User cache yo'q — lekin token bor bo'lishi mumkin
-          // Token refresh qilib ko'ramiz
-          final refreshResult = await repository.refreshToken();
-          refreshResult.fold(
-            (_) => emit(state.copyWith(status: AuthStatus.unauthenticated)),
-            (_) => emit(state.copyWith(status: AuthStatus.authenticated)),
-          );
-        },
-        (user) {
-          if (user != null) {
-            emit(state.copyWith(
-              status: AuthStatus.authenticated,
-              user: user,
-            ));
-          } else {
-            emit(state.copyWith(status: AuthStatus.unauthenticated));
+      if (result.isRight()) {
+        final user = result.getOrElse(() => null);
+        if (user != null) {
+          // Device mode ni lokal cache dan olish
+          String deviceMode = 'parent';
+          if (localDataSource != null) {
+            deviceMode = await localDataSource!.getDeviceMode();
           }
-        },
-      );
+          emit(state.copyWith(
+            status: AuthStatus.authenticated,
+            user: user,
+            deviceMode: deviceMode,
+          ));
+        } else {
+          emit(state.copyWith(status: AuthStatus.unauthenticated));
+        }
+      } else {
+        // User cache yo'q — lekin token bor bo'lishi mumkin
+        // Token refresh qilib ko'ramiz
+        final refreshResult = await repository.refreshToken();
+        refreshResult.fold(
+          (_) => emit(state.copyWith(status: AuthStatus.unauthenticated)),
+          (_) => emit(state.copyWith(status: AuthStatus.authenticated)),
+        );
+      }
     } else {
       emit(state.copyWith(status: AuthStatus.unauthenticated));
     }
@@ -141,6 +149,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       (data) => emit(state.copyWith(
         status: AuthStatus.authenticated,
         user: data.$1,
+        deviceMode: data.$3,
       )),
     );
   }
@@ -210,6 +219,63 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       },
       (_) => emit(state.copyWith(
         status: AuthStatus.pinVerified,
+      )),
+    );
+  }
+
+  Future<void> _onUpdateProfile(
+    UpdateProfileEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    final result = await repository.updateProfile(name: event.name);
+    
+    result.fold(
+      (failure) => emit(state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: failure.message,
+      )),
+      (user) => emit(state.copyWith(
+        status: AuthStatus.authenticated,
+        user: user,
+      )),
+    );
+  }
+
+  Future<void> _onChangePin(
+    ChangePinEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(state.copyWith(status: AuthStatus.loading));
+    
+    // Avval joriy PIN ni tekshirish
+    final verifyResult = await repository.verifyPin(event.currentPin);
+    
+    final verified = verifyResult.fold(
+      (failure) {
+        emit(state.copyWith(
+          status: AuthStatus.error,
+          errorMessage: 'Joriy PIN noto\'g\'ri',
+        ));
+        return false;
+      },
+      (_) => true,
+    );
+    
+    if (!verified) return;
+    
+    // Yangi PIN ni o'rnatish
+    final resetResult = await repository.resetPin(
+      phone: event.phone,
+      newPin: event.newPin,
+    );
+    
+    resetResult.fold(
+      (failure) => emit(state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: failure.message,
+      )),
+      (_) => emit(state.copyWith(
+        status: AuthStatus.authenticated,
       )),
     );
   }

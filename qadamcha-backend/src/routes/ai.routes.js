@@ -1,9 +1,15 @@
 const { Type } = require('@sinclair/typebox');
 const aiController = require('../controllers/ai.controller');
 
+const HistoryItemSchema = Type.Object({
+    role: Type.Union([Type.Literal('user'), Type.Literal('model')]),
+    text: Type.String({ minLength: 1 })
+});
+
 const ChatSchema = Type.Object({
-    message: Type.String({ minLength: 3, maxLength: 500 }),
-    childId: Type.Optional(Type.String())
+    message: Type.String({ minLength: 3, maxLength: 2000 }),
+    childId: Type.Optional(Type.String()),
+    history: Type.Optional(Type.Array(HistoryItemSchema, { maxItems: 100 }))
 });
 
 module.exports = async function (fastify) {

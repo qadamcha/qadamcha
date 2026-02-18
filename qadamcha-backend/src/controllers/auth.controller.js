@@ -205,19 +205,26 @@ module.exports = {
 
         // Device check
         let device = await Device.findOne({ deviceId });
+        let deviceMode = 'parent';
 
         if (!device) {
             // Check device limit
-            const deviceCount = await Device.countDocuments({
+            const existingDevices = await Device.countDocuments({
                 userId: user._id,
                 isActive: true
             });
 
-            if (deviceCount >= config.MAX_DEVICES) {
+            if (existingDevices >= config.MAX_DEVICES) {
                 return reply.status(400).send({
                     success: false,
                     message: `${ERRORS.DEVICE_LIMIT} (${config.MAX_DEVICES} ta)`
                 });
+            }
+
+            // Agar shu user allaqachon boshqa qurilmada ro'yxatdan o'tgan bo'lsa
+            // → bu yangi qurilma = child qurilma (avtomatik)
+            if (existingDevices > 0) {
+                deviceMode = 'child';
             }
 
             device = await Device.create({
@@ -225,8 +232,11 @@ module.exports = {
                 deviceId,
                 deviceName: deviceName || 'Unknown Device',
                 deviceType: deviceType || 'android',
-                mode: 'parent'
+                mode: deviceMode
             });
+        } else {
+            // Mavjud qurilma — uning mode'ini olish
+            deviceMode = device.mode;
         }
 
         // Generate tokens with JTI
@@ -270,7 +280,8 @@ module.exports = {
                 name: user.name,
                 phone: user.phone,
                 role: user.role
-            }
+            },
+            deviceMode
         };
     },
 
@@ -419,6 +430,35 @@ module.exports = {
         return {
             success: true,
             message: SUCCESS.LOGGED_OUT
+        };
+    },
+
+    // PUT /auth/profile - Profilni yangilash
+    async updateProfile(request, reply) {
+        const { userId } = request.user;
+        const { name } = request.body;
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return reply.status(404).send({
+                success: false,
+                message: ERRORS.USER_NOT_FOUND
+            });
+        }
+
+        if (name) user.name = name;
+        await user.save();
+
+        return {
+            success: true,
+            message: 'Profil yangilandi',
+            user: {
+                id: user._id,
+                phone: user.phone,
+                name: user.name,
+                role: user.role,
+                createdAt: user.createdAt,
+            }
         };
     }
 };

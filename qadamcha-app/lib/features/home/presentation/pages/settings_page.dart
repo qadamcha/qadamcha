@@ -1,16 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../subscription/presentation/bloc/subscription_bloc.dart';
+import '../../../device/presentation/bloc/device_bloc.dart';
 import '../../../device/presentation/pages/device_linking_page.dart';
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
   @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  bool _notificationsEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // Qurilmalar sonini yuklash
+    context.read<DeviceBloc>().add(LoadDevicesEvent());
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final authState = context.watch<AuthBloc>().state;
+    final user = authState.user;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       body: SafeArea(
@@ -64,8 +81,8 @@ class SettingsPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Profile Card
-                    _buildProfileCard(context),
+                    // Profile Card — real ma'lumotlar
+                    _buildProfileCard(context, user),
                     SizedBox(height: 12.h),
 
                     // Subscription Info
@@ -81,53 +98,63 @@ class SettingsPage extends StatelessWidget {
                         bgColor: const Color(0xFF2D6A9F).withOpacity(0.08),
                         title: 'Profilni tahrirlash',
                         trailing: _arrowIcon(),
-                        onTap: () {},
+                        onTap: () => _showEditProfileDialog(context, user?.name ?? ''),
                       ),
-                      _SettingsRow(
-                        emoji: '📱',
-                        bgColor: const Color(0xFF7C4DFF).withOpacity(0.08),
-                        title: 'Qurilmalarni boshqarish',
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF2D6A9F).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8.r),
-                              ),
-                              child: Text(
-                                '2/3',
-                                style: TextStyle(
-                                  fontSize: 10.sp,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF2D6A9F),
-                                  fontFamily: 'Nunito',
+                      BlocBuilder<DeviceBloc, DeviceState>(
+                        builder: (context, deviceState) {
+                          final deviceCount = deviceState.devices.length;
+                          final maxDevices = deviceState.maxDevices;
+                          return _SettingsRow(
+                            emoji: '📱',
+                            bgColor: const Color(0xFF7C4DFF).withOpacity(0.08),
+                            title: 'Qurilmalarni boshqarish',
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF2D6A9F).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8.r),
+                                  ),
+                                  child: Text(
+                                    '$deviceCount/$maxDevices',
+                                    style: TextStyle(
+                                      fontSize: 10.sp,
+                                      fontWeight: FontWeight.w700,
+                                      color: const Color(0xFF2D6A9F),
+                                      fontFamily: 'Nunito',
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                SizedBox(width: 6.w),
+                                _arrowIcon(),
+                              ],
                             ),
-                            SizedBox(width: 6.w),
-                            _arrowIcon(),
-                          ],
-                        ),
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const DeviceLinkingPage()),
-                        ),
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const DeviceLinkingPage()),
+                            ),
+                          );
+                        },
                       ),
                       _SettingsRow(
                         emoji: '🔒',
                         bgColor: const Color(0xFF22C55E).withOpacity(0.08),
                         title: 'PIN kodni o\'zgartirish',
                         trailing: _arrowIcon(),
-                        onTap: () {},
+                        onTap: () => _showChangePinDialog(context, user?.phone ?? ''),
                       ),
                       _SettingsRow(
                         emoji: '🔔',
                         bgColor: const Color(0xFFFF6D00).withOpacity(0.08),
                         title: 'Bildirishnomalar',
-                        trailing: _buildSwitch(true),
-                        onTap: () {},
+                        trailing: _buildSwitch(_notificationsEnabled),
+                        onTap: () {
+                          setState(() {
+                            _notificationsEnabled = !_notificationsEnabled;
+                          });
+                        },
                         showDivider: false,
                       ),
                     ]),
@@ -182,7 +209,13 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileCard(BuildContext context) {
+  Widget _buildProfileCard(BuildContext context, dynamic user) {
+    final userName = user?.name ?? 'Foydalanuvchi';
+    final userPhone = user?.phone ?? '';
+
+    // Ismning birinchi harfini avatar sifatida olish
+    final initials = userName.isNotEmpty ? userName[0].toUpperCase() : '?';
+
     return Container(
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
@@ -217,7 +250,15 @@ class SettingsPage extends StatelessWidget {
               ],
             ),
             child: Center(
-              child: Text('👤', style: TextStyle(fontSize: 28.sp)),
+              child: Text(
+                initials,
+                style: TextStyle(
+                  fontSize: 24.sp,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  fontFamily: 'Nunito',
+                ),
+              ),
             ),
           ),
           SizedBox(width: 14.w),
@@ -226,7 +267,7 @@ class SettingsPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Abdulloh',
+                  userName,
                   style: TextStyle(
                     fontSize: 17.sp,
                     fontWeight: FontWeight.w800,
@@ -236,7 +277,7 @@ class SettingsPage extends StatelessWidget {
                 ),
                 SizedBox(height: 2.h),
                 Text(
-                  '+998 90 123 45 67',
+                  _formatPhone(userPhone),
                   style: TextStyle(
                     fontSize: 12.sp,
                     color: const Color(0xFF6B7280),
@@ -284,6 +325,12 @@ class SettingsPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// Telefon raqamni formatlash: +998901234567 → +998 90 123 45 67
+  String _formatPhone(String phone) {
+    if (phone.length < 13) return phone;
+    return '${phone.substring(0, 4)} ${phone.substring(4, 6)} ${phone.substring(6, 9)} ${phone.substring(9, 11)} ${phone.substring(11)}';
   }
 
   Widget _buildSubscriptionInfo(BuildContext context) {
@@ -407,7 +454,7 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSettingsCard(List<_SettingsRow> items) {
+  Widget _buildSettingsCard(List<Widget> items) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -503,6 +550,222 @@ class SettingsPage extends StatelessWidget {
               fontFamily: 'Nunito',
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  // ============= Dialoglar =============
+
+  /// Profil tahrirlash dialog — ismni o'zgartirish
+  void _showEditProfileDialog(BuildContext context, String currentName) {
+    final controller = TextEditingController(text: currentName);
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        title: Text(
+          'Profilni tahrirlash',
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            fontFamily: 'Nunito',
+            fontSize: 18.sp,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: controller,
+              decoration: InputDecoration(
+                labelText: 'Ism',
+                hintText: 'Ismingizni kiriting',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                prefixIcon: const Icon(Icons.person_outline),
+              ),
+              textCapitalization: TextCapitalization.words,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Bekor qilish',
+              style: TextStyle(
+                color: const Color(0xFF6B7280),
+                fontFamily: 'Nunito',
+                fontWeight: FontWeight.w600,
+                fontSize: 14.sp,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final newName = controller.text.trim();
+              if (newName.isNotEmpty && newName.length >= 2) {
+                context.read<AuthBloc>().add(UpdateProfileEvent(name: newName));
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Profil yangilandi ✅'),
+                    backgroundColor: Color(0xFF22C55E),
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2D6A9F),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+            ),
+            child: Text(
+              'Saqlash',
+              style: TextStyle(
+                color: Colors.white,
+                fontFamily: 'Nunito',
+                fontWeight: FontWeight.w700,
+                fontSize: 14.sp,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// PIN o'zgartirish dialog
+  void _showChangePinDialog(BuildContext context, String phone) {
+    final currentPinController = TextEditingController();
+    final newPinController = TextEditingController();
+    final confirmPinController = TextEditingController();
+    String? errorText;
+
+    showDialog(
+      context: context,
+      builder: (_) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+          title: Text(
+            'PIN kodni o\'zgartirish',
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              fontFamily: 'Nunito',
+              fontSize: 18.sp,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: currentPinController,
+                decoration: InputDecoration(
+                  labelText: 'Joriy PIN',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  prefixIcon: const Icon(Icons.lock_outline),
+                ),
+                keyboardType: TextInputType.number,
+                obscureText: true,
+                maxLength: 6,
+              ),
+              SizedBox(height: 8.h),
+              TextField(
+                controller: newPinController,
+                decoration: InputDecoration(
+                  labelText: 'Yangi PIN',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  prefixIcon: const Icon(Icons.lock_open),
+                ),
+                keyboardType: TextInputType.number,
+                obscureText: true,
+                maxLength: 6,
+              ),
+              SizedBox(height: 8.h),
+              TextField(
+                controller: confirmPinController,
+                decoration: InputDecoration(
+                  labelText: 'Yangi PIN (tasdiqlash)',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  prefixIcon: const Icon(Icons.lock),
+                  errorText: errorText,
+                ),
+                keyboardType: TextInputType.number,
+                obscureText: true,
+                maxLength: 6,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(
+                'Bekor qilish',
+                style: TextStyle(
+                  color: const Color(0xFF6B7280),
+                  fontFamily: 'Nunito',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14.sp,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final currentPin = currentPinController.text.trim();
+                final newPin = newPinController.text.trim();
+                final confirmPin = confirmPinController.text.trim();
+
+                if (currentPin.length < 4) {
+                  setDialogState(() => errorText = 'Joriy PIN noto\'g\'ri');
+                  return;
+                }
+                if (newPin.length < 4) {
+                  setDialogState(() => errorText = 'Yangi PIN kamida 4 raqam');
+                  return;
+                }
+                if (newPin != confirmPin) {
+                  setDialogState(() => errorText = 'PIN kodlar mos kelmadi');
+                  return;
+                }
+
+                // Avval joriy PIN tekshirish, keyin yangilash
+                context.read<AuthBloc>().add(ChangePinEvent(
+                  currentPin: currentPin,
+                  newPin: newPin,
+                  phone: phone,
+                ));
+                Navigator.pop(dialogContext);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('PIN kod yangilanmoqda...'),
+                    backgroundColor: Color(0xFF2D6A9F),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF22C55E),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+              ),
+              child: Text(
+                'O\'zgartirish',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Nunito',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14.sp,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

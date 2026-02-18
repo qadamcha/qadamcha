@@ -56,6 +56,9 @@ void main() {
         when(() => mockRepository.isLoggedIn()).thenAnswer((_) async => true);
         when(() => mockRepository.getCachedUser())
             .thenAnswer((_) async => Right(tUser));
+        // refreshToken fallback uchun
+        when(() => mockRepository.refreshToken())
+            .thenAnswer((_) async => const Right('new-token'));
         return authBloc;
       },
       act: (bloc) => bloc.add(CheckAuthStatusEvent()),
@@ -82,6 +85,9 @@ void main() {
         when(() => mockRepository.isLoggedIn()).thenAnswer((_) async => true);
         when(() => mockRepository.getCachedUser())
             .thenAnswer((_) async => const Left(CacheFailure()));
+        // Token ham expire bo'ldi — unauthenticated ga o'tkazish kerak
+        when(() => mockRepository.refreshToken())
+            .thenAnswer((_) async => const Left(TokenExpiredFailure()));
         return authBloc;
       },
       act: (bloc) => bloc.add(CheckAuthStatusEvent()),

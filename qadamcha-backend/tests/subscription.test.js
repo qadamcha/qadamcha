@@ -183,7 +183,7 @@ describe('Subscription Controller', () => {
             expect(response.statusCode).toBe(200);
             expect(data.success).toBe(true);
             expect(data.orderId).toBeDefined();
-            expect(data.checkoutUrl).toContain('https://test.paycom.uz');
+            expect(data.amount).toBe(29900);
             expect(Subscription.create).toHaveBeenCalled();
         });
 

@@ -59,6 +59,9 @@ class DeviceState extends Equatable {
   List<Device> get onlineDevices => 
       devices.where((d) => d.isOnline).toList();
   
+  /// Backend MAX_DEVICES bilan moslashtirish
+  int get maxDevices => 3;
+  
   @override
   List<Object?> get props => [
     status, 

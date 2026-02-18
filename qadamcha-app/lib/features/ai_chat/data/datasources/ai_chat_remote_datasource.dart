@@ -1,9 +1,13 @@
+import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 
 abstract class AiChatRemoteDataSource {
-  Future<String> sendMessage({
+  /// AI ga xabar yuborish (tarix bilan)
+  /// Returns: (javob matni, tokenCount)
+  Future<(String, int)> sendMessage({
     required String message,
     String? childId,
+    List<Map<String, String>>? history,
   });
 
   Future<bool> checkStatus();
@@ -15,26 +19,37 @@ class AiChatRemoteDataSourceImpl implements AiChatRemoteDataSource {
   AiChatRemoteDataSourceImpl(this._apiClient);
 
   @override
-  Future<String> sendMessage({
+  Future<(String, int)> sendMessage({
     required String message,
     String? childId,
+    List<Map<String, String>>? history,
   }) async {
     final data = <String, dynamic>{'message': message};
     if (childId != null) data['childId'] = childId;
+    if (history != null && history.isNotEmpty) data['history'] = history;
 
     final response = await _apiClient.post(
       '/ai/chat',
       data: data,
+      options: Options(
+        // AI javob berishi uzoqroq vaqt olishi mumkin
+        receiveTimeout: const Duration(seconds: 120),
+        sendTimeout: const Duration(seconds: 30),
+      ),
     );
 
     final body = response.data;
     if (body is Map && body['success'] == true) {
-      return body['message'] as String;
+      final text = body['message'] as String;
+      final tokenCount = (body['tokenCount'] as int?) ?? 0;
+      return (text, tokenCount);
     }
 
-    return body is Map
+    // Backend success: false qaytarsa — exception tashlash
+    final errorText = body is Map
         ? (body['message'] as String? ?? 'Javob olib bo\'lmadi')
         : 'Javob olib bo\'lmadi';
+    throw Exception(errorText);
   }
 
   @override

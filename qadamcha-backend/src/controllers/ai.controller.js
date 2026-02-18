@@ -5,10 +5,10 @@ const { ERRORS } = require('../config/constants');
 
 module.exports = {
 
-    // POST /ai/chat - AI bilan suhbat
+    // POST /ai/chat - AI bilan suhbat (tarix bilan)
     async chat(request, reply) {
         const { userId } = request.user;
-        const { message, childId } = request.body;
+        const { message, childId, history } = request.body;
 
         if (!message || message.trim().length < 3) {
             return reply.status(400).send({
@@ -35,7 +35,14 @@ module.exports = {
             }
         }
 
-        const result = await aiService.chat(message, context);
+        // History array ni validatsiya qilish
+        const validHistory = Array.isArray(history) ? history.filter(
+            h => h && typeof h.role === 'string' && typeof h.text === 'string'
+                && ['user', 'model'].includes(h.role)
+                && h.text.length > 0
+        ) : [];
+
+        const result = await aiService.chat(message, validHistory, context);
 
         return result;
     },

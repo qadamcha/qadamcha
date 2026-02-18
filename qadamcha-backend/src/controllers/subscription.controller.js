@@ -22,12 +22,17 @@ module.exports = {
             success: true,
             hasSubscription: true,
             subscription: {
+                _id: subscription._id,
+                userId: subscription.userId,
                 plan: subscription.plan,
                 status: subscription.status,
                 startDate: subscription.startDate,
                 endDate: subscription.endDate,
                 daysRemaining: Math.ceil((subscription.endDate - new Date()) / (1000 * 60 * 60 * 24)),
-                maxDevices: subscription.maxDevices
+                maxDevices: subscription.maxDevices,
+                autoRenew: subscription.autoRenew,
+                paymentMethod: subscription.paymentMethod,
+                createdAt: subscription.createdAt
             }
         };
     },
@@ -230,5 +235,68 @@ module.exports = {
             .limit(10);
 
         return { success: true, subscriptions };
+    },
+
+    // POST /subscription/activate-test - Test rejimida obunani faollashtirish
+    async activateTest(request, reply) {
+        const { userId } = request.user;
+
+        // Mavjud faol obunani tekshirish
+        const existing = await Subscription.getActive(userId);
+        if (existing) {
+            return {
+                success: true,
+                message: 'Obuna allaqachon faol',
+                subscription: {
+                    _id: existing._id,
+                    userId: existing.userId,
+                    plan: existing.plan,
+                    status: existing.status,
+                    startDate: existing.startDate,
+                    endDate: existing.endDate,
+                    autoRenew: existing.autoRenew,
+                    paymentMethod: existing.paymentMethod,
+                    createdAt: existing.createdAt
+                }
+            };
+        }
+
+        // Yangi obuna yaratish (test rejim — to'lovsiz)
+        const planData = config.PLANS['monthly'];
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + planData.days);
+
+        const subscription = await Subscription.create({
+            userId,
+            plan: 'monthly',
+            status: 'active',
+            price: planData.price,
+            startDate: new Date(),
+            endDate,
+            paymentMethod: 'trial',
+            createdBy: userId
+        });
+
+        // User modelini yangilash
+        await User.findByIdAndUpdate(userId, {
+            subscriptionStatus: 'active',
+            subscriptionPlan: 'monthly'
+        });
+
+        return {
+            success: true,
+            message: 'Obuna muvaffaqiyatli faollashtirildi (test rejim)',
+            subscription: {
+                _id: subscription._id,
+                userId: subscription.userId,
+                plan: subscription.plan,
+                status: subscription.status,
+                startDate: subscription.startDate,
+                endDate: subscription.endDate,
+                autoRenew: subscription.autoRenew,
+                paymentMethod: subscription.paymentMethod,
+                createdAt: subscription.createdAt
+            }
+        };
     }
 };

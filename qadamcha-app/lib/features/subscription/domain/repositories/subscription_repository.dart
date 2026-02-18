@@ -17,6 +17,9 @@ abstract class SubscriptionRepository {
 
   Future<Either<Failure, void>> cancelSubscription();
 
+  /// Test rejimida to'g'ridan-to'g'ri obunani faollashtirish (backend orqali)
+  Future<Either<Failure, Subscription>> activateTestSubscription();
+
   // ============= Subscribe API Methods =============
 
   /// Karta tokenini yaratish

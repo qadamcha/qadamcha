@@ -88,3 +88,27 @@ class AuthVerifyPinEvent extends AuthEvent {
   List<Object?> get props => [pin];
 }
 
+class UpdateProfileEvent extends AuthEvent {
+  final String name;
+  
+  const UpdateProfileEvent({required this.name});
+  
+  @override
+  List<Object?> get props => [name];
+}
+
+class ChangePinEvent extends AuthEvent {
+  final String currentPin;
+  final String newPin;
+  final String phone;
+  
+  const ChangePinEvent({
+    required this.currentPin,
+    required this.newPin,
+    required this.phone,
+  });
+  
+  @override
+  List<Object?> get props => [currentPin, newPin, phone];
+}
+

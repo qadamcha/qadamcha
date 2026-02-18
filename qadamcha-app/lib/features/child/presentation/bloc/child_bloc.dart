@@ -39,6 +39,7 @@ class ChildBloc extends Bloc<ChildEvent, ChildState> {
           status: ChildStatus.loaded,
           children: children,
           selectedChild: children.isNotEmpty ? children.first : null,
+          clearSelectedChild: children.isEmpty,
         ));
       },
     );
@@ -139,6 +140,7 @@ class ChildBloc extends Bloc<ChildEvent, ChildState> {
           selectedChild: updatedChildren.isNotEmpty 
               ? updatedChildren.first 
               : null,
+          clearSelectedChild: updatedChildren.isEmpty,
         ));
       },
     );

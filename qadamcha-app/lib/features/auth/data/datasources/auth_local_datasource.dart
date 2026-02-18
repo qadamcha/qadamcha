@@ -21,6 +21,12 @@ abstract class AuthLocalDataSource {
   
   /// PIN hash'ni o'chirish (logout da)
   Future<void> clearPinHash();
+
+  /// Device mode saqlash (parent/child)
+  Future<void> cacheDeviceMode(String mode);
+
+  /// Device mode olish
+  Future<String> getDeviceMode();
 }
 
 class AuthLocalDataSourceImpl implements AuthLocalDataSource {
@@ -118,5 +124,15 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   @override
   Future<void> clearPinHash() async {
     await _secureStorage.delete(key: StorageKeys.pinHash);
+  }
+
+  @override
+  Future<void> cacheDeviceMode(String mode) async {
+    await _prefs.setString('device_mode', mode);
+  }
+
+  @override
+  Future<String> getDeviceMode() async {
+    return _prefs.getString('device_mode') ?? 'parent';
   }
 }

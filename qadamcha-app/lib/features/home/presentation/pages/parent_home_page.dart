@@ -5,6 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../subscription/presentation/bloc/subscription_bloc.dart';
 import '../../../subscription/presentation/pages/payment_page.dart';
 import '../../../subscription/domain/entities/subscription_entity.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 import 'settings_page.dart';
 import '../../../auth/presentation/pages/role_selection_page.dart';
 
@@ -35,6 +36,9 @@ class ParentHomePage extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final authState = context.watch<AuthBloc>().state;
+    final userName = authState.user?.name ?? 'Ota-ona';
+
     return Row(
       children: [
         // Back button
@@ -82,7 +86,7 @@ class ParentHomePage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Salom! \u{1F44B}',
+                'Salom, $userName! \u{1F44B}',
                 style: TextStyle(
                   fontSize: 14.sp,
                   color: AppColors.textSecondary,

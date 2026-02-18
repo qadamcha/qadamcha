@@ -6,7 +6,7 @@ import '../../../../core/services/local_monitoring_service.dart';
 import '../../../../injection.dart';
 import '../../../child/presentation/bloc/child_bloc.dart';
 import '../../../ai_chat/presentation/bloc/ai_chat_bloc.dart';
-import '../../../ai_chat/presentation/pages/ai_chat_page.dart';
+import '../../../ai_chat/presentation/pages/chat_sessions_page.dart';
 import 'parent_home_page.dart';
 import 'guides_page.dart';
 import 'monitoring_page.dart';
@@ -36,7 +36,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
       const GuidesPage(),
       BlocProvider.value(
         value: _aiChatBloc,
-        child: const AiChatPage(),
+        child: const ChatSessionsPage(),
       ),
       const StoriesPage(),
       const MonitoringPage(),
@@ -90,7 +90,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+               color: const Color.fromRGBO(0, 0, 0, 0.05),
               blurRadius: 20,
               offset: const Offset(0, -5),
             ),

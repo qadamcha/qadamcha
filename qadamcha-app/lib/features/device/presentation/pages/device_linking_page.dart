@@ -1,11 +1,7 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../child/presentation/bloc/child_bloc.dart';
 import '../../domain/entities/device_entity.dart';
 import '../bloc/device_bloc.dart';
 
@@ -17,33 +13,10 @@ class DeviceLinkingPage extends StatefulWidget {
 }
 
 class _DeviceLinkingPageState extends State<DeviceLinkingPage> {
-  Timer? _timer;
-  int _remainingSeconds = 0;
-
   @override
   void initState() {
     super.initState();
     context.read<DeviceBloc>().add(LoadDevicesEvent());
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  void _startCountdown(Duration duration) {
-    _remainingSeconds = duration.inSeconds;
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        if (_remainingSeconds > 0) {
-          _remainingSeconds--;
-        } else {
-          timer.cancel();
-        }
-      });
-    });
   }
 
   @override
@@ -71,8 +44,8 @@ class _DeviceLinkingPageState extends State<DeviceLinkingPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Generate Code Section
-                _buildGenerateCodeSection(context, state),
+                // Info section
+                _buildAutoLinkingInfo(),
                 SizedBox(height: 24.h),
                 
                 // Devices List
@@ -107,9 +80,7 @@ class _DeviceLinkingPageState extends State<DeviceLinkingPage> {
     );
   }
 
-  Widget _buildGenerateCodeSection(BuildContext context, DeviceState state) {
-    final childState = context.watch<ChildBloc>().state;
-    
+  Widget _buildAutoLinkingInfo() {
     return Container(
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
@@ -118,8 +89,10 @@ class _DeviceLinkingPageState extends State<DeviceLinkingPage> {
       ),
       child: Column(
         children: [
+          Icon(Icons.devices, size: 48.sp, color: Colors.white),
+          SizedBox(height: 12.h),
           Text(
-            'Bola qurilmasini ulash',
+            'Avtomatik qurilma ulash',
             style: TextStyle(
               fontSize: 18.sp,
               fontWeight: FontWeight.bold,
@@ -128,138 +101,15 @@ class _DeviceLinkingPageState extends State<DeviceLinkingPage> {
           ),
           SizedBox(height: 8.h),
           Text(
-            'QR kodni bola qurilmasidan skanerlang',
+            'Bola telefoniga ilovani o\'rnating va shu telefon raqam bilan kiring.\n'
+            'Qurilma avtomatik ravishda bola qurilmasi sifatida ulanadi.',
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14.sp,
               color: Colors.white.withOpacity(0.9),
+              height: 1.4,
             ),
           ),
-          SizedBox(height: 20.h),
-          
-          // QR Code or Generate Button
-          if (state.linkingCode != null && !state.linkingCode!.isExpired) ...[
-            Container(
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16.r),
-              ),
-              child: Column(
-                children: [
-                  QrImageView(
-                    data: state.linkingCode!.code,
-                    version: QrVersions.auto,
-                    size: 180.w,
-                    backgroundColor: Colors.white,
-                    eyeStyle: const QrEyeStyle(
-                      eyeShape: QrEyeShape.square,
-                      color: AppColors.primary,
-                    ),
-                    dataModuleStyle: const QrDataModuleStyle(
-                      dataModuleShape: QrDataModuleShape.square,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  // Code display
-                  GestureDetector(
-                    onTap: () {
-                      Clipboard.setData(ClipboardData(text: state.linkingCode!.code));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Kod nusxalandi')),
-                      );
-                    },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceVariant,
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            state.linkingCode!.code,
-                            style: TextStyle(
-                              fontSize: 24.sp,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 4,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          SizedBox(width: 8.w),
-                          Icon(Icons.copy, size: 20.sp, color: AppColors.textSecondary),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 8.h),
-                  Text(
-                    'Amal qilish muddati: ${_formatDuration(Duration(seconds: _remainingSeconds))}',
-                    style: TextStyle(
-                      fontSize: 13.sp,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ] else ...[
-            // Child selector
-            if (childState.children.isNotEmpty) ...[
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: DropdownButton<String>(
-                  value: childState.selectedChild?.id,
-                  dropdownColor: AppColors.primary,
-                  style: TextStyle(color: Colors.white, fontSize: 16.sp),
-                  underline: const SizedBox(),
-                  isExpanded: true,
-                  items: childState.children.map((child) {
-                    return DropdownMenuItem(
-                      value: child.id,
-                      child: Text(child.name),
-                    );
-                  }).toList(),
-                  onChanged: (id) {
-                    if (id != null) {
-                      context.read<ChildBloc>().add(SelectChildEvent(id));
-                    }
-                  },
-                ),
-              ),
-              SizedBox(height: 16.h),
-            ],
-            ElevatedButton.icon(
-              onPressed: state.isGeneratingCode
-                  ? null
-                  : () {
-                      final selectedChild = childState.selectedChild;
-                      if (selectedChild != null) {
-                        context.read<DeviceBloc>().add(
-                          GenerateLinkingCodeEvent(selectedChild.id),
-                        );
-                      }
-                    },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: AppColors.primary,
-                padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 14.h),
-              ),
-              icon: state.isGeneratingCode
-                  ? SizedBox(
-                      width: 20.w,
-                      height: 20.w,
-                      child: const CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.qr_code),
-              label: Text(state.isGeneratingCode ? 'Yaratilmoqda...' : 'QR kod yaratish'),
-            ),
-          ],
         ],
       ),
     );
@@ -273,7 +123,7 @@ class _DeviceLinkingPageState extends State<DeviceLinkingPage> {
           Text('📱', style: TextStyle(fontSize: 64.sp)),
           SizedBox(height: 16.h),
           Text(
-            'Hali qurilma ulanmagan',
+            'Hali boshqa qurilma ulanmagan',
             style: TextStyle(
               fontSize: 16.sp,
               fontWeight: FontWeight.w600,
@@ -282,7 +132,7 @@ class _DeviceLinkingPageState extends State<DeviceLinkingPage> {
           ),
           SizedBox(height: 8.h),
           Text(
-            'Yuqoridagi QR kodni bola qurilmasidan skanerlang',
+            'Bola qurilmasidan shu raqam bilan kirilganda avtomatik ulanadi',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14.sp,
@@ -316,12 +166,6 @@ class _DeviceLinkingPageState extends State<DeviceLinkingPage> {
         ],
       ),
     );
-  }
-
-  String _formatDuration(Duration duration) {
-    final minutes = duration.inMinutes;
-    final seconds = duration.inSeconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 }
 

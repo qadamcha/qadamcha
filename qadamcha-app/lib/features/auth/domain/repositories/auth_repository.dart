@@ -17,7 +17,7 @@ abstract class AuthRepository {
   });
   
   /// Tizimga kirish
-  Future<Either<Failure, (User, AuthTokens)>> login({
+  Future<Either<Failure, (User, AuthTokens, String)>> login({
     required String phone,
     required String pin,
     required String deviceId,
@@ -45,4 +45,7 @@ abstract class AuthRepository {
 
   /// PIN kodni tekshirish (faqat token borlar uchun)
   Future<Either<Failure, void>> verifyPin(String pin);
+
+  /// Profilni yangilash (ismni o'zgartirish)
+  Future<Either<Failure, User>> updateProfile({required String name});
 }

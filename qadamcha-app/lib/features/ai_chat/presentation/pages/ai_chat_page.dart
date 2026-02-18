@@ -5,7 +5,7 @@ import '../bloc/ai_chat_bloc.dart';
 import '../bloc/ai_chat_event.dart';
 import '../bloc/ai_chat_state.dart';
 
-/// AI Maslahatchi sahifasi — real backend bilan ishlaydi
+/// AI Chat sahifasi — session-based, context bilan
 class AiChatPage extends StatefulWidget {
   const AiChatPage({super.key});
 
@@ -16,12 +16,6 @@ class AiChatPage extends StatefulWidget {
 class _AiChatPageState extends State<AiChatPage> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-
-  @override
-  void initState() {
-    super.initState();
-    context.read<AiChatBloc>().add(const CheckAiStatusEvent());
-  }
 
   @override
   void dispose() {
@@ -68,6 +62,9 @@ class _AiChatPageState extends State<AiChatPage> {
                   }
                 },
                 builder: (context, state) {
+                  if (state.messages.isEmpty) {
+                    return _buildWelcomeView();
+                  }
                   return ListView.builder(
                     controller: _scrollController,
                     padding: EdgeInsets.all(16.w),
@@ -85,10 +82,10 @@ class _AiChatPageState extends State<AiChatPage> {
               ),
             ),
 
-            // Tez savollar — faqat birinchi xabar bo'lganda
+            // Tez savollar — faqat kam xabar bo'lganda
             BlocBuilder<AiChatBloc, AiChatState>(
               builder: (context, state) {
-                if (state.messages.length > 1) return const SizedBox.shrink();
+                if (state.messages.length > 2) return const SizedBox.shrink();
                 return Column(
                   children: [
                     Container(
@@ -131,7 +128,7 @@ class _AiChatPageState extends State<AiChatPage> {
 
   Widget _buildHeader() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 10.h),
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(
@@ -140,19 +137,40 @@ class _AiChatPageState extends State<AiChatPage> {
       ),
       child: Row(
         children: [
+          GestureDetector(
+            onTap: () {
+              // Chatlar ro'yxatini yangilash va orqaga
+              context.read<AiChatBloc>().add(const LoadAllChatsEvent());
+              Navigator.pop(context);
+            },
+            child: Container(
+              width: 36.w,
+              height: 36.w,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF3F4F6),
+                borderRadius: BorderRadius.circular(10.r),
+              ),
+              child: Icon(
+                Icons.arrow_back_ios_new_rounded,
+                size: 16.sp,
+                color: const Color(0xFF374151),
+              ),
+            ),
+          ),
+          SizedBox(width: 10.w),
           Container(
-            width: 38.w,
-            height: 38.w,
+            width: 34.w,
+            height: 34.w,
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [Color(0xFF7C4DFF), Color(0xFFB388FF)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(11.r),
+              borderRadius: BorderRadius.circular(10.r),
             ),
             child: Center(
-              child: Text('🤖', style: TextStyle(fontSize: 20.sp)),
+              child: Text('🤖', style: TextStyle(fontSize: 18.sp)),
             ),
           ),
           SizedBox(width: 10.w),
@@ -163,7 +181,7 @@ class _AiChatPageState extends State<AiChatPage> {
                 Text(
                   'AI Maslahatchi',
                   style: TextStyle(
-                    fontSize: 16.sp,
+                    fontSize: 15.sp,
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF1A1A2E),
                     fontFamily: 'Nunito',
@@ -171,26 +189,52 @@ class _AiChatPageState extends State<AiChatPage> {
                 ),
                 BlocBuilder<AiChatBloc, AiChatState>(
                   builder: (context, state) {
-                    return Text(
-                      state.isAiOnline ? '✅ Online' : '⏳ Tekshirilmoqda...',
-                      style: TextStyle(
-                        fontSize: 11.sp,
-                        fontWeight: FontWeight.w600,
-                        color: state.isAiOnline
-                            ? const Color(0xFF22C55E)
-                            : const Color(0xFFEAB308),
-                        fontFamily: 'Nunito',
-                      ),
+                    return Row(
+                      children: [
+                        Text(
+                          state.isAiOnline ? '✅ Online' : '⏳ Tekshirilmoqda...',
+                          style: TextStyle(
+                            fontSize: 10.sp,
+                            fontWeight: FontWeight.w600,
+                            color: state.isAiOnline
+                                ? const Color(0xFF22C55E)
+                                : const Color(0xFFEAB308),
+                            fontFamily: 'Nunito',
+                          ),
+                        ),
+                        if (state.totalTokens > 0) ...[
+                          SizedBox(width: 8.w),
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 6.w,
+                              vertical: 1.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF3F4F6),
+                              borderRadius: BorderRadius.circular(6.r),
+                            ),
+                            child: Text(
+                              '${(state.totalTokens / 1000).toStringAsFixed(0)}K',
+                              style: TextStyle(
+                                fontSize: 9.sp,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF9CA3AF),
+                                fontFamily: 'Nunito',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     );
                   },
                 ),
               ],
             ),
           ),
-          // Chat tozalash tugmasi
+          // Yangi chat tugmasi
           GestureDetector(
             onTap: () {
-              context.read<AiChatBloc>().add(const ClearChatEvent());
+              context.read<AiChatBloc>().add(const CreateNewChatEvent());
             },
             child: Container(
               width: 36.w,
@@ -200,13 +244,60 @@ class _AiChatPageState extends State<AiChatPage> {
                 borderRadius: BorderRadius.circular(10.r),
               ),
               child: Icon(
-                Icons.refresh_rounded,
+                Icons.edit_note_rounded,
                 size: 20.sp,
                 color: const Color(0xFF6B7280),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildWelcomeView() {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(32.w),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 64.w,
+              height: 64.w,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF7C4DFF), Color(0xFFB388FF)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20.r),
+              ),
+              child: Center(
+                child: Text('🤖', style: TextStyle(fontSize: 32.sp)),
+              ),
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              'Qanday yordam bera olaman?',
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF1A1A2E),
+                fontFamily: 'Nunito',
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'Farzand tarbiyasi bo\'yicha savolingizni yozing',
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: const Color(0xFF6B7280),
+                fontFamily: 'Nunito',
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -282,7 +373,7 @@ class _AiChatPageState extends State<AiChatPage> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
+                    color: const Color.fromRGBO(0, 0, 0, 0.06),
                     blurRadius: 3,
                     offset: const Offset(0, 1),
                   ),
@@ -333,7 +424,7 @@ class _AiChatPageState extends State<AiChatPage> {
               borderRadius: BorderRadius.circular(16.r),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
+                  color: const Color.fromRGBO(0, 0, 0, 0.06),
                   blurRadius: 3,
                   offset: const Offset(0, 1),
                 ),
@@ -457,7 +548,7 @@ class _AiChatPageState extends State<AiChatPage> {
           border: Border.all(color: const Color(0xFFE5E7EB)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: const Color.fromRGBO(0, 0, 0, 0.03),
               blurRadius: 4,
               offset: const Offset(0, 1),
             ),
@@ -521,7 +612,7 @@ class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
         height: 8.w,
         decoration: BoxDecoration(
           color:
-              const Color(0xFF7C4DFF).withOpacity(0.3 + _animation.value * 0.7),
+              Color.fromRGBO(124, 77, 255, 0.3 + _animation.value * 0.7),
           shape: BoxShape.circle,
         ),
       ),

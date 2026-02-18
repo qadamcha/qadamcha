@@ -35,6 +35,7 @@ import 'features/subscription/presentation/bloc/subscription_bloc.dart';
 import 'features/ai_chat/domain/repositories/ai_chat_repository.dart';
 import 'features/ai_chat/data/repositories/ai_chat_repository_impl.dart';
 import 'features/ai_chat/data/datasources/ai_chat_remote_datasource.dart';
+import 'features/ai_chat/data/datasources/chat_local_datasource.dart';
 import 'features/ai_chat/presentation/bloc/ai_chat_bloc.dart';
 
 final sl = GetIt.instance;
@@ -69,7 +70,7 @@ Future<void> initializeDependencies() async {
     ),
   );
   sl.registerFactory<AuthBloc>(
-    () => AuthBloc(repository: sl()),
+    () => AuthBloc(repository: sl(), localDataSource: sl()),
   );
   
   //=== Child Feature ===
@@ -111,10 +112,13 @@ Future<void> initializeDependencies() async {
   sl.registerLazySingleton<AiChatRemoteDataSource>(
     () => AiChatRemoteDataSourceImpl(sl()),
   );
+  sl.registerLazySingleton<ChatLocalDataSource>(
+    () => ChatLocalDataSourceImpl(sl()),
+  );
   sl.registerLazySingleton<AiChatRepository>(
     () => AiChatRepositoryImpl(remoteDataSource: sl()),
   );
   sl.registerFactory<AiChatBloc>(
-    () => AiChatBloc(repository: sl()),
+    () => AiChatBloc(repository: sl(), localDataSource: sl()),
   );
 }
