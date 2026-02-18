@@ -47,6 +47,8 @@ module.exports = {
                 BUNNY_LIBRARY_ID: { envKey: 'BUNNY_STREAM_LIBRARY_ID', minLen: 1 },
                 BUNNY_API_KEY: { envKey: 'BUNNY_STREAM_API_KEY', minLen: 10 },
                 ALLOWED_ORIGINS: { envKey: 'ALLOWED_ORIGINS', minLen: 1 },
+                PAYME_MERCHANT_ID: { envKey: 'PAYME_MERCHANT_ID', minLen: 10 },
+                PAYME_KEY: { envKey: 'PAYME_KEY', minLen: 5 },
             };
 
             const missing = [];
@@ -76,7 +78,7 @@ module.exports = {
     // Payme
     PAYME_MERCHANT_ID: process.env.PAYME_MERCHANT_ID,
     PAYME_KEY: process.env.PAYME_KEY,
-    PAYME_API_URL: process.env.PAYME_API_URL || 'https://checkout.test.paycom.uz/api',
+    PAYME_API_URL: process.env.PAYME_API_URL || 'https://checkout.paycom.uz/api',
 
     // Gemini AI
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,
@@ -86,10 +88,10 @@ module.exports = {
     MAX_DEVICES: 3,      // Maksimal qurilma soni
     TEST_PHONE: process.env.TEST_PHONE || null, // Faqat development uchun
 
-    // Subscription Plans (UZS)
+    // Subscription Plans (so'mda — Payme uchun controller da × 100 = tiyin)
     PLANS: {
-        monthly: { price: 10000000, days: 30, name: 'Oylik (Test)' }, // 100,000 UZS
-        yearly: { price: 399000, days: 365, name: 'Yillik' },
-        lifetime: { price: 990000, days: 36500, name: 'Umrbod' }
+        monthly: { price: 1000, days: 30, name: 'Oylik' },      // 1,000 so'm (test/demo)
+        yearly: { price: 399000, days: 365, name: 'Yillik' },   // 399,000 so'm
+        lifetime: { price: 990000, days: 36500, name: 'Umrbod' } // 990,000 so'm
     }
 };

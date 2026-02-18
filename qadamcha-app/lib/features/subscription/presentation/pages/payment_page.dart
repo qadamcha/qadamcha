@@ -140,7 +140,12 @@ class _PaymentPageState extends State<PaymentPage> {
                 duration: const Duration(seconds: 3),
               ),
             );
-            Navigator.pop(context);
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => PaymentSuccessPage(plan: widget.plan),
+              ),
+            );
             break;
 
           case PaymentStatus.failed:

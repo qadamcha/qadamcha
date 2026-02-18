@@ -144,7 +144,7 @@ async function createCardToken(cardNumber, expire) {
             number: cardNumber,
             expire,
         },
-        save: true,
+        save: false,
     });
 
     return {
