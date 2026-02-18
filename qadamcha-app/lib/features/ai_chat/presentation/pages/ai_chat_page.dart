@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../bloc/ai_chat_bloc.dart';
 import '../bloc/ai_chat_event.dart';
 import '../bloc/ai_chat_state.dart';
 
 /// AI Chat sahifasi — session-based, context bilan
+/// Pro-level markdown rendering + premium dizayn
 class AiChatPage extends StatefulWidget {
   const AiChatPage({super.key});
 
@@ -45,6 +48,23 @@ class _AiChatPageState extends State<AiChatPage> {
     });
   }
 
+  void _copyMessage(String text) {
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text(
+          'Nusxalandi ✓',
+          style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w600),
+        ),
+        backgroundColor: const Color(0xFF22C55E),
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.all(16.w),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,7 +87,10 @@ class _AiChatPageState extends State<AiChatPage> {
                   }
                   return ListView.builder(
                     controller: _scrollController,
-                    padding: EdgeInsets.all(16.w),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 12.h,
+                    ),
                     itemCount: state.messages.length +
                         (state.status == AiChatStatus.loading ? 1 : 0),
                     itemBuilder: (context, index) {
@@ -129,17 +152,20 @@ class _AiChatPageState extends State<AiChatPage> {
   Widget _buildHeader() {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
-        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color.fromRGBO(0, 0, 0, 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
           GestureDetector(
             onTap: () {
-              // Chatlar ro'yxatini yangilash va orqaga
               context.read<AiChatBloc>().add(const LoadAllChatsEvent());
               Navigator.pop(context);
             },
@@ -191,10 +217,21 @@ class _AiChatPageState extends State<AiChatPage> {
                   builder: (context, state) {
                     return Row(
                       children: [
+                        Container(
+                          width: 6.w,
+                          height: 6.w,
+                          decoration: BoxDecoration(
+                            color: state.isAiOnline
+                                ? const Color(0xFF22C55E)
+                                : const Color(0xFFEAB308),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        SizedBox(width: 4.w),
                         Text(
-                          state.isAiOnline ? '✅ Online' : '⏳ Tekshirilmoqda...',
+                          state.isAiOnline ? 'Online' : 'Tekshirilmoqda...',
                           style: TextStyle(
-                            fontSize: 10.sp,
+                            fontSize: 11.sp,
                             fontWeight: FontWeight.w600,
                             color: state.isAiOnline
                                 ? const Color(0xFF22C55E)
@@ -263,26 +300,33 @@ class _AiChatPageState extends State<AiChatPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 64.w,
-              height: 64.w,
+              width: 80.w,
+              height: 80.w,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [Color(0xFF7C4DFF), Color(0xFFB388FF)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(20.r),
+                borderRadius: BorderRadius.circular(24.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF7C4DFF).withValues(alpha: 0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
               child: Center(
-                child: Text('🤖', style: TextStyle(fontSize: 32.sp)),
+                child: Text('🤖', style: TextStyle(fontSize: 40.sp)),
               ),
             ),
-            SizedBox(height: 16.h),
+            SizedBox(height: 24.h),
             Text(
               'Qanday yordam bera olaman?',
               style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.w700,
+                fontSize: 20.sp,
+                fontWeight: FontWeight.w800,
                 color: const Color(0xFF1A1A2E),
                 fontFamily: 'Nunito',
               ),
@@ -302,92 +346,152 @@ class _AiChatPageState extends State<AiChatPage> {
     );
   }
 
+  // ============= MESSAGE BUBBLE =============
+
   Widget _buildMessageBubble(ChatMessage message) {
     if (message.isUser) {
-      return Align(
-        alignment: Alignment.centerRight,
-        child: Container(
-          margin: EdgeInsets.only(bottom: 12.h, left: 60.w),
-          constraints:
-              BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
-          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF2D6A9F), Color(0xFF4A90D9)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(16.r),
-              topRight: Radius.circular(16.r),
-              bottomLeft: Radius.circular(16.r),
-              bottomRight: Radius.circular(4.r),
-            ),
+      return _buildUserBubble(message);
+    }
+    return _buildAiBubble(message);
+  }
+
+  /// User xabar bubble — gradient fon
+  Widget _buildUserBubble(ChatMessage message) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Container(
+        margin: EdgeInsets.only(bottom: 12.h, left: 48.w),
+        constraints:
+            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF2D6A9F), Color(0xFF4A90D9)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          child: Text(
-            message.text,
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: Colors.white,
-              height: 1.5,
-              fontFamily: 'Nunito',
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(18.r),
+            topRight: Radius.circular(18.r),
+            bottomLeft: Radius.circular(18.r),
+            bottomRight: Radius.circular(4.r),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF2D6A9F).withValues(alpha: 0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
             ),
+          ],
+        ),
+        child: Text(
+          message.text,
+          style: TextStyle(
+            fontSize: 14.sp,
+            color: Colors.white,
+            height: 1.5,
+            fontFamily: 'Nunito',
           ),
         ),
-      );
-    }
+      ),
+    );
+  }
 
+  /// AI xabar bubble — Markdown rendering + copy tugmasi
+  Widget _buildAiBubble(ChatMessage message) {
     return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
+      margin: EdgeInsets.only(bottom: 16.h),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // AI Avatar
           Container(
-            width: 26.w,
-            height: 26.w,
+            width: 30.w,
+            height: 30.w,
+            margin: EdgeInsets.only(top: 2.h),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [Color(0xFF7C4DFF), Color(0xFFB388FF)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(9.r),
+              borderRadius: BorderRadius.circular(10.r),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF7C4DFF).withValues(alpha: 0.2),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Center(
-              child: Text('🤖', style: TextStyle(fontSize: 12.sp)),
+              child: Text('🤖', style: TextStyle(fontSize: 14.sp)),
             ),
           ),
-          SizedBox(width: 6.w),
+          SizedBox(width: 8.w),
+
+          // Xabar bubble
           Flexible(
-            child: Container(
-              constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * 0.75),
-              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(16.r),
-                  topRight: Radius.circular(16.r),
-                  bottomLeft: Radius.circular(4.r),
-                  bottomRight: Radius.circular(16.r),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color.fromRGBO(0, 0, 0, 0.06),
-                    blurRadius: 3,
-                    offset: const Offset(0, 1),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.78,
                   ),
-                ],
-              ),
-              child: Text(
-                message.text,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: const Color(0xFF1A1A2E),
-                  height: 1.6,
-                  fontFamily: 'Nunito',
+                  padding: EdgeInsets.all(14.w),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(4.r),
+                      topRight: Radius.circular(18.r),
+                      bottomLeft: Radius.circular(18.r),
+                      bottomRight: Radius.circular(18.r),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color.fromRGBO(0, 0, 0, 0.06),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: MarkdownBody(
+                    data: message.text,
+                    selectable: true,
+                    shrinkWrap: true,
+                    softLineBreak: true,
+                    styleSheet: _markdownStyleSheet(),
+                  ),
                 ),
-              ),
+                // Copy tugmasi
+                Padding(
+                  padding: EdgeInsets.only(top: 4.h, left: 4.w),
+                  child: GestureDetector(
+                    onTap: () => _copyMessage(message.text),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.copy_rounded,
+                          size: 13.sp,
+                          color: const Color(0xFF9CA3AF),
+                        ),
+                        SizedBox(width: 3.w),
+                        Text(
+                          'Nusxalash',
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            color: const Color(0xFF9CA3AF),
+                            fontFamily: 'Nunito',
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -395,38 +499,178 @@ class _AiChatPageState extends State<AiChatPage> {
     );
   }
 
+  /// Markdown uchun professional style sheet
+  MarkdownStyleSheet _markdownStyleSheet() {
+    return MarkdownStyleSheet(
+      // Asosiy matn
+      p: TextStyle(
+        fontSize: 14.sp,
+        color: const Color(0xFF1F2937),
+        height: 1.6,
+        fontFamily: 'Nunito',
+      ),
+
+      // Bold
+      strong: TextStyle(
+        fontSize: 14.sp,
+        fontWeight: FontWeight.w700,
+        color: const Color(0xFF111827),
+        fontFamily: 'Nunito',
+      ),
+
+      // Italic
+      em: TextStyle(
+        fontSize: 14.sp,
+        fontStyle: FontStyle.italic,
+        color: const Color(0xFF374151),
+        fontFamily: 'Nunito',
+      ),
+
+      // Sarlavhalar
+      h1: TextStyle(
+        fontSize: 20.sp,
+        fontWeight: FontWeight.w800,
+        color: const Color(0xFF111827),
+        fontFamily: 'Nunito',
+        height: 1.4,
+      ),
+      h2: TextStyle(
+        fontSize: 17.sp,
+        fontWeight: FontWeight.w700,
+        color: const Color(0xFF1F2937),
+        fontFamily: 'Nunito',
+        height: 1.4,
+      ),
+      h3: TextStyle(
+        fontSize: 15.sp,
+        fontWeight: FontWeight.w700,
+        color: const Color(0xFF374151),
+        fontFamily: 'Nunito',
+        height: 1.4,
+      ),
+
+      // Ro'yxatlar
+      listBullet: TextStyle(
+        fontSize: 14.sp,
+        color: const Color(0xFF7C4DFF),
+        fontWeight: FontWeight.w700,
+      ),
+
+      // Kod bloklari
+      code: TextStyle(
+        fontSize: 12.sp,
+        color: const Color(0xFF7C4DFF),
+        backgroundColor: const Color(0xFFF3F0FF),
+        fontFamily: 'monospace',
+      ),
+      codeblockDecoration: BoxDecoration(
+        color: const Color(0xFFF8F6FF),
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(color: const Color(0xFFE8E0FF), width: 1),
+      ),
+      codeblockPadding: EdgeInsets.all(12.w),
+
+      // Blockquote
+      blockquote: TextStyle(
+        fontSize: 14.sp,
+        color: const Color(0xFF6B7280),
+        fontStyle: FontStyle.italic,
+        fontFamily: 'Nunito',
+        height: 1.6,
+      ),
+      blockquoteDecoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        border: const Border(
+          left: BorderSide(color: Color(0xFF7C4DFF), width: 3),
+        ),
+        borderRadius: BorderRadius.only(
+          topRight: Radius.circular(6.r),
+          bottomRight: Radius.circular(6.r),
+        ),
+      ),
+      blockquotePadding: EdgeInsets.fromLTRB(12.w, 8.h, 12.w, 8.h),
+
+      // Horizontal rule
+      horizontalRuleDecoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
+        ),
+      ),
+
+      // Table
+      tableBorder: TableBorder.all(
+        color: const Color(0xFFE5E7EB),
+        width: 1,
+        borderRadius: BorderRadius.circular(8.r),
+      ),
+      tableHead: TextStyle(
+        fontSize: 13.sp,
+        fontWeight: FontWeight.w700,
+        color: const Color(0xFF374151),
+        fontFamily: 'Nunito',
+      ),
+      tableBody: TextStyle(
+        fontSize: 13.sp,
+        color: const Color(0xFF4B5563),
+        fontFamily: 'Nunito',
+      ),
+      tableCellsPadding: EdgeInsets.symmetric(
+        horizontal: 10.w,
+        vertical: 6.h,
+      ),
+
+      // Bo'shliqlar
+      blockSpacing: 10.h,
+      listIndent: 20.w,
+      listBulletPadding: EdgeInsets.only(right: 6.w),
+    );
+  }
+
   Widget _buildTypingIndicator() {
     return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
+      margin: EdgeInsets.only(bottom: 16.h),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 26.w,
-            height: 26.w,
+            width: 30.w,
+            height: 30.w,
+            margin: EdgeInsets.only(top: 2.h),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [Color(0xFF7C4DFF), Color(0xFFB388FF)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(9.r),
+              borderRadius: BorderRadius.circular(10.r),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF7C4DFF).withOpacity(0.2),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Center(
-              child: Text('🤖', style: TextStyle(fontSize: 12.sp)),
+              child: Text('🤖', style: TextStyle(fontSize: 14.sp)),
             ),
           ),
-          SizedBox(width: 6.w),
+          SizedBox(width: 8.w),
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+            padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 14.h),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(4.r),
+                topRight: Radius.circular(18.r),
+                bottomLeft: Radius.circular(18.r),
+                bottomRight: Radius.circular(18.r),
+              ),
               boxShadow: [
                 BoxShadow(
                   color: const Color.fromRGBO(0, 0, 0, 0.06),
-                  blurRadius: 3,
-                  offset: const Offset(0, 1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
@@ -434,9 +678,9 @@ class _AiChatPageState extends State<AiChatPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 _Dot(delay: 0),
-                SizedBox(width: 4.w),
+                SizedBox(width: 5.w),
                 _Dot(delay: 150),
-                SizedBox(width: 4.w),
+                SizedBox(width: 5.w),
                 _Dot(delay: 300),
               ],
             ),
@@ -448,21 +692,25 @@ class _AiChatPageState extends State<AiChatPage> {
 
   Widget _buildInputArea() {
     return Container(
-      padding: EdgeInsets.fromLTRB(18.w, 12.h, 18.w, 18.h),
-      decoration: const BoxDecoration(
+      padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 16.h),
+      decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(
-          top: BorderSide(color: Color(0xFFE5E7EB), width: 1),
-        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color.fromRGBO(0, 0, 0, 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
       ),
       child: Row(
         children: [
           Expanded(
             child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8F9FA),
-                borderRadius: BorderRadius.circular(14.r),
+                color: const Color(0xFFF3F4F6),
+                borderRadius: BorderRadius.circular(24.r),
               ),
               child: TextField(
                 controller: _controller,
@@ -484,9 +732,12 @@ class _AiChatPageState extends State<AiChatPage> {
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
                   isDense: true,
-                  contentPadding: EdgeInsets.zero,
+                  contentPadding: EdgeInsets.symmetric(
+                    vertical: 10.h,
+                  ),
                 ),
-                maxLines: null,
+                maxLines: 4,
+                minLines: 1,
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => _sendMessage(),
               ),
@@ -499,21 +750,31 @@ class _AiChatPageState extends State<AiChatPage> {
               return GestureDetector(
                 onTap: isLoading ? null : _sendMessage,
                 child: Container(
-                  width: 40.w,
-                  height: 40.w,
+                  width: 44.w,
+                  height: 44.w,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: isLoading
-                          ? [const Color(0xFF9CA3AF), const Color(0xFFBBBBBB)]
+                          ? [const Color(0xFFD1D5DB), const Color(0xFFE5E7EB)]
                           : [const Color(0xFF2D6A9F), const Color(0xFF4A90D9)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(12.r),
+                    borderRadius: BorderRadius.circular(22.r),
+                    boxShadow: isLoading
+                        ? []
+                        : [
+                            BoxShadow(
+                              color:
+                                  const Color(0xFF2D6A9F).withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
                   ),
                   child: isLoading
                       ? Padding(
-                          padding: EdgeInsets.all(10.w),
+                          padding: EdgeInsets.all(11.w),
                           child: const CircularProgressIndicator(
                             strokeWidth: 2,
                             color: Colors.white,
@@ -568,6 +829,7 @@ class _AiChatPageState extends State<AiChatPage> {
   }
 }
 
+// ============= Dots Animation =============
 class _Dot extends StatefulWidget {
   final int delay;
 
