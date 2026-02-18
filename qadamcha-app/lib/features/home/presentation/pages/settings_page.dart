@@ -637,136 +637,45 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  /// PIN o'zgartirish dialog
+  /// PIN o'zgartirish — premium bottom sheet
   void _showChangePinDialog(BuildContext context, String phone) {
-    final currentPinController = TextEditingController();
-    final newPinController = TextEditingController();
-    final confirmPinController = TextEditingController();
-    String? errorText;
-
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (_) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-          title: Text(
-            'PIN kodni o\'zgartirish',
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-              fontFamily: 'Nunito',
-              fontSize: 18.sp,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _PinChangeSheet(
+        phone: phone,
+        onSubmit: (currentPin, newPin) {
+          context.read<AuthBloc>().add(ChangePinEvent(
+                currentPin: currentPin,
+                newPin: newPin,
+                phone: phone,
+              ));
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.check_circle_rounded,
+                      color: Colors.white, size: 18.sp),
+                  SizedBox(width: 8.w),
+                  const Text(
+                    'PIN kod yangilanmoqda...',
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: const Color(0xFF2D6A9F),
+              behavior: SnackBarBehavior.floating,
+              margin: EdgeInsets.all(16.w),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.r)),
             ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: currentPinController,
-                decoration: InputDecoration(
-                  labelText: 'Joriy PIN',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  prefixIcon: const Icon(Icons.lock_outline),
-                ),
-                keyboardType: TextInputType.number,
-                obscureText: true,
-                maxLength: 6,
-              ),
-              SizedBox(height: 8.h),
-              TextField(
-                controller: newPinController,
-                decoration: InputDecoration(
-                  labelText: 'Yangi PIN',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  prefixIcon: const Icon(Icons.lock_open),
-                ),
-                keyboardType: TextInputType.number,
-                obscureText: true,
-                maxLength: 6,
-              ),
-              SizedBox(height: 8.h),
-              TextField(
-                controller: confirmPinController,
-                decoration: InputDecoration(
-                  labelText: 'Yangi PIN (tasdiqlash)',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  prefixIcon: const Icon(Icons.lock),
-                  errorText: errorText,
-                ),
-                keyboardType: TextInputType.number,
-                obscureText: true,
-                maxLength: 6,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(
-                'Bekor qilish',
-                style: TextStyle(
-                  color: const Color(0xFF6B7280),
-                  fontFamily: 'Nunito',
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14.sp,
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final currentPin = currentPinController.text.trim();
-                final newPin = newPinController.text.trim();
-                final confirmPin = confirmPinController.text.trim();
-
-                if (currentPin.length < 4) {
-                  setDialogState(() => errorText = 'Joriy PIN noto\'g\'ri');
-                  return;
-                }
-                if (newPin.length < 4) {
-                  setDialogState(() => errorText = 'Yangi PIN kamida 4 raqam');
-                  return;
-                }
-                if (newPin != confirmPin) {
-                  setDialogState(() => errorText = 'PIN kodlar mos kelmadi');
-                  return;
-                }
-
-                // Avval joriy PIN tekshirish, keyin yangilash
-                context.read<AuthBloc>().add(ChangePinEvent(
-                  currentPin: currentPin,
-                  newPin: newPin,
-                  phone: phone,
-                ));
-                Navigator.pop(dialogContext);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('PIN kod yangilanmoqda...'),
-                    backgroundColor: Color(0xFF2D6A9F),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF22C55E),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
-                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
-              ),
-              child: Text(
-                'O\'zgartirish',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Nunito',
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14.sp,
-                ),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -881,6 +790,373 @@ class _SettingsRow extends StatelessWidget {
             trailing,
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// PIN O'zgartirish — Premium Bottom Sheet (3 bosqichli)
+// ============================================================
+
+class _PinChangeSheet extends StatefulWidget {
+  final String phone;
+  final void Function(String currentPin, String newPin) onSubmit;
+
+  const _PinChangeSheet({required this.phone, required this.onSubmit});
+
+  @override
+  State<_PinChangeSheet> createState() => _PinChangeSheetState();
+}
+
+class _PinChangeSheetState extends State<_PinChangeSheet> {
+  int _step = 0; // 0: joriy PIN, 1: yangi PIN, 2: tasdiqlash
+  String _currentPin = '';
+  String _newPin = '';
+  String _confirmPin = '';
+  String _error = '';
+
+  static const int _pinLength = 4;
+
+  String get _activePin {
+    switch (_step) {
+      case 0:
+        return _currentPin;
+      case 1:
+        return _newPin;
+      case 2:
+        return _confirmPin;
+      default:
+        return '';
+    }
+  }
+
+  void _onDigit(String digit) {
+    if (_activePin.length >= _pinLength) return;
+    setState(() {
+      _error = '';
+      switch (_step) {
+        case 0:
+          _currentPin += digit;
+          if (_currentPin.length == _pinLength) {
+            Future.delayed(const Duration(milliseconds: 200), () {
+              if (mounted) setState(() => _step = 1);
+            });
+          }
+          break;
+        case 1:
+          _newPin += digit;
+          if (_newPin.length == _pinLength) {
+            Future.delayed(const Duration(milliseconds: 200), () {
+              if (mounted) setState(() => _step = 2);
+            });
+          }
+          break;
+        case 2:
+          _confirmPin += digit;
+          if (_confirmPin.length == _pinLength) {
+            Future.delayed(const Duration(milliseconds: 200), _submit);
+          }
+          break;
+      }
+    });
+  }
+
+  void _onBackspace() {
+    setState(() {
+      _error = '';
+      switch (_step) {
+        case 0:
+          if (_currentPin.isNotEmpty) {
+            _currentPin = _currentPin.substring(0, _currentPin.length - 1);
+          }
+          break;
+        case 1:
+          if (_newPin.isNotEmpty) {
+            _newPin = _newPin.substring(0, _newPin.length - 1);
+          } else {
+            _step = 0;
+          }
+          break;
+        case 2:
+          if (_confirmPin.isNotEmpty) {
+            _confirmPin = _confirmPin.substring(0, _confirmPin.length - 1);
+          } else {
+            _step = 1;
+          }
+          break;
+      }
+    });
+  }
+
+  void _submit() {
+    if (_newPin != _confirmPin) {
+      setState(() {
+        _error = 'PIN kodlar mos kelmadi';
+        _confirmPin = '';
+      });
+      return;
+    }
+    widget.onSubmit(_currentPin, _newPin);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Container(
+      padding: EdgeInsets.only(bottom: bottomInset),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+      ),
+      child: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Drag handle
+            Container(
+              margin: EdgeInsets.only(top: 12.h),
+              width: 40.w,
+              height: 4.h,
+              decoration: BoxDecoration(
+                color: const Color(0xFFD1D5DB),
+                borderRadius: BorderRadius.circular(2.r),
+              ),
+            ),
+
+            SizedBox(height: 20.h),
+
+            // Title + Step indicator
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              child: Column(
+                children: [
+                  // Icon
+                  Container(
+                    width: 56.w,
+                    height: 56.w,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF7C4DFF), Color(0xFFB388FF)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16.r),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF7C4DFF).withValues(alpha: 0.25),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.lock_rounded,
+                      color: Colors.white,
+                      size: 26.sp,
+                    ),
+                  ),
+
+                  SizedBox(height: 16.h),
+
+                  Text(
+                    _stepTitle,
+                    style: TextStyle(
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF1A1A2E),
+                      fontFamily: 'Nunito',
+                    ),
+                  ),
+                  SizedBox(height: 6.h),
+                  Text(
+                    _stepSubtitle,
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      color: const Color(0xFF6B7280),
+                      fontFamily: 'Nunito',
+                    ),
+                  ),
+
+                  SizedBox(height: 20.h),
+
+                  // Step indicator dots
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(3, (i) {
+                      final isActive = i <= _step;
+                      final isCurrent = i == _step;
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        margin: EdgeInsets.symmetric(horizontal: 4.w),
+                        width: isCurrent ? 24.w : 8.w,
+                        height: 8.h,
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? const Color(0xFF7C4DFF)
+                              : const Color(0xFFE5E7EB),
+                          borderRadius: BorderRadius.circular(4.r),
+                        ),
+                      );
+                    }),
+                  ),
+
+                  SizedBox(height: 28.h),
+
+                  // PIN dots
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(_pinLength, (i) {
+                      final filled = i < _activePin.length;
+                      final hasError = _error.isNotEmpty;
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        margin: EdgeInsets.symmetric(horizontal: 8.w),
+                        width: 16.w,
+                        height: 16.w,
+                        decoration: BoxDecoration(
+                          color: filled
+                              ? (hasError
+                                  ? const Color(0xFFEF4444)
+                                  : const Color(0xFF7C4DFF))
+                              : Colors.transparent,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: hasError
+                                ? const Color(0xFFEF4444)
+                                : filled
+                                    ? const Color(0xFF7C4DFF)
+                                    : const Color(0xFFD1D5DB),
+                            width: 2,
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+
+                  // Error text
+                  SizedBox(height: 12.h),
+                  SizedBox(
+                    height: 18.h,
+                    child: _error.isNotEmpty
+                        ? Text(
+                            _error,
+                            style: TextStyle(
+                              fontSize: 13.sp,
+                              color: const Color(0xFFEF4444),
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Nunito',
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ),
+            ),
+
+            SizedBox(height: 16.h),
+
+            // Keypad
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 40.w),
+              child: _buildKeypad(),
+            ),
+
+            SizedBox(height: 16.h),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String get _stepTitle {
+    switch (_step) {
+      case 0:
+        return 'Joriy PIN kodni kiriting';
+      case 1:
+        return 'Yangi PIN yarating';
+      case 2:
+        return 'Tasdiqlang';
+      default:
+        return '';
+    }
+  }
+
+  String get _stepSubtitle {
+    switch (_step) {
+      case 0:
+        return 'Xavfsizlik uchun hozirgi PIN kodingizni kiriting';
+      case 1:
+        return '4 xonali yangi PIN kodni o\'ylab toping';
+      case 2:
+        return 'Yangi PIN kodni qayta kiriting';
+      default:
+        return '';
+    }
+  }
+
+  Widget _buildKeypad() {
+    return Column(
+      children: [
+        for (var row in [
+          ['1', '2', '3'],
+          ['4', '5', '6'],
+          ['7', '8', '9'],
+          ['', '0', 'back']
+        ])
+          Padding(
+            padding: EdgeInsets.only(bottom: 10.h),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: row.map((key) {
+                if (key.isEmpty) {
+                  return SizedBox(width: 64.w, height: 52.h);
+                }
+                if (key == 'back') {
+                  return _buildKeypadButton(
+                    child: Icon(
+                      Icons.backspace_outlined,
+                      color: const Color(0xFF374151),
+                      size: 22.sp,
+                    ),
+                    onTap: _onBackspace,
+                  );
+                }
+                return _buildKeypadButton(
+                  child: Text(
+                    key,
+                    style: TextStyle(
+                      fontSize: 24.sp,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF1A1A2E),
+                      fontFamily: 'Nunito',
+                    ),
+                  ),
+                  onTap: () => _onDigit(key),
+                );
+              }).toList(),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildKeypadButton({
+    required Widget child,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 64.w,
+        height: 52.h,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF9FAFB),
+          borderRadius: BorderRadius.circular(14.r),
+          border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
+        ),
+        child: Center(child: child),
       ),
     );
   }
