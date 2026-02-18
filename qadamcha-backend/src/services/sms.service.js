@@ -11,6 +11,12 @@ class SmsService {
         this.redis = null;
     }
 
+    // Telefon raqamni maskirovka qilish (+998*****1234)
+    _maskPhone(phone) {
+        if (!phone || phone.length < 6) return '***';
+        return phone.slice(0, 4) + '*'.repeat(phone.length - 8) + phone.slice(-4);
+    }
+
     // Redis ni sozlash (app.js dan chaqiriladi)
     setRedis(redis) {
         this.redis = redis;
@@ -91,12 +97,17 @@ class SmsService {
             && config.ESKIZ_EMAIL !== 'your_email@gmail.com'
             && config.ESKIZ_PASSWORD !== 'your_eskiz_api_password';
 
-        // OTP kodni har doim logga chiqarish
-        console.log('\n' + '='.repeat(50));
-        console.log('📱 OTP CODE FOR', phone);
-        console.log('🔐 CODE:', code);
-        console.log('📋 PURPOSE:', purpose);
-        console.log('='.repeat(50) + '\n');
+        // OTP kodni FAQAT development rejimda logga chiqarish
+        if (config.NODE_ENV !== 'production') {
+            console.log('\n' + '='.repeat(50));
+            console.log('📱 OTP CODE FOR', phone);
+            console.log('🔐 CODE:', code);
+            console.log('📋 PURPOSE:', purpose);
+            console.log('='.repeat(50) + '\n');
+        } else {
+            // Production: faqat maskirovka qilingan telefon raqam
+            console.log(`📱 OTP sent to ${this._maskPhone(phone)} | purpose: ${purpose}`);
+        }
 
         // Eskiz sozlanmagan bo'lsa — faqat logga chiqarish
         if (!eskizConfigured) {

@@ -28,7 +28,7 @@ jest.mock('../src/services/payme.service', () => ({
 jest.mock('../src/models', () => {
     return {
         PaymeTransaction: { create: jest.fn(), findOne: jest.fn() },
-        Subscription: { findById: jest.fn() },
+        Subscription: { findById: jest.fn(), findOneAndUpdate: jest.fn(), updateOne: jest.fn() },
         User: jest.fn(), Child: jest.fn(), Device: jest.fn(),
         Content: jest.fn(), Activity: jest.fn(), ContentLike: jest.fn(),
     };
@@ -284,7 +284,10 @@ describe('POST /payme/pay', () => {
 
     test('Muvaffaqiyatli to\'lov', async () => {
         const save = jest.fn();
-        Subscription.findById.mockResolvedValue({ ...mockOrder, save });
+        Subscription.findOneAndUpdate.mockResolvedValue({
+            ...mockOrder, save,
+            userId: { toString: () => TEST_USER_ID },
+        });
         paymeService.createReceipt.mockResolvedValue({ receiptId: 'r-123', state: 0 });
         paymeService.payReceipt.mockResolvedValue({ receiptId: 'r-123', state: 4 });
         PaymeTransaction.create.mockResolvedValue({
@@ -301,12 +304,18 @@ describe('POST /payme/pay', () => {
         expect(res.statusCode).toBe(200);
         expect(body.success).toBe(true);
         expect(body.subscription.status).toBe('active');
+        expect(Subscription.findOneAndUpdate).toHaveBeenCalledWith(
+            { _id: TEST_ORDER_ID, userId: TEST_USER_ID, status: 'pending' },
+            { $set: { status: 'processing' } },
+            { new: true }
+        );
         expect(paymeService.createReceipt).toHaveBeenCalledWith(4900000, TEST_ORDER_ID);
         expect(paymeService.payReceipt).toHaveBeenCalledWith('r-123', 'card-token');
         expect(save).toHaveBeenCalled();
     });
 
     test('Buyurtma topilmadi — 404', async () => {
+        Subscription.findOneAndUpdate.mockResolvedValue(null);
         Subscription.findById.mockResolvedValue(null);
         const res = await app.inject({
             method: 'POST', url: '/payme/pay',
@@ -317,6 +326,7 @@ describe('POST /payme/pay', () => {
     });
 
     test('Boshqa foydalanuvchi — 403', async () => {
+        Subscription.findOneAndUpdate.mockResolvedValue(null);
         Subscription.findById.mockResolvedValue({
             ...mockOrder, userId: { toString: () => 'other' },
         });
@@ -330,7 +340,8 @@ describe('POST /payme/pay', () => {
     });
 
     test('Allaqachon active — 400', async () => {
-        Subscription.findById.mockResolvedValue({ ...mockOrder, status: 'active' });
+        Subscription.findOneAndUpdate.mockResolvedValue(null);
+        Subscription.findById.mockResolvedValue({ ...mockOrder, status: 'active', userId: { toString: () => TEST_USER_ID } });
         const res = await app.inject({
             method: 'POST', url: '/payme/pay',
             payload: { orderId: TEST_ORDER_ID, token: 'x' },
@@ -339,8 +350,23 @@ describe('POST /payme/pay', () => {
         expect(res.statusCode).toBe(400);
     });
 
-    test('Mablag\' yetarli emas — 400 (-31008)', async () => {
-        Subscription.findById.mockResolvedValue({ ...mockOrder, save: jest.fn() });
+    test('Race condition — ikkinchi so\'rov rad etiladi', async () => {
+        // Birinchi so'rov allaqachon processing ga o'tkazgan
+        Subscription.findOneAndUpdate.mockResolvedValue(null);
+        Subscription.findById.mockResolvedValue({ ...mockOrder, status: 'processing', userId: { toString: () => TEST_USER_ID } });
+        const res = await app.inject({
+            method: 'POST', url: '/payme/pay',
+            payload: { orderId: TEST_ORDER_ID, token: 'x' },
+            headers: { Authorization: `Bearer ${authToken}` },
+        });
+        expect(res.statusCode).toBe(400);
+        expect(JSON.parse(res.body).message).toContain('qayta ishlanyapti');
+        expect(paymeService.createReceipt).not.toHaveBeenCalled();
+    });
+
+    test('Mablag\' yetarli emas — 400 (-31008) + rollback', async () => {
+        Subscription.findOneAndUpdate.mockResolvedValue({ ...mockOrder, save: jest.fn(), userId: { toString: () => TEST_USER_ID } });
+        Subscription.updateOne.mockResolvedValue({ modifiedCount: 1 });
         paymeService.createReceipt.mockResolvedValue({ receiptId: 'r-456', state: 0 });
         paymeService.payReceipt.mockRejectedValue(
             Object.assign(new Error('Insufficient'), { code: -31008 })
@@ -354,6 +380,11 @@ describe('POST /payme/pay', () => {
 
         expect(res.statusCode).toBe(400);
         expect(JSON.parse(res.body).code).toBe(-31008);
+        // Rollback tekshiruvi: processing → pending
+        expect(Subscription.updateOne).toHaveBeenCalledWith(
+            { _id: TEST_ORDER_ID, status: 'processing' },
+            { $set: { status: 'pending' } }
+        );
     });
 });
 

@@ -153,27 +153,32 @@ async function pay(request, reply) {
     const { userId } = request.user;
     const { orderId, token } = request.body;
 
-    // 1. Buyurtma tekshiruvi
-    const order = await Subscription.findById(orderId);
+    // 1. ATOMIC: pending → processing (race condition oldini olish)
+    // Ikkita parallel so'rov kelsa, faqat bittasi muvaffaqiyatli bo'ladi
+    const order = await Subscription.findOneAndUpdate(
+        { _id: orderId, userId, status: 'pending' },
+        { $set: { status: 'processing' } },
+        { new: true }
+    );
+
     if (!order) {
-        return reply.status(404).send({
-            success: false,
-            message: 'Buyurtma topilmadi',
-        });
-    }
-
-    // Ownership tekshiruvi
-    if (order.userId.toString() !== userId) {
-        return reply.status(403).send({
-            success: false,
-            message: 'Ruxsat yo\'q',
-        });
-    }
-
-    if (order.status !== 'pending') {
+        // Aniq xato xabarini qaytarish
+        const existing = await Subscription.findById(orderId);
+        if (!existing) {
+            return reply.status(404).send({
+                success: false,
+                message: 'Buyurtma topilmadi',
+            });
+        }
+        if (existing.userId.toString() !== userId) {
+            return reply.status(403).send({
+                success: false,
+                message: 'Ruxsat yo\'q',
+            });
+        }
         return reply.status(400).send({
             success: false,
-            message: 'Buyurtma allaqachon to\'langan yoki bekor qilingan',
+            message: 'Buyurtma allaqachon to\'langan yoki qayta ishlanyapti',
         });
     }
 
@@ -198,7 +203,7 @@ async function pay(request, reply) {
             performTime: Date.now(),
         });
 
-        // 5. Subscription ni activate qilish
+        // 5. Subscription ni activate qilish (processing → active)
         const planData = config.PLANS[order.plan];
         order.status = 'active';
         order.paymentMethod = 'payme';
@@ -227,7 +232,12 @@ async function pay(request, reply) {
     } catch (err) {
         request.log.error('Payme pay xatosi:', err);
 
-        // Agar receipt yaratilgan bo'lsa-yu to'lov muvaffaqiyatsiz bo'lsa
+        // ROLLBACK: processing → pending (to'lov muvaffaqiyatsiz bo'lsa)
+        await Subscription.updateOne(
+            { _id: orderId, status: 'processing' },
+            { $set: { status: 'pending' } }
+        );
+
         return reply.status(400).send({
             success: false,
             message: err.message || 'To\'lovda xatolik yuz berdi',

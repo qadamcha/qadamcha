@@ -3,17 +3,20 @@
  * Request/Response logging with body sanitization, log levels, response time
  */
 
-const SENSITIVE_KEYS = ['pin', 'password', 'token', 'refreshToken', 'code', 'secret'];
+const SENSITIVE_KEYS = ['pin', 'password', 'token', 'refreshToken', 'code', 'secret', 'cardNumber', 'expire'];
 
 /**
- * Body dan sensitive data larni tozalash
+ * Body dan sensitive data larni tozalash (rekursiv — nested objectlar uchun ham)
  */
 function sanitizeBody(body) {
     if (!body || typeof body !== 'object') return body;
+    if (Array.isArray(body)) return body.map(item => sanitizeBody(item));
     const sanitized = { ...body };
     for (const key of Object.keys(sanitized)) {
         if (SENSITIVE_KEYS.includes(key)) {
             sanitized[key] = '***';
+        } else if (typeof sanitized[key] === 'object' && sanitized[key] !== null) {
+            sanitized[key] = sanitizeBody(sanitized[key]);
         }
     }
     return sanitized;
