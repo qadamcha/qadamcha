@@ -207,22 +207,43 @@ class LocalMonitoringService {
   /// Haftalik jami daqiqalar
   int get weeklyTotalMinutes => _weeklyMinutes.fold(0, (a, b) => a + b);
 
-  // ─── Last Watched ──────────────────────────────────────────────────
+  // ─── Last Watched (ro'yxat) ────────────────────────────────────────
 
-  /// Oxirgi ko'rilgan kontentni saqlash
+  /// Oxirgi ko'rilgan kontentni ro'yxatga qo'shish (dublikatlarni olib tashlash)
   void saveLastWatched(Map<String, dynamic> contentJson) {
     if (_prefs == null) return;
-    _prefs!.setString(_keyLastWatched, jsonEncode(contentJson));
+    final list = getLastWatchedList();
+    // Dublikatni olib tashlash (id bo'yicha)
+    list.removeWhere((item) => item['id'] == contentJson['id']);
+    // Boshiga qo'shish
+    list.insert(0, contentJson);
+    // Faqat oxirgi 10 tasini saqlash
+    final toSave = list.take(10).toList();
+    _prefs!.setString(_keyLastWatched, jsonEncode(toSave));
   }
 
-  /// Oxirgi ko'rilgan kontentni olish
+  /// Oxirgi ko'rilgan kontentni olish (bitta — backward compatibility)
   Map<String, dynamic>? getLastWatched() {
+    final list = getLastWatchedList();
+    return list.isNotEmpty ? list.first : null;
+  }
+
+  /// Oxirgi ko'rilgan kontentlar ro'yxatini olish
+  List<Map<String, dynamic>> getLastWatchedList() {
     final json = _prefs?.getString(_keyLastWatched);
-    if (json == null) return null;
+    if (json == null) return [];
     try {
-      return jsonDecode(json) as Map<String, dynamic>;
+      final decoded = jsonDecode(json);
+      // Eski format (bitta Map) ni ro'yxatga o'zgartirish
+      if (decoded is Map<String, dynamic>) {
+        return [decoded];
+      }
+      if (decoded is List) {
+        return decoded.cast<Map<String, dynamic>>();
+      }
+      return [];
     } catch (_) {
-      return null;
+      return [];
     }
   }
 
@@ -299,6 +320,12 @@ class LocalMonitoringService {
     'gamesPlayed': _gamesPlayed,
     'storiesRead': _storiesRead,
   };
+
+  /// Barcha ma'lumotlarni backend'ga sync qilish (menu tark etganda)
+  void syncAllToBackend() {
+    syncToBackend();
+    saveToLocal();
+  }
 
   // ─── Lifecycle ──────────────────────────────────────────────────────
 

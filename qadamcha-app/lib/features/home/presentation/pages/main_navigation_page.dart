@@ -79,7 +79,8 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
   @override
   void dispose() {
     _aiChatBloc.close();
-    // Sync timer'ni to'xtatmaymiz — LocalMonitoringService singleton
+    // Chiqishda barcha ma'lumotlarni backend'ga sync qilish
+    LocalMonitoringService.instance.syncAllToBackend();
     super.dispose();
   }
 

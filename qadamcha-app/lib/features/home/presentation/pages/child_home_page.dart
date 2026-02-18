@@ -23,6 +23,7 @@ class ChildHomePage extends StatefulWidget {
 
 class _ChildHomePageState extends State<ChildHomePage> {
   late final ChildBloc _childBloc;
+  List<Map<String, dynamic>> _lastWatchedList = [];
 
   @override
   void initState() {
@@ -41,6 +42,15 @@ class _ChildHomePageState extends State<ChildHomePage> {
     
     // Umumiy vaqt tracking boshlash
     SessionTracker.instance.startSession('child_home');
+    
+    // Oxirgi ko'rilgan multfilmlar ro'yxatini yuklash
+    _loadLastWatchedList();
+  }
+
+  void _loadLastWatchedList() {
+    setState(() {
+      _lastWatchedList = LocalMonitoringService.instance.getLastWatchedList();
+    });
   }
 
   @override
@@ -58,6 +68,8 @@ class _ChildHomePageState extends State<ChildHomePage> {
         ));
       }
     }
+    // Chiqishda barcha ma'lumotlarni backend'ga sync qilish
+    LocalMonitoringService.instance.syncAllToBackend();
     super.dispose();
   }
 
@@ -216,17 +228,6 @@ class _ChildHomePageState extends State<ChildHomePage> {
                 _buildHeader(context),
                 SizedBox(height: 28.h),
 
-                Text(
-                  'Nima qilmoqchisan? \u{1F3AF}',
-                  style: TextStyle(
-                    fontSize: 22.sp,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                    fontFamily: 'Nunito',
-                  ),
-                ),
-                SizedBox(height: 16.h),
-
                 _buildCategoryCard(
                   context,
                   emoji: '\u{1F3AC}',
@@ -234,10 +235,12 @@ class _ChildHomePageState extends State<ChildHomePage> {
                   subtitle: 'Qiziqarli multiklar ko\'rish',
                   gradient: AppColors.cartoonGradient,
                   itemCount: '100+',
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const ContentPage()),
-                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ContentPage()),
+                    ).then((_) => _loadLastWatchedList());
+                  },
                 ),
                 SizedBox(height: 16.h),
                 _buildCategoryCard(
@@ -247,10 +250,12 @@ class _ChildHomePageState extends State<ChildHomePage> {
                   subtitle: 'Ta\'limiy o\'yinlar o\'ynash',
                   gradient: AppColors.gamesGradient,
                   itemCount: '50+',
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const GamesPage()),
-                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const GamesPage()),
+                    ).then((_) => _loadLastWatchedList());
+                  },
                 ),
                 SizedBox(height: 28.h),
 
@@ -436,11 +441,18 @@ class _ChildHomePageState extends State<ChildHomePage> {
   }
 
   Widget _buildContinueWatching() {
+    // Oxirgi ko'rilgan multfilmlar ro'yxati (max 3 ta)
+    final watchedItems = _lastWatchedList.take(3).toList();
+    
+    if (watchedItems.isEmpty) {
+      return const SizedBox.shrink(); // Hech narsa ko'rilmagan
+    }
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Davom etish \u{25B6}\u{FE0F}',
+          'Oxirgi ko\'rilganlar \u{25B6}\u{FE0F}',
           style: TextStyle(
             fontSize: 18.sp,
             fontWeight: FontWeight.w700,
@@ -450,98 +462,98 @@ class _ChildHomePageState extends State<ChildHomePage> {
         ),
         SizedBox(height: 12.h),
         SizedBox(
-          height: 120.h,
-          child: ListView(
+          height: 140.h,
+          child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            children: [
-              _buildContinueCard(
-                title: 'Qiziqarli sarguzashtlar',
-                progress: 0.6,
-                emoji: '\u{1F981}',
-                color: AppColors.kidYellow,
-              ),
-              SizedBox(width: 12.w),
-              _buildContinueCard(
-                title: 'Matematik o\'yin',
-                progress: 0.3,
-                emoji: '\u{1F522}',
-                color: AppColors.kidBlue,
-              ),
-              SizedBox(width: 12.w),
-              _buildContinueCard(
-                title: 'Alifbo sayohati',
-                progress: 0.8,
-                emoji: '\u{1F4D6}',
-                color: AppColors.kidGreen,
-              ),
-            ],
+            itemCount: watchedItems.length,
+            separatorBuilder: (_, __) => SizedBox(width: 12.w),
+            itemBuilder: (context, index) {
+              final item = watchedItems[index];
+              return _buildLastWatchedCard(item);
+            },
           ),
         ),
       ],
     );
   }
 
-  Widget _buildContinueCard({
-    required String title,
-    required double progress,
-    required String emoji,
-    required Color color,
-  }) {
-    return Container(
-      width: 150.w,
-      padding: EdgeInsets.all(14.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(emoji, style: TextStyle(fontSize: 22.sp)),
-              const Spacer(),
-              Text(
-                '${(progress * 100).toInt()}%',
+  Widget _buildLastWatchedCard(Map<String, dynamic> item) {
+    final title = item['title'] ?? 'Multfilm';
+    final thumbnailUrl = item['thumbnailUrl'] as String?;
+    final type = item['type'] ?? 'video';
+    
+    return GestureDetector(
+      onTap: () {
+        // ContentPage ga qaytarish
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const ContentPage()),
+        ).then((_) => _loadLastWatchedList());
+      },
+      child: Container(
+        width: 160.w,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Thumbnail
+            ClipRRect(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+              child: SizedBox(
+                width: double.infinity,
+                height: 85.h,
+                child: thumbnailUrl != null && thumbnailUrl.isNotEmpty
+                    ? Image.network(
+                        thumbnailUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          color: AppColors.kidPurple.withOpacity(0.15),
+                          child: Center(
+                            child: Text(
+                              type == 'game' ? '\u{1F3AE}' : '\u{1F3AC}',
+                              style: TextStyle(fontSize: 32.sp),
+                            ),
+                          ),
+                        ),
+                      )
+                    : Container(
+                        color: AppColors.kidPurple.withOpacity(0.15),
+                        child: Center(
+                          child: Text(
+                            type == 'game' ? '\u{1F3AE}' : '\u{1F3AC}',
+                            style: TextStyle(fontSize: 32.sp),
+                          ),
+                        ),
+                      ),
+              ),
+            ),
+            // Title
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+              child: Text(
+                title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 12.sp,
-                  fontWeight: FontWeight.w700,
-                  color: color,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
                   fontFamily: 'Nunito',
                 ),
               ),
-            ],
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            title,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 13.sp,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-              fontFamily: 'Nunito',
             ),
-          ),
-          const Spacer(),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(3.r),
-            child: LinearProgressIndicator(
-              value: progress,
-              backgroundColor: color.withOpacity(0.15),
-              valueColor: AlwaysStoppedAnimation<Color>(color),
-              minHeight: 5.h,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
