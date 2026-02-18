@@ -63,6 +63,8 @@ class AuthRepositoryImpl implements AuthRepository {
         await localDataSource.cacheTokens(tokens);
         await localDataSource.cacheUser(loggedUser);
         await localDataSource.setLoggedIn(true);
+        // PIN hash'ni lokal saqlash (keyingi kirish tez bo'lishi uchun)
+        await localDataSource.cachePinHash(pin);
       } catch (_) {
         // Login xato bo'lsa ham ro'yxatdan o'tish muvaffaqiyatli
       }
@@ -98,6 +100,8 @@ class AuthRepositoryImpl implements AuthRepository {
       await localDataSource.cacheTokens(tokens);
       await localDataSource.cacheUser(user);
       await localDataSource.setLoggedIn(true);
+      // PIN hash'ni lokal saqlash (keyingi kirish tez bo'lishi uchun)
+      await localDataSource.cachePinHash(pin);
       
       return Right((user.toEntity(), tokens));
     } on NetworkException catch (e) {
@@ -138,10 +142,12 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, void>> logout() async {
     try {
       await remoteDataSource.logout();
+      await localDataSource.clearPinHash();
       await localDataSource.clearCache();
       return const Right(null);
     } catch (e) {
       // Logout locally even if server fails
+      await localDataSource.clearPinHash();
       await localDataSource.clearCache();
       return const Right(null);
     }
@@ -169,6 +175,8 @@ class AuthRepositoryImpl implements AuthRepository {
   }) async {
     try {
       final message = await remoteDataSource.resetPin(phone, newPin);
+      // Yangi PIN hash'ni lokal saqlash
+      await localDataSource.cachePinHash(newPin);
       return Right(message);
     } on NetworkException catch (e) {
       return Left(NetworkFailure(e.message));
@@ -182,7 +190,16 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, void>> verifyPin(String pin) async {
     try {
+      // Avval lokal tekshirish (1ms — serverga bormasdan)
+      final localResult = await localDataSource.verifyPinLocally(pin);
+      if (localResult) {
+        return const Right(null); // ✅ Lokal tasdiqlandi!
+      }
+      
+      // Lokal hash yo'q (birinchi kirish yoki boshqa qurilma) — serverda tekshirish
       await remoteDataSource.verifyPin(pin);
+      // Muvaffaqiyat — keyingi safar uchun lokal saqlash
+      await localDataSource.cachePinHash(pin);
       return const Right(null);
     } on NetworkException catch (e) {
       return Left(NetworkFailure(e.message));

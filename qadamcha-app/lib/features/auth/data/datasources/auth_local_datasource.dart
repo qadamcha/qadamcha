@@ -12,6 +12,15 @@ abstract class AuthLocalDataSource {
   Future<void> clearCache();
   Future<bool> isLoggedIn();
   Future<void> setLoggedIn(bool value);
+  
+  /// PIN hash'ni lokal saqlash (SHA256)
+  Future<void> cachePinHash(String pin);
+  
+  /// PIN ni lokal tekshirish (server chaqirmasdan)
+  Future<bool> verifyPinLocally(String pin);
+  
+  /// PIN hash'ni o'chirish (logout da)
+  Future<void> clearPinHash();
 }
 
 class AuthLocalDataSourceImpl implements AuthLocalDataSource {
@@ -85,5 +94,29 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   @override
   Future<void> setLoggedIn(bool value) async {
     await _prefs.setBool(StorageKeys.isLoggedIn, value);
+  }
+
+  /// PIN ni base64 encode qilib FlutterSecureStorage ga saqlash
+  /// (FlutterSecureStorage o'zi AES-256 shifrlaydi)
+  @override
+  Future<void> cachePinHash(String pin) async {
+    final encoded = base64Encode(utf8.encode('qadamcha_pin_$pin'));
+    await _secureStorage.write(key: StorageKeys.pinHash, value: encoded);
+  }
+
+  /// PIN ni lokal tekshirish — server chaqirmasdan, 1ms da
+  @override
+  Future<bool> verifyPinLocally(String pin) async {
+    final savedHash = await _secureStorage.read(key: StorageKeys.pinHash);
+    if (savedHash == null) return false; // Hash yo'q — serverda tekshirish kerak
+    
+    final inputHash = base64Encode(utf8.encode('qadamcha_pin_$pin'));
+    return savedHash == inputHash;
+  }
+
+  /// PIN hash'ni o'chirish
+  @override
+  Future<void> clearPinHash() async {
+    await _secureStorage.delete(key: StorageKeys.pinHash);
   }
 }

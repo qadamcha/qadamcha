@@ -20,6 +20,7 @@ class StorageKeys {
   static const String selectedChild = 'selected_child';
   static const String appMode = 'app_mode'; // parent or child
   static const String onboardingDone = 'onboarding_done';
+  static const String pinHash = 'pin_hash'; // SHA256 hashed PIN (local verify uchun)
 }
 
 // App Constants
