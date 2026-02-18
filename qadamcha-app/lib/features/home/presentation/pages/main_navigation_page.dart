@@ -5,6 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/services/local_monitoring_service.dart';
 import '../../../../injection.dart';
 import '../../../child/presentation/bloc/child_bloc.dart';
+import '../../../subscription/presentation/bloc/subscription_bloc.dart';
 import '../../../ai_chat/presentation/bloc/ai_chat_bloc.dart';
 import '../../../ai_chat/presentation/pages/chat_sessions_page.dart';
 import 'parent_home_page.dart';
@@ -41,10 +42,38 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
       const StoriesPage(),
       const MonitoringPage(),
     ];
-    context.read<ChildBloc>().add(LoadChildrenEvent());
+    
+    // Barcha asosiy ma'lumotlarni backend'dan yuklash
+    _loadAllData();
     
     // Backend sync'ni ulash — LocalMonitoringService → ChildBloc
     _initMonitoringSync();
+  }
+
+  /// Barcha kerakli ma'lumotlarni backend'dan yuklash
+  /// Yangi qurilmada ham ishlashi uchun
+  void _loadAllData() {
+    // 1. Bolalar ro'yxatini yuklash
+    context.read<ChildBloc>().add(const LoadChildrenEvent());
+    
+    // 2. Obuna holatini yuklash
+    context.read<SubscriptionBloc>().add(LoadSubscriptionEvent());
+    
+    // 3. Bolalar yuklanganidan keyin monitoring datani yuklash
+    final childState = context.read<ChildBloc>().state;
+    if (childState.children.isNotEmpty) {
+      _loadMonitoringForChild(childState.selectedChild?.id ?? childState.children.first.id);
+    }
+  }
+
+  /// Bolaning monitoring ma'lumotlarini backend'dan yuklash
+  void _loadMonitoringForChild(String childId) {
+    final childBloc = context.read<ChildBloc>();
+    childBloc.add(LoadActivityLogsEvent(childId));
+    childBloc.add(LoadWeeklyStatsEvent(childId));
+    
+    // LocalMonitoringService'ga ham child ID o'rnatish
+    LocalMonitoringService.instance.setChildId(childId);
   }
 
   @override
@@ -80,7 +109,17 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BlocListener<ChildBloc, ChildState>(
+      listenWhen: (prev, curr) =>
+          prev.status != curr.status && curr.status == ChildStatus.loaded,
+      listener: (context, state) {
+        // Bolalar yuklanganda monitoring datani ham yuklash
+        if (state.children.isNotEmpty) {
+          final childId = state.selectedChild?.id ?? state.children.first.id;
+          _loadMonitoringForChild(childId);
+        }
+      },
+      child: Scaffold(
       body: IndexedStack(
         index: _currentIndex,
         children: _pages,
@@ -136,6 +175,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

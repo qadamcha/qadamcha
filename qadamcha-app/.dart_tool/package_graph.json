@@ -20,6 +20,7 @@
         "flutter",
         "flutter_bloc",
         "flutter_local_notifications",
+        "flutter_markdown",
         "flutter_native_splash",
         "flutter_screenutil",
         "flutter_secure_storage",
@@ -379,6 +380,16 @@
         "video_player_avfoundation",
         "video_player_platform_interface",
         "video_player_web"
+      ]
+    },
+    {
+      "name": "flutter_markdown",
+      "version": "0.7.7+1",
+      "dependencies": [
+        "flutter",
+        "markdown",
+        "meta",
+        "path"
       ]
     },
     {
@@ -1395,6 +1406,14 @@
       "dependencies": [
         "flutter",
         "video_player_platform_interface"
+      ]
+    },
+    {
+      "name": "markdown",
+      "version": "7.3.0",
+      "dependencies": [
+        "args",
+        "meta"
       ]
     },
     {
