@@ -37,11 +37,31 @@ class SessionTracker {
     monitoring.addMinutes(minutes);
     
     // Activity type ga qarab qo'shimcha counter'larni yangilash
+    String activityType;
+    String contentTitle;
     if (type == 'content') {
       monitoring.addVideoWatched();
+      activityType = 'video_watch';
+      contentTitle = 'Multfilm ko\'rish';
     } else if (type == 'games') {
       monitoring.addGamePlayed();
+      activityType = 'game_play';
+      contentTitle = 'O\'yin o\'ynash';
+    } else if (type == 'stories') {
+      monitoring.addStoryRead();
+      activityType = 'story_read';
+      contentTitle = 'Ertak o\'qish';
+    } else {
+      activityType = 'app_usage';
+      contentTitle = 'Ilova foydalanish';
     }
+    
+    // Activity logga yozish (monitoring page "So'nggi faoliyat" uchun)
+    monitoring.addActivityLog(
+      activityType: activityType,
+      contentTitle: contentTitle,
+      durationMinutes: minutes,
+    );
     
     // Agar boshqa aktiv sessiya yo'q bo'lsa, timer'ni to'xtatish
     if (_sessions.isEmpty) {

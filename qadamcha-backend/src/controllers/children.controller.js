@@ -152,16 +152,26 @@ module.exports = {
         return { success: true, message: SUCCESS.DELETED };
     },
 
-    // POST /children/:id/limit - Vaqt limitini o'zgartirish
+    // POST|PATCH /children/:id/limit(s) - Vaqt limitini o'zgartirish
     async setLimit(request, reply) {
         const { userId } = request.user;
         const { id } = request.params;
-        const { dailyLimit, weekdayLimit, weekendLimit } = request.body;
+        const { dailyLimit, weekdayLimit, weekendLimit, weekdayMinutes, weekendMinutes } = request.body;
 
         const update = {};
         if (dailyLimit !== undefined) update.dailyLimit = dailyLimit;
+        // Flutter weekdayMinutes/weekendMinutes yuboradi, backend weekdayLimit/weekendLimit saqlaydi
+        if (weekdayMinutes !== undefined) update.weekdayLimit = weekdayMinutes;
         if (weekdayLimit !== undefined) update.weekdayLimit = weekdayLimit;
+        if (weekendMinutes !== undefined) update.weekendLimit = weekendMinutes;
         if (weekendLimit !== undefined) update.weekendLimit = weekendLimit;
+
+        if (Object.keys(update).length === 0) {
+            return reply.status(400).send({
+                success: false,
+                message: 'Kamida bitta limit qiymati kerak'
+            });
+        }
 
         const child = await Child.findOneAndUpdate(
             { _id: id, parentId: userId, isActive: true },
@@ -179,6 +189,45 @@ module.exports = {
         return {
             success: true,
             message: 'Vaqt limiti yangilandi',
+            child
+        };
+    },
+
+    // PATCH /children/:id/settings - Bolaning sozlamalarini yangilash
+    async updateSettings(request, reply) {
+        const { userId } = request.user;
+        const { id } = request.params;
+        const { allowGames, allowVideos, allowStories, safeMode } = request.body;
+
+        const settingsUpdate = {};
+        if (allowGames !== undefined) settingsUpdate['settings.allowGames'] = allowGames;
+        if (allowVideos !== undefined) settingsUpdate['settings.allowVideos'] = allowVideos;
+        if (allowStories !== undefined) settingsUpdate['settings.allowStories'] = allowStories;
+        if (safeMode !== undefined) settingsUpdate['settings.safeMode'] = safeMode;
+
+        if (Object.keys(settingsUpdate).length === 0) {
+            return reply.status(400).send({
+                success: false,
+                message: 'Kamida bitta sozlama kerak'
+            });
+        }
+
+        const child = await Child.findOneAndUpdate(
+            { _id: id, parentId: userId, isActive: true },
+            { $set: settingsUpdate },
+            { new: true }
+        );
+
+        if (!child) {
+            return reply.status(404).send({
+                success: false,
+                message: ERRORS.NOT_FOUND
+            });
+        }
+
+        return {
+            success: true,
+            message: 'Sozlamalar yangilandi',
             child
         };
     },
@@ -289,7 +338,7 @@ module.exports = {
     async recordActivity(request, reply) {
         const { userId } = request.user;
         const { id } = request.params;
-        const { contentId, activityType, durationMinutes } = request.body;
+        const { contentId, activityType, durationMinutes, contentTitle } = request.body;
 
         // Bola ota-onaga tegishliligini tekshirish
         const child = await Child.findOne({ _id: id, parentId: userId });
@@ -304,27 +353,41 @@ module.exports = {
         const today = now.toISOString().split('T')[0];
         const durationSeconds = (durationMinutes || 1) * 60;
 
+        // Content title aniqlash: request body'dan yoki default
+        const resolvedTitle = contentTitle ||
+            (activityType === 'video_watch' ? 'Multfilm ko\'rish' :
+                activityType === 'game_play' ? 'O\'yin o\'ynash' :
+                    activityType === 'story_read' ? 'Ertak o\'qish' :
+                        'Ilova foydalanish');
+
         // Activity yozish
         const activity = await Activity.create({
             childId: child._id,
+            contentId: contentId || undefined,
             contentType: activityType,
-            contentTitle: activityType === 'video_watch' ? 'Multfilm ko\'rish' :
-                activityType === 'game_play' ? 'O\'yin o\'ynash' :
-                    'Ilova foydalanish',
+            contentTitle: resolvedTitle,
             duration: durationSeconds,
             date: today,
             startedAt: new Date(now.getTime() - durationSeconds * 1000),
             endedAt: now,
         });
 
+        // Kunlik reset tekshirish (lazy)
+        if (child.lastUsageDate !== today) {
+            child.todayUsage = { minutesUsed: 0, videosWatched: 0, gamesPlayed: 0, storiesRead: 0 };
+            child.lastUsageDate = today;
+        }
+
         // Bolaning bugungi foydalanishini yangilash
         await Child.updateOne(
             { _id: child._id },
             {
+                $set: { lastUsageDate: today },
                 $inc: {
                     'todayUsage.minutesUsed': durationMinutes || 1,
                     ...(activityType === 'video_watch' ? { 'todayUsage.videosWatched': 1 } : {}),
                     ...(activityType === 'game_play' ? { 'todayUsage.gamesPlayed': 1 } : {}),
+                    ...(activityType === 'story_read' ? { 'todayUsage.storiesRead': 1 } : {}),
                 }
             }
         );

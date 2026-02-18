@@ -221,7 +221,14 @@ class _MonitoringPageState extends State<MonitoringPage> {
               ),
             ),
             SizedBox(width: 14.w),
-            const Expanded(child: SizedBox()),
+            Expanded(
+              child: _SummaryCard(
+                icon: '📖',
+                title: 'Ertak o\'qildi',
+                value: '${localStats.storiesRead} ta',
+                color: const Color(0xFFffecd2),
+              ),
+            ),
           ],
         ),
       ],
@@ -587,10 +594,10 @@ class _MonitoringPageState extends State<MonitoringPage> {
     // Foizlarni hisoblash
     final videoPercent = totalActivities > 0
         ? ((videoCount / totalActivities) * 100).clamp(0, 100).round()
-        : (totalMinutes > 0 ? 50 : 0);
+        : 0;
     final gamePercent = totalActivities > 0
         ? ((gameCount / totalActivities) * 100).clamp(0, 100).round()
-        : (totalMinutes > 0 ? 50 : 0);
+        : 0;
 
     return Container(
       padding: EdgeInsets.all(20.w),

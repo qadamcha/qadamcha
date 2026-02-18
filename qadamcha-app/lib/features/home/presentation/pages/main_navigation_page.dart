@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/services/local_monitoring_service.dart';
 import '../../../../injection.dart';
 import '../../../child/presentation/bloc/child_bloc.dart';
 import '../../../ai_chat/presentation/bloc/ai_chat_bloc.dart';
@@ -41,12 +42,40 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
       const MonitoringPage(),
     ];
     context.read<ChildBloc>().add(LoadChildrenEvent());
+    
+    // Backend sync'ni ulash — LocalMonitoringService → ChildBloc
+    _initMonitoringSync();
   }
 
   @override
   void dispose() {
     _aiChatBloc.close();
+    // Sync timer'ni to'xtatmaymiz — LocalMonitoringService singleton
     super.dispose();
+  }
+
+  /// LocalMonitoringService → ChildBloc backend sync ulash
+  void _initMonitoringSync() {
+    final monitoring = LocalMonitoringService.instance;
+    final childBloc = context.read<ChildBloc>();
+    
+    // Sync callback — har 5 daqiqada monitoring data backend'ga yuboriladi
+    monitoring.onSyncToBackend = (data) {
+      final state = childBloc.state;
+      final childId = state.selectedChild?.id ?? monitoring.childId;
+      
+      if (childId != null && data['minutesUsed'] != null && data['minutesUsed']! > 0) {
+        childBloc.add(RecordActivityEvent(
+          childId: childId,
+          contentId: '',
+          activityType: 'app_usage',
+          durationMinutes: data['minutesUsed']!,
+        ));
+      }
+    };
+    
+    // Sync timer'ni boshlash (har 5 daqiqada)
+    monitoring.startSyncTimer();
   }
 
   @override
