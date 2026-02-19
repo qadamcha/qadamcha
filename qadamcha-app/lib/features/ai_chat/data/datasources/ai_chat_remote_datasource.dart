@@ -8,6 +8,7 @@ abstract class AiChatRemoteDataSource {
     required String message,
     String? childId,
     List<Map<String, String>>? history,
+    CancelToken? cancelToken,
   });
 
   Future<bool> checkStatus();
@@ -23,6 +24,7 @@ class AiChatRemoteDataSourceImpl implements AiChatRemoteDataSource {
     required String message,
     String? childId,
     List<Map<String, String>>? history,
+    CancelToken? cancelToken,
   }) async {
     final data = <String, dynamic>{'message': message};
     if (childId != null) data['childId'] = childId;
@@ -32,10 +34,11 @@ class AiChatRemoteDataSourceImpl implements AiChatRemoteDataSource {
       '/ai/chat',
       data: data,
       options: Options(
-        // AI javob berishi uzoqroq vaqt olishi mumkin
-        receiveTimeout: const Duration(seconds: 120),
-        sendTimeout: const Duration(seconds: 30),
+        // AI javob berishi uchun 60s (45s backend + 15s network buffer)
+        receiveTimeout: const Duration(seconds: 60),
+        sendTimeout: const Duration(seconds: 15),
       ),
+      cancelToken: cancelToken,
     );
 
     final body = response.data;

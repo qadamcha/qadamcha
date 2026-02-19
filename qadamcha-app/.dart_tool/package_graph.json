@@ -41,6 +41,7 @@
         "share_plus",
         "shared_preferences",
         "shimmer",
+        "smart_auth",
         "url_launcher",
         "video_player",
         "webview_flutter"
@@ -395,6 +396,14 @@
         "video_player_avfoundation",
         "video_player_platform_interface",
         "video_player_web"
+      ]
+    },
+    {
+      "name": "smart_auth",
+      "version": "2.0.0",
+      "dependencies": [
+        "flutter",
+        "flutter_web_plugins"
       ]
     },
     {

@@ -10,12 +10,14 @@ class ChatMessage {
   final bool isUser;
   final DateTime timestamp;
   final int tokenCount;
+  final bool isError;
 
   const ChatMessage({
     required this.text,
     required this.isUser,
     required this.timestamp,
     this.tokenCount = 0,
+    this.isError = false,
   });
 
   /// DB modeldan yaratish
@@ -73,6 +75,9 @@ class AiChatState {
   final String? errorMessage;
   final String? currentSessionId;
   final int totalTokens;
+  /// Oxirgi muvaffaqiyatsiz xabar — retry uchun
+  final String? lastFailedMessage;
+  final String? lastFailedChildId;
 
   const AiChatState({
     this.messages = const [],
@@ -82,7 +87,11 @@ class AiChatState {
     this.errorMessage,
     this.currentSessionId,
     this.totalTokens = 0,
+    this.lastFailedMessage,
+    this.lastFailedChildId,
   });
+
+  bool get canRetry => lastFailedMessage != null && status == AiChatStatus.error;
 
   AiChatState copyWith({
     List<ChatMessage>? messages,
@@ -92,6 +101,9 @@ class AiChatState {
     String? errorMessage,
     String? currentSessionId,
     int? totalTokens,
+    String? lastFailedMessage,
+    String? lastFailedChildId,
+    bool clearLastFailed = false,
   }) {
     return AiChatState(
       messages: messages ?? this.messages,
@@ -101,6 +113,8 @@ class AiChatState {
       errorMessage: errorMessage,
       currentSessionId: currentSessionId ?? this.currentSessionId,
       totalTokens: totalTokens ?? this.totalTokens,
+      lastFailedMessage: clearLastFailed ? null : (lastFailedMessage ?? this.lastFailedMessage),
+      lastFailedChildId: clearLastFailed ? null : (lastFailedChildId ?? this.lastFailedChildId),
     );
   }
 }

@@ -98,7 +98,11 @@ class _AiChatPageState extends State<AiChatPage> {
                           state.status == AiChatStatus.loading) {
                         return _buildTypingIndicator();
                       }
-                      return _buildMessageBubble(state.messages[index]);
+                      final msg = state.messages[index];
+                      if (msg.isError) {
+                        return _buildErrorBubble(msg, state.canRetry);
+                      }
+                      return _buildMessageBubble(msg);
                     },
                   );
                 },
@@ -353,6 +357,115 @@ class _AiChatPageState extends State<AiChatPage> {
       return _buildUserBubble(message);
     }
     return _buildAiBubble(message);
+  }
+
+  /// Error xabar bubble — "Qayta urinish" tugmasi bilan
+  Widget _buildErrorBubble(ChatMessage message, bool canRetry) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 16.h),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 30.w,
+            height: 30.w,
+            margin: EdgeInsets.only(top: 2.h),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFEF4444), Color(0xFFF87171)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+            child: Center(
+              child: Text('⚠', style: TextStyle(fontSize: 14.sp)),
+            ),
+          ),
+          SizedBox(width: 8.w),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(14.w),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF2F2),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(4.r),
+                      topRight: Radius.circular(18.r),
+                      bottomLeft: Radius.circular(18.r),
+                      bottomRight: Radius.circular(18.r),
+                    ),
+                    border: Border.all(
+                      color: const Color(0xFFFECACA),
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    message.text,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: const Color(0xFF991B1B),
+                      height: 1.5,
+                      fontFamily: 'Nunito',
+                    ),
+                  ),
+                ),
+                if (canRetry)
+                  Padding(
+                    padding: EdgeInsets.only(top: 8.h),
+                    child: GestureDetector(
+                      onTap: () {
+                        context.read<AiChatBloc>().add(
+                          const RetryLastMessageEvent(),
+                        );
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 14.w,
+                          vertical: 7.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2D6A9F),
+                          borderRadius: BorderRadius.circular(20.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF2D6A9F).withValues(alpha: 0.3),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.refresh_rounded,
+                              size: 16.sp,
+                              color: Colors.white,
+                            ),
+                            SizedBox(width: 5.w),
+                            Text(
+                              'Qayta urinish',
+                              style: TextStyle(
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                                fontFamily: 'Nunito',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   /// User xabar bubble — gradient fon
@@ -645,7 +758,7 @@ class _AiChatPageState extends State<AiChatPage> {
               borderRadius: BorderRadius.circular(10.r),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF7C4DFF).withOpacity(0.2),
+                  color: const Color(0xFF7C4DFF).withValues(alpha: 0.2),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
@@ -656,34 +769,79 @@ class _AiChatPageState extends State<AiChatPage> {
             ),
           ),
           SizedBox(width: 8.w),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 14.h),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(4.r),
-                topRight: Radius.circular(18.r),
-                bottomLeft: Radius.circular(18.r),
-                bottomRight: Radius.circular(18.r),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color.fromRGBO(0, 0, 0, 0.06),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 14.h),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(4.r),
+                    topRight: Radius.circular(18.r),
+                    bottomLeft: Radius.circular(18.r),
+                    bottomRight: Radius.circular(18.r),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color.fromRGBO(0, 0, 0, 0.06),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _Dot(delay: 0),
-                SizedBox(width: 5.w),
-                _Dot(delay: 150),
-                SizedBox(width: 5.w),
-                _Dot(delay: 300),
-              ],
-            ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _Dot(delay: 0),
+                    SizedBox(width: 5.w),
+                    _Dot(delay: 150),
+                    SizedBox(width: 5.w),
+                    _Dot(delay: 300),
+                    SizedBox(width: 12.w),
+                    Text(
+                      'Javob yozilmoqda...',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: const Color(0xFF9CA3AF),
+                        fontFamily: 'Nunito',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Cancel tugmasi
+              Padding(
+                padding: EdgeInsets.only(top: 6.h),
+                child: GestureDetector(
+                  onTap: () {
+                    context.read<AiChatBloc>().add(
+                      const CancelMessageEvent(),
+                    );
+                  },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.close_rounded,
+                        size: 14.sp,
+                        color: const Color(0xFF9CA3AF),
+                      ),
+                      SizedBox(width: 3.w),
+                      Text(
+                        'Bekor qilish',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: const Color(0xFF9CA3AF),
+                          fontFamily: 'Nunito',
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

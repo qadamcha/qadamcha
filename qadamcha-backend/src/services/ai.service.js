@@ -106,9 +106,16 @@ Sening asosiy vazifang — O'zbek ota-onalariga farzand tarbiyasi, rivojlanishi 
             if (history && history.length > 0) {
                 console.log(`📜 Suhbat tarixi (${history.length} xabar):`);
                 for (const msg of history) {
-                    console.log(`  [${msg.role}]: ${msg.text.substring(0, 50)}...`);
+                    const role = msg.role === 'user' ? 'user' : 'model';
+                    // Gemini talabi: birinchi xabar 'user' bo'lishi kerak
+                    // va ketma-ket bir xil role bo'lmasligi kerak
+                    const lastRole = contents.length > 0 ? contents[contents.length - 1].role : null;
+                    if (contents.length === 0 && role !== 'user') continue;
+                    if (lastRole === role) continue;
+
+                    console.log(`  [${role}]: ${msg.text.substring(0, 50)}...`);
                     contents.push({
-                        role: msg.role === 'user' ? 'user' : 'model',
+                        role,
                         parts: [{ text: msg.text }]
                     });
                 }
@@ -117,13 +124,19 @@ Sening asosiy vazifang — O'zbek ota-onalariga farzand tarbiyasi, rivojlanishi 
             }
 
             // Yangi xabarni qo'shish
-            contents.push({
-                role: 'user',
-                parts: [{ text: message }]
-            });
+            // Agar oxirgi element ham 'user' bo'lsa, birlashtirish
+            const lastContent = contents.length > 0 ? contents[contents.length - 1] : null;
+            if (lastContent && lastContent.role === 'user') {
+                lastContent.parts[0].text += '\n' + message;
+            } else {
+                contents.push({
+                    role: 'user',
+                    parts: [{ text: message }]
+                });
+            }
 
-            // AI javob olish (90 soniya timeout bilan)
-            const AI_TIMEOUT = 90000;
+            // AI javob olish (45 soniya timeout bilan)
+            const AI_TIMEOUT = 45000;
             const timeoutPromise = new Promise((_, reject) =>
                 setTimeout(() => reject(new Error('AI_TIMEOUT')), AI_TIMEOUT)
             );

@@ -34,6 +34,16 @@ class SendMessageEvent extends AiChatEvent {
   const SendMessageEvent({required this.message, this.childId});
 }
 
+/// Oxirgi xato xabarni qayta yuborish
+class RetryLastMessageEvent extends AiChatEvent {
+  const RetryLastMessageEvent();
+}
+
+/// Hozirgi so'rovni bekor qilish
+class CancelMessageEvent extends AiChatEvent {
+  const CancelMessageEvent();
+}
+
 /// AI xizmat holatini tekshirish
 class CheckAiStatusEvent extends AiChatEvent {
   const CheckAiStatusEvent();
