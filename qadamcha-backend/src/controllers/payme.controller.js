@@ -6,6 +6,7 @@
  */
 
 const paymeService = require('../services/payme.service');
+const otpRateLimiter = require('../services/otp-rate-limiter');
 const { PaymeTransaction, Subscription } = require('../models');
 const config = require('../config/env');
 
@@ -39,18 +40,50 @@ async function createCard(request, reply) {
 /**
  * POST /payme/card/verify-code
  * SMS tasdiqlash kodini so'rash
+ * 
+ * Rate limiting:
+ * - Bloklangan user'ga SMS yuborilmaydi
+ * - Qayta yuborish orasida kamida 60s kutish kerak
  */
 async function getVerifyCode(request, reply) {
+    const { userId } = request.user;
     const { token } = request.body;
+
+    // 1. Bloklangan foydalanuvchini tekshirish
+    const blockStatus = otpRateLimiter.isBlocked(userId);
+    if (blockStatus.blocked) {
+        return reply.status(429).send({
+            success: false,
+            errorCode: 'BLOCKED',
+            message: `Ko'p marta noto'g'ri kod kiritdingiz. ${blockStatus.remainingSeconds} soniya kutib turing`,
+            remainingSeconds: blockStatus.remainingSeconds,
+        });
+    }
+
+    // 2. Qayta yuborish tezligini tekshirish
+    const resendStatus = otpRateLimiter.canResendCode(userId);
+    if (!resendStatus.canResend) {
+        return reply.status(429).send({
+            success: false,
+            errorCode: 'RESEND_TOO_FAST',
+            message: `SMS kodni qayta yuborish uchun ${resendStatus.waitSeconds} soniya kutib turing`,
+            waitSeconds: resendStatus.waitSeconds,
+        });
+    }
 
     try {
         const result = await paymeService.getVerifyCode(token);
+
+        // 3. Kod sessiyasini qayd etish (60s muddat boshlanadi)
+        otpRateLimiter.recordCodeSent(userId, token);
 
         return {
             success: true,
             sent: result.sent,
             phone: result.phone,
             wait: result.wait,
+            codeExpiresIn: 60,
+            attemptsLeft: otpRateLimiter.getAttemptsLeft(userId),
         };
     } catch (err) {
         request.log.error('Payme cards.get_verify_code xatosi:', err);
@@ -65,12 +98,43 @@ async function getVerifyCode(request, reply) {
 /**
  * POST /payme/card/verify
  * Kartani SMS kod bilan tasdiqlash
+ * 
+ * Rate limiting:
+ * - Bloklangan user verify qila olmaydi
+ * - Kod muddati (60s) o'tgan bo'lsa, qayta yuborish kerak
+ * - 3 marta noto'g'ri = 5 daqiqa blok
  */
 async function verifyCard(request, reply) {
+    const { userId } = request.user;
     const { token, code } = request.body;
+
+    // 1. Bloklangan foydalanuvchini tekshirish
+    const blockStatus = otpRateLimiter.isBlocked(userId);
+    if (blockStatus.blocked) {
+        return reply.status(429).send({
+            success: false,
+            errorCode: 'BLOCKED',
+            message: `Ko'p marta noto'g'ri kod kiritdingiz. ${blockStatus.remainingSeconds} soniya kutib turing`,
+            remainingSeconds: blockStatus.remainingSeconds,
+        });
+    }
+
+    // 2. Kod muddatini tekshirish
+    const expiryStatus = otpRateLimiter.isCodeExpired(userId);
+    if (expiryStatus.expired) {
+        return reply.status(400).send({
+            success: false,
+            errorCode: 'CODE_EXPIRED',
+            message: 'Tasdiqlash kodi muddati tugagan. Iltimos, qayta yuborish tugmasini bosing',
+            attemptsLeft: otpRateLimiter.getAttemptsLeft(userId),
+        });
+    }
 
     try {
         const result = await paymeService.verifyCard(token, code);
+
+        // 3. Muvaffaqiyat — barcha counterlarni tozalash
+        otpRateLimiter.resetAttempts(userId);
 
         return {
             success: true,
@@ -79,9 +143,25 @@ async function verifyCard(request, reply) {
         };
     } catch (err) {
         request.log.error('Payme cards.verify xatosi:', err);
+
+        // 4. Noto'g'ri kod — urinishni qayd etish
+        const attemptResult = otpRateLimiter.recordFailedAttempt(userId);
+
+        if (attemptResult.blocked) {
+            return reply.status(429).send({
+                success: false,
+                errorCode: 'MAX_ATTEMPTS',
+                message: `3 marta noto'g'ri kod kiritdingiz. ${attemptResult.remainingSeconds} soniya kutib turing`,
+                remainingSeconds: attemptResult.remainingSeconds,
+                attemptsLeft: 0,
+            });
+        }
+
         return reply.status(400).send({
             success: false,
-            message: err.message || 'Kartani tasdiqlashda xatolik',
+            errorCode: 'VERIFY_FAILED',
+            message: err.message || 'Tasdiqlash kodi noto\'g\'ri',
+            attemptsLeft: attemptResult.attemptsLeft,
             code: err.code,
         });
     }
