@@ -39,7 +39,7 @@ dependencies:
   shimmer: 3.0.0
   lottie: 3.3.2
   flutter_markdown: ^0.7.6
-  sms_autofill: ^2.4.0
+  smart_auth: ^2.0.0
 
   # Video Player
   video_player: 2.10.1

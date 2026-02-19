@@ -1,43 +1,27 @@
-import 'dart:async';
-import 'package:sms_autofill/sms_autofill.dart';
+import 'package:smart_auth/smart_auth.dart';
 
-/// SMS OTP Auto-fill xizmati
-/// Android SMS Retriever API orqali ruxsatsiz avtomatik kodni o'qiydi.
+/// SMS OTP Auto-fill xizmati (User Consent API)
+/// Foydalanuvchiga SMS dialog ko'rsatib, ruxsat bergandan keyin
+/// kodni avtomatik o'qiydi. Hash kerak EMAS.
 class SmsAutoFillService {
-  final SmsAutoFill _smsAutoFill = SmsAutoFill();
-  StreamSubscription? _subscription;
+  final _smartAuth = SmartAuth();
 
-  /// App signing hash — backend SMS ga qo'shilishi kerak
-  Future<String> getAppSignature() async {
-    return await _smsAutoFill.getAppSignature;
-  }
-
-  /// SMS tinglashni boshlash
-  /// [onCodeReceived] — 6 xonali kod topilganda chaqiriladi
+  /// SMS tinglashni boshlash (User Consent API)
+  /// Dialog chiqadi → foydalanuvchi ruxsat beradi → kod qaytadi
   Future<void> listenForSms({
     required void Function(String code) onCodeReceived,
   }) async {
-    await _smsAutoFill.listenForCode();
-    
-    _subscription = SmsAutoFill().code.listen((String message) {
-      // SMS matnidan 6 xonali kodni ajratish
-      final code = _extractCode(message);
-      if (code != null) {
-        onCodeReceived(code);
-      }
-    });
+    final res = await _smartAuth.getSmsCode(
+      useUserConsentApi: true,
+    );
+
+    if (res.succeed && res.code != null) {
+      onCodeReceived(res.code!);
+    }
   }
 
-  /// SMS matnidan 6 xonali raqamli kodni ajratish
-  String? _extractCode(String message) {
-    final regex = RegExp(r'\b(\d{6})\b');
-    final match = regex.firstMatch(message);
-    return match?.group(1);
-  }
-
-  /// Tinglashni to'xtatish — dispose da chaqirish kerak
+  /// Tinglashni to'xtatish
   void dispose() {
-    _subscription?.cancel();
-    SmsAutoFill().unregisterListener();
+    _smartAuth.removeSmsListener();
   }
 }

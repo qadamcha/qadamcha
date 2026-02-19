@@ -116,12 +116,9 @@ class SmsService {
         }
 
         // SMS matni (moderatsiyadan o'tgan shablonlar)
-        // APP_SMS_HASH: Android SMS Retriever API uchun app hash
-        const appHash = config.APP_SMS_HASH || '';
-        const hashSuffix = appHash ? `\n${appHash}` : '';
         const smsMessages = {
-            'register': `Kodni hech kimga bermang! QADAMCHA ilovasiga ro'yxatdan o'tish uchun tasdiqlash kodi: ${code}${hashSuffix}`,
-            'reset-pin': `Kodni hech kimga bermang! QADAMCHA ilovasida parolni qayta tiklash uchun tasdiqlash kodi: ${code}${hashSuffix}`,
+            'register': `Kodni hech kimga bermang! QADAMCHA ilovasiga ro'yxatdan o'tish uchun tasdiqlash kodi: ${code}`,
+            'reset-pin': `Kodni hech kimga bermang! QADAMCHA ilovasida parolni qayta tiklash uchun tasdiqlash kodi: ${code}`,
         };
         const message = smsMessages[purpose] || smsMessages['register'];
 

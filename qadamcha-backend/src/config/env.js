@@ -69,7 +69,6 @@ module.exports = {
     ESKIZ_EMAIL: process.env.ESKIZ_EMAIL,
     ESKIZ_PASSWORD: process.env.ESKIZ_PASSWORD,
     ESKIZ_BASE_URL: 'https://notify.eskiz.uz/api',
-    APP_SMS_HASH: process.env.APP_SMS_HASH || '', // Android SMS Retriever API uchun app hash
 
     // Bunny.net
     BUNNY_LIBRARY_ID: process.env.BUNNY_STREAM_LIBRARY_ID,
