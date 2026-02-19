@@ -10,8 +10,8 @@ import '../../../content/presentation/bloc/content_bloc.dart';
 import '../../../content/presentation/widgets/video_card.dart';
 import '../../../content/presentation/pages/video_player_page.dart';
 
-/// Content Page — Multfilmlar ekrani
-/// Oxirgi ko'rilgan + Filtrlar (tab + tur + til + yosh) + GridView
+/// Content Page — YouTube-style Multfilmlar ekrani
+/// Horizontal category chips + vertical video feed
 class ContentPage extends StatefulWidget {
   const ContentPage({super.key});
 
@@ -21,16 +21,20 @@ class ContentPage extends StatefulWidget {
 
 class _ContentPageState extends State<ContentPage> {
   final ScrollController _scrollController = ScrollController();
-  int _selectedTab = 0;
-  final _tabs = ['Barchasi', 'Yangi'];
 
-  // Filter state
-  String? _selectedType;
+  // Category chips (YouTube-style horizontal pills)
+  int _selectedCategory = 0;
+  final _categories = [
+    {'label': 'Barchasi', 'icon': '🔥', 'value': null},
+    {'label': 'Yangi', 'icon': '✨', 'value': 'new'},
+    {"label": "Ta'limiy", 'icon': '📚', 'value': 'talimiy'},
+    {"label": "O'zbek", 'icon': '🇺🇿', 'value': 'ozbek'},
+    {'label': 'Jahon', 'icon': '🌍', 'value': 'jahon'},
+  ];
+
+  // Advanced filter state
   String? _selectedLanguage;
   int? _selectedAge;
-
-  final _types = ["Ta'limiy", "O'zbek", 'Jahon'];
-  final _typeValues = {"Ta'limiy": 'talimiy', "O'zbek": 'ozbek', 'Jahon': 'jahon'};
 
   final _languages = ["O'zbek tili", 'Rus tili', 'Ingliz tili'];
   final _languageValues = {"O'zbek tili": 'uz', 'Rus tili': 'ru', 'Ingliz tili': 'en'};
@@ -47,12 +51,9 @@ class _ContentPageState extends State<ContentPage> {
   void initState() {
     super.initState();
     _childBloc = context.read<ChildBloc>();
-    // Multfilm vaqt tracking
     SessionTracker.instance.startSession('content');
     context.read<ContentBloc>().add(const LoadContentEvent(refresh: true));
     _scrollController.addListener(_onScroll);
-    
-    // Oxirgi ko'rilganni local'dan yuklash
     _loadLastWatched();
   }
 
@@ -94,7 +95,6 @@ class _ContentPageState extends State<ContentPage> {
 
   @override
   void dispose() {
-    // Multfilm vaqt tracking to'xtatish (lokal counter yangilanadi, backend batch sync orqali)
     SessionTracker.instance.endSession('content');
     _scrollController.dispose();
     super.dispose();
@@ -103,18 +103,17 @@ class _ContentPageState extends State<ContentPage> {
   List<ContentEntity> _getFilteredContents(List<ContentEntity> contents) {
     var filtered = List<ContentEntity>.from(contents);
 
-    // Tab filter
-    if (_selectedTab == 1) {
-      // "Yangi" — oxirgi 20 ta
-      if (filtered.length > 20) {
-        filtered = filtered.sublist(0, 20);
+    // Category filter
+    if (_selectedCategory > 0) {
+      final categoryValue = _categories[_selectedCategory]['value'] as String?;
+      if (categoryValue == 'new') {
+        // Yangi — oxirgi 20 ta
+        if (filtered.length > 20) {
+          filtered = filtered.sublist(0, 20);
+        }
+      } else if (categoryValue != null) {
+        filtered = filtered.where((c) => c.type.toLowerCase() == categoryValue).toList();
       }
-    }
-
-    // Type filter
-    if (_selectedType != null) {
-      final typeValue = _typeValues[_selectedType] ?? _selectedType!.toLowerCase();
-      filtered = filtered.where((c) => c.type.toLowerCase() == typeValue).toList();
     }
 
     // Language filter
@@ -133,18 +132,9 @@ class _ContentPageState extends State<ContentPage> {
     return filtered;
   }
 
-  int get _activeFilterCount {
-    int count = 0;
-    if (_selectedType != null) count++;
-    if (_selectedLanguage != null) count++;
-    if (_selectedAge != null) count++;
-    return count;
-  }
-
-  bool get _hasActiveFilters => _activeFilterCount > 0;
+  bool get _hasAdvancedFilters => _selectedLanguage != null || _selectedAge != null;
 
   void _showFilterSheet() {
-    String? tempType = _selectedType;
     String? tempLang = _selectedLanguage;
     int? tempAge = _selectedAge;
 
@@ -178,19 +168,16 @@ class _ContentPageState extends State<ContentPage> {
                         fontFamily: 'Nunito',
                       ),
                     ),
-                    if (tempType != null || tempLang != null || tempAge != null)
+                    if (tempLang != null || tempAge != null)
                       GestureDetector(
-                        onTap: () {
-                          setSheetState(() {
-                            tempType = null;
-                            tempLang = null;
-                            tempAge = null;
-                          });
-                        },
+                        onTap: () => setSheetState(() {
+                          tempLang = null;
+                          tempAge = null;
+                        }),
                         child: Container(
                           padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                           decoration: BoxDecoration(
-                            color: AppColors.error.withValues(alpha: 0.1),
+                            color: AppColors.error.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8.r),
                           ),
                           child: Text(
@@ -208,48 +195,7 @@ class _ContentPageState extends State<ContentPage> {
                 ),
                 SizedBox(height: 20.h),
 
-                // ==================== TUR FILTRI ====================
-                Text(
-                  '📺 Turi',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                    fontFamily: 'Nunito',
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                Wrap(
-                  spacing: 8.w,
-                  runSpacing: 8.h,
-                  children: _types.map((type) {
-                    final sel = tempType == type;
-                    return GestureDetector(
-                      onTap: () => setSheetState(() => tempType = sel ? null : type),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
-                        decoration: BoxDecoration(
-                          gradient: sel ? AppColors.cartoonGradient : null,
-                          color: sel ? null : AppColors.surfaceVariant,
-                          borderRadius: BorderRadius.circular(12.r),
-                          border: sel ? null : Border.all(color: AppColors.divider),
-                        ),
-                        child: Text(
-                          type,
-                          style: TextStyle(
-                            fontSize: 13.sp,
-                            fontWeight: FontWeight.w600,
-                            color: sel ? Colors.white : AppColors.textPrimary,
-                            fontFamily: 'Nunito',
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                SizedBox(height: 18.h),
-
-                // ==================== TIL FILTRI ====================
+                // TIL FILTRI
                 Text(
                   '🌐 Til',
                   style: TextStyle(
@@ -268,7 +214,8 @@ class _ContentPageState extends State<ContentPage> {
                     final emoji = _languageEmojis[lang] ?? '';
                     return GestureDetector(
                       onTap: () => setSheetState(() => tempLang = sel ? null : lang),
-                      child: Container(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
                         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
                         decoration: BoxDecoration(
                           gradient: sel ? const LinearGradient(
@@ -293,7 +240,7 @@ class _ContentPageState extends State<ContentPage> {
                 ),
                 SizedBox(height: 18.h),
 
-                // ==================== YOSH FILTRI ====================
+                // YOSH FILTRI
                 Text(
                   '👶 Yosh',
                   style: TextStyle(
@@ -312,7 +259,8 @@ class _ContentPageState extends State<ContentPage> {
                     final sel = tempAge == ageVal;
                     return GestureDetector(
                       onTap: () => setSheetState(() => tempAge = sel ? null : ageVal),
-                      child: Container(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
                         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
                         decoration: BoxDecoration(
                           gradient: sel ? const LinearGradient(
@@ -341,7 +289,6 @@ class _ContentPageState extends State<ContentPage> {
                 GestureDetector(
                   onTap: () {
                     setState(() {
-                      _selectedType = tempType;
                       _selectedLanguage = tempLang;
                       _selectedAge = tempAge;
                     });
@@ -355,7 +302,7 @@ class _ContentPageState extends State<ContentPage> {
                       borderRadius: BorderRadius.circular(14.r),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.kidPink.withValues(alpha: 0.3),
+                          color: AppColors.kidPink.withOpacity(0.3),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
@@ -400,11 +347,12 @@ class _ContentPageState extends State<ContentPage> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
+            // ===== HEADER — YouTube-style =====
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
               child: Row(
                 children: [
+                  // Back button
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Container(
@@ -421,7 +369,8 @@ class _ContentPageState extends State<ContentPage> {
                       ),
                     ),
                   ),
-                  SizedBox(width: 14.w),
+                  SizedBox(width: 12.w),
+                  // Logo/Title
                   Text(
                     '🎬 Multfilmlar',
                     style: TextStyle(
@@ -439,11 +388,11 @@ class _ContentPageState extends State<ContentPage> {
                       width: 40.w,
                       height: 40.w,
                       decoration: BoxDecoration(
-                        color: _hasActiveFilters
-                            ? AppColors.kidPink.withValues(alpha: 0.1)
+                        color: _hasAdvancedFilters
+                            ? AppColors.kidPink.withOpacity(0.1)
                             : AppColors.surfaceVariant,
                         borderRadius: BorderRadius.circular(12.r),
-                        border: _hasActiveFilters
+                        border: _hasAdvancedFilters
                             ? Border.all(color: AppColors.kidPink, width: 1.5)
                             : null,
                       ),
@@ -453,31 +402,21 @@ class _ContentPageState extends State<ContentPage> {
                             child: Icon(
                               Icons.tune_rounded,
                               size: 20.sp,
-                              color: _hasActiveFilters
+                              color: _hasAdvancedFilters
                                   ? AppColors.kidPink
                                   : AppColors.textSecondary,
                             ),
                           ),
-                          if (_hasActiveFilters)
+                          if (_hasAdvancedFilters)
                             Positioned(
                               top: 6.h,
                               right: 6.w,
                               child: Container(
-                                width: 16.w,
-                                height: 16.w,
+                                width: 8.w,
+                                height: 8.w,
                                 decoration: const BoxDecoration(
                                   color: AppColors.kidPink,
                                   shape: BoxShape.circle,
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    '$_activeFilterCount',
-                                    style: TextStyle(
-                                      fontSize: 9.sp,
-                                      fontWeight: FontWeight.w700,
-                                      color: Colors.white,
-                                    ),
-                                  ),
                                 ),
                               ),
                             ),
@@ -509,32 +448,38 @@ class _ContentPageState extends State<ContentPage> {
               ),
             ),
 
-            // Category Tabs
+            // ===== CATEGORY CHIPS — YouTube-style horizontal pills =====
             SizedBox(
-              height: 40.h,
+              height: 42.h,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: EdgeInsets.symmetric(horizontal: 16.w),
-                itemCount: _tabs.length,
+                itemCount: _categories.length,
                 separatorBuilder: (_, __) => SizedBox(width: 8.w),
                 itemBuilder: (context, index) {
-                  final selected = _selectedTab == index;
+                  final selected = _selectedCategory == index;
+                  final cat = _categories[index];
                   return GestureDetector(
-                    onTap: () => setState(() => _selectedTab = index),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 22.w),
+                    onTap: () => setState(() => _selectedCategory = index),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: EdgeInsets.symmetric(horizontal: 16.w),
                       decoration: BoxDecoration(
-                        gradient: selected ? AppColors.cartoonGradient : null,
-                        color: selected ? null : AppColors.surfaceVariant,
-                        borderRadius: BorderRadius.circular(20.r),
+                        color: selected
+                            ? AppColors.textPrimary
+                            : AppColors.surfaceVariant,
+                        borderRadius: BorderRadius.circular(10.r),
+                        border: selected
+                            ? null
+                            : Border.all(color: AppColors.border, width: 1),
                       ),
                       alignment: Alignment.center,
                       child: Text(
-                        _tabs[index],
+                        '${cat['icon']} ${cat['label']}',
                         style: TextStyle(
-                          fontSize: 14.sp,
+                          fontSize: 13.sp,
                           fontWeight: FontWeight.w600,
-                          color: selected ? Colors.white : AppColors.textSecondary,
+                          color: selected ? Colors.white : AppColors.textPrimary,
                           fontFamily: 'Nunito',
                         ),
                       ),
@@ -544,271 +489,62 @@ class _ContentPageState extends State<ContentPage> {
               ),
             ),
 
-            SizedBox(height: 16.h),
+            SizedBox(height: 8.h),
 
-            // Content
+            // ===== ACTIVE FILTER CHIPS =====
+            if (_hasAdvancedFilters)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: SizedBox(
+                  height: 32.h,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      if (_selectedLanguage != null)
+                        _buildFilterChip(
+                          '${_languageEmojis[_selectedLanguage] ?? ""} $_selectedLanguage',
+                          () => setState(() => _selectedLanguage = null),
+                        ),
+                      if (_selectedAge != null)
+                        _buildFilterChip(
+                          '👶 ${_ageGroups.firstWhere((g) => _parseAgeGroup(g) == _selectedAge, orElse: () => '')} yosh',
+                          () => setState(() => _selectedAge = null),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+
+            // ===== VIDEO FEED =====
             Expanded(
               child: BlocBuilder<ContentBloc, ContentState>(
                 builder: (context, state) {
                   if (state.status == ContentStatus.loading && state.contents.isEmpty) {
-                    return const Center(
-                      child: CircularProgressIndicator(color: AppColors.primary),
-                    );
+                    return _buildSkeletonLoader();
                   }
 
                   if (state.status == ContentStatus.error && state.contents.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text('😔', style: TextStyle(fontSize: 48.sp)),
-                          SizedBox(height: 12.h),
-                          Text(
-                            'Xatolik yuz berdi',
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                              fontFamily: 'Nunito',
-                            ),
-                          ),
-                          SizedBox(height: 8.h),
-                          Text(
-                            state.errorMessage ?? '',
-                            style: TextStyle(
-                              fontSize: 13.sp,
-                              color: AppColors.textSecondary,
-                              fontFamily: 'Nunito',
-                            ),
-                          ),
-                          SizedBox(height: 20.h),
-                          ElevatedButton(
-                            onPressed: () {
-                              context.read<ContentBloc>().add(const LoadContentEvent(refresh: true));
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-                            ),
-                            child: const Text('Qayta yuklash'),
-                          ),
-                        ],
-                      ),
-                    );
+                    return _buildErrorState(state);
                   }
 
                   final filteredContents = _getFilteredContents(state.contents);
 
                   if (state.contents.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text('📺', style: TextStyle(fontSize: 48.sp)),
-                          SizedBox(height: 12.h),
-                          Text(
-                            'Hozircha kontent yo\'q',
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                              fontFamily: 'Nunito',
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
+                    return _buildEmptyState();
                   }
 
                   return RefreshIndicator(
                     onRefresh: () async {
                       context.read<ContentBloc>().add(const LoadContentEvent(refresh: true));
                     },
-                    child: CustomScrollView(
+                    color: AppColors.kidPink,
+                    child: ListView.builder(
                       controller: _scrollController,
-                      slivers: [
-                        // Oxirgi ko'rilgan multfilm
-                        if (_lastWatched != null)
-                          SliverToBoxAdapter(
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 16.w),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Text(
-                                        '⏱ Oxirgi ko\'rilgan',
-                                        style: TextStyle(
-                                          fontSize: 16.sp,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColors.textPrimary,
-                                          fontFamily: 'Nunito',
-                                        ),
-                                      ),
-                                      const Spacer(),
-                                      Container(
-                                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.kidPink.withValues(alpha: 0.1),
-                                          borderRadius: BorderRadius.circular(8.r),
-                                        ),
-                                        child: Text(
-                                          'Davom etish ▶',
-                                          style: TextStyle(
-                                            fontSize: 11.sp,
-                                            fontWeight: FontWeight.w700,
-                                            color: AppColors.kidPink,
-                                            fontFamily: 'Nunito',
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 10.h),
-                                  SizedBox(
-                                    height: 220.h,
-                                    child: VideoCard(
-                                      content: _lastWatched!,
-                                      onTap: () => _navigateToPlayer(context, _lastWatched!),
-                                    ),
-                                  ),
-                                  SizedBox(height: 16.h),
-                                ],
-                              ),
-                            ),
-                          ),
-
-
-                        // Active filters chips
-                        if (_hasActiveFilters)
-                          SliverToBoxAdapter(
-                            child: Padding(
-                              padding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 12.h),
-                              child: Wrap(
-                                spacing: 6.w,
-                                runSpacing: 6.h,
-                                children: [
-                                  if (_selectedType != null)
-                                    _buildFilterChip('📺 $_selectedType', () {
-                                      setState(() => _selectedType = null);
-                                    }),
-                                  if (_selectedLanguage != null)
-                                    _buildFilterChip(
-                                      '${_languageEmojis[_selectedLanguage] ?? ""} $_selectedLanguage',
-                                      () => setState(() => _selectedLanguage = null),
-                                    ),
-                                  if (_selectedAge != null)
-                                    _buildFilterChip(
-                                      '👶 ${_ageGroups.firstWhere((g) => _parseAgeGroup(g) == _selectedAge, orElse: () => '')} yosh',
-                                      () => setState(() => _selectedAge = null),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-
-                        // "Barcha multfilmlar" title
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: EdgeInsets.only(left: 16.w, bottom: 12.h),
-                            child: Row(
-                              children: [
-                                Text(
-                                  'Barcha multfilmlar',
-                                  style: TextStyle(
-                                    fontSize: 18.sp,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.textPrimary,
-                                    fontFamily: 'Nunito',
-                                  ),
-                                ),
-                                SizedBox(width: 8.w),
-                                if (_hasActiveFilters || _selectedTab == 1)
-                                  Container(
-                                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.kidPink.withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(8.r),
-                                    ),
-                                    child: Text(
-                                      '${filteredContents.length}',
-                                      style: TextStyle(
-                                        fontSize: 12.sp,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.kidPink,
-                                        fontFamily: 'Nunito',
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        // Empty filter result
-                        if (filteredContents.isEmpty)
-                          SliverToBoxAdapter(
-                            child: Padding(
-                              padding: EdgeInsets.all(40.w),
-                              child: Column(
-                                children: [
-                                  Text('🔍', style: TextStyle(fontSize: 48.sp)),
-                                  SizedBox(height: 12.h),
-                                  Text(
-                                    'Bu filtr bo\'yicha multfilm topilmadi',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 15.sp,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.textSecondary,
-                                      fontFamily: 'Nunito',
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-
-                        // Grid
-                        if (filteredContents.isNotEmpty)
-                          SliverPadding(
-                            padding: EdgeInsets.symmetric(horizontal: 16.w),
-                            sliver: SliverGrid(
-                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                childAspectRatio: 0.72,
-                                crossAxisSpacing: 12.w,
-                                mainAxisSpacing: 12.h,
-                              ),
-                              delegate: SliverChildBuilderDelegate(
-                                (context, index) {
-                                  if (index >= filteredContents.length) return null;
-                                  final content = filteredContents[index];
-                                  return VideoCard(
-                                    content: content,
-                                    onTap: () => _navigateToPlayer(context, content),
-                                  );
-                                },
-                                childCount: filteredContents.length,
-                              ),
-                            ),
-                          ),
-
-                        // Loading indicator
-                        if (state.status == ContentStatus.loading && state.contents.isNotEmpty)
-                          SliverToBoxAdapter(
-                            child: Padding(
-                              padding: EdgeInsets.all(20.w),
-                              child: const Center(
-                                child: CircularProgressIndicator(color: AppColors.primary),
-                              ),
-                            ),
-                          ),
-
-                        SliverToBoxAdapter(child: SizedBox(height: 20.h)),
-                      ],
+                      padding: EdgeInsets.symmetric(horizontal: 16.w),
+                      itemCount: _buildFeedItemCount(filteredContents, state),
+                      itemBuilder: (context, index) {
+                        return _buildFeedItem(context, index, filteredContents, state);
+                      },
                     ),
                   );
                 },
@@ -820,13 +556,360 @@ class _ContentPageState extends State<ContentPage> {
     );
   }
 
+  // Feed items: [last watched] + [videos] + [loading indicator]
+  int _buildFeedItemCount(List<ContentEntity> filtered, ContentState state) {
+    int count = filtered.length;
+    if (_lastWatched != null) count++; // oxirgi ko'rilgan
+    if (state.status == ContentStatus.loading && state.contents.isNotEmpty) count++; // loader
+    return count;
+  }
+
+  Widget _buildFeedItem(BuildContext context, int index, List<ContentEntity> filtered, ContentState state) {
+    // Oxirgi ko'rilgan — birinchi element
+    if (_lastWatched != null) {
+      if (index == 0) {
+        return _buildLastWatchedSection();
+      }
+      index -= 1;
+    }
+
+    // Loading indicator — oxirgi element
+    if (index >= filtered.length) {
+      return Padding(
+        padding: EdgeInsets.all(20.w),
+        child: const Center(
+          child: CircularProgressIndicator(color: AppColors.kidPink),
+        ),
+      );
+    }
+
+    // Video card — YouTube-style
+    final content = filtered[index];
+    return Padding(
+      padding: EdgeInsets.only(bottom: 16.h),
+      child: VideoCard(
+        content: content,
+        onTap: () => _navigateToPlayer(context, content),
+      ),
+    );
+  }
+
+  // ===== OXIRGI KO'RILGAN — YouTube "Continue watching" style =====
+  Widget _buildLastWatchedSection() {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 16.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: AppColors.kidPink.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.history_rounded, size: 14.sp, color: AppColors.kidPink),
+                    SizedBox(width: 4.w),
+                    Text(
+                      'Davom etish',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.kidPink,
+                        fontFamily: 'Nunito',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8.h),
+          _buildLastWatchedCard(_lastWatched!),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLastWatchedCard(ContentEntity content) {
+    return GestureDetector(
+      onTap: () => _navigateToPlayer(context, content),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: AppColors.kidPink.withOpacity(0.15), width: 1.5),
+        ),
+        child: Row(
+          children: [
+            // Thumbnail — chap tomonda
+            ClipRRect(
+              borderRadius: BorderRadius.horizontal(left: Radius.circular(11.r)),
+              child: SizedBox(
+                width: 140.w,
+                height: 86.h,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    content.thumbnailUrl != null && content.thumbnailUrl!.isNotEmpty
+                        ? Image.network(
+                            content.thumbnailUrl!,
+                            fit: BoxFit.cover,
+                            headers: const {'Referer': 'https://qadamcha.uz/'},
+                            errorBuilder: (_, __, ___) => Container(
+                              decoration: const BoxDecoration(gradient: AppColors.cartoonGradient),
+                              child: const Center(child: Icon(Icons.movie_rounded, color: Colors.white54, size: 30)),
+                            ),
+                          )
+                        : Container(
+                            decoration: const BoxDecoration(gradient: AppColors.cartoonGradient),
+                            child: const Center(child: Icon(Icons.movie_rounded, color: Colors.white54, size: 30)),
+                          ),
+                    // Play overlay
+                    Center(
+                      child: Container(
+                        width: 32.w,
+                        height: 32.w,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.play_arrow_rounded,
+                          size: 20.sp,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    // Duration badge
+                    if (content.duration > 0)
+                      Positioned(
+                        bottom: 4.h,
+                        right: 4.w,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.8),
+                            borderRadius: BorderRadius.circular(3.r),
+                          ),
+                          child: Text(
+                            _formatDuration(content.duration),
+                            style: TextStyle(
+                              fontSize: 9.sp,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            // Info — o'ng tomonda
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      content.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                        fontFamily: 'Nunito',
+                        height: 1.3,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      content.category.isNotEmpty ? content.category : 'Multfilm',
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        color: AppColors.textSecondary,
+                        fontFamily: 'Nunito',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ===== SKELETON LOADER =====
+  Widget _buildSkeletonLoader() {
+    return ListView.builder(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      itemCount: 4,
+      itemBuilder: (_, __) => Padding(
+        padding: EdgeInsets.only(bottom: 16.h),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Thumbnail skeleton
+            Container(
+              height: 190.h,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceVariant,
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+            ),
+            SizedBox(height: 10.h),
+            // Info skeleton
+            Row(
+              children: [
+                // Avatar
+                Container(
+                  width: 36.w,
+                  height: 36.w,
+                  decoration: const BoxDecoration(
+                    color: AppColors.surfaceVariant,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                SizedBox(width: 10.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        height: 14.h,
+                        width: 200.w,
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceVariant,
+                          borderRadius: BorderRadius.circular(4.r),
+                        ),
+                      ),
+                      SizedBox(height: 6.h),
+                      Container(
+                        height: 12.h,
+                        width: 120.w,
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceVariant,
+                          borderRadius: BorderRadius.circular(4.r),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ===== ERROR STATE =====
+  Widget _buildErrorState(ContentState state) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(32.w),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('😔', style: TextStyle(fontSize: 48.sp)),
+            SizedBox(height: 16.h),
+            Text(
+              'Xatolik yuz berdi',
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+                fontFamily: 'Nunito',
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              state.errorMessage ?? 'Internetni tekshiring',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: AppColors.textSecondary,
+                fontFamily: 'Nunito',
+              ),
+            ),
+            SizedBox(height: 24.h),
+            GestureDetector(
+              onTap: () {
+                context.read<ContentBloc>().add(const LoadContentEvent(refresh: true));
+              },
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                decoration: BoxDecoration(
+                  gradient: AppColors.cartoonGradient,
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Text(
+                  'Qayta yuklash',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    fontFamily: 'Nunito',
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ===== EMPTY STATE =====
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('📺', style: TextStyle(fontSize: 56.sp)),
+          SizedBox(height: 16.h),
+          Text(
+            'Hozircha kontent yo\'q',
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+              fontFamily: 'Nunito',
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            'Tez orada yangi multfilmlar qo\'shiladi!',
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: AppColors.textSecondary,
+              fontFamily: 'Nunito',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===== FILTER CHIP =====
   Widget _buildFilterChip(String label, VoidCallback onRemove) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+      margin: EdgeInsets.only(right: 6.w),
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: AppColors.kidPink.withValues(alpha: 0.08),
+        color: AppColors.kidPink.withOpacity(0.08),
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: AppColors.kidPink.withValues(alpha: 0.2)),
+        border: Border.all(color: AppColors.kidPink.withOpacity(0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -834,7 +917,7 @@ class _ContentPageState extends State<ContentPage> {
           Text(
             label,
             style: TextStyle(
-              fontSize: 12.sp,
+              fontSize: 11.sp,
               fontWeight: FontWeight.w600,
               color: AppColors.kidPink,
               fontFamily: 'Nunito',
@@ -850,157 +933,12 @@ class _ContentPageState extends State<ContentPage> {
     );
   }
 
-  Widget _buildLastWatchedCard(ContentEntity content) {
-    return GestureDetector(
-      onTap: () => _navigateToPlayer(context, content),
-      child: Container(
-        height: 90.h,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: AppColors.kidPink.withValues(alpha: 0.2), width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.kidPink.withValues(alpha: 0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // Thumbnail
-            ClipRRect(
-              borderRadius: BorderRadius.horizontal(left: Radius.circular(14.r)),
-              child: SizedBox(
-                width: 130.w,
-                height: double.infinity,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    content.thumbnailUrl != null && content.thumbnailUrl!.isNotEmpty
-                        ? Image.network(
-                            content.thumbnailUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              decoration: const BoxDecoration(gradient: AppColors.cartoonGradient),
-                              child: const Center(child: Icon(Icons.movie_rounded, color: Colors.white54, size: 30)),
-                            ),
-                          )
-                        : Container(
-                            decoration: const BoxDecoration(gradient: AppColors.cartoonGradient),
-                            child: const Center(child: Icon(Icons.movie_rounded, color: Colors.white54, size: 30)),
-                          ),
-                    // Duration badge
-                    if (content.duration > 0)
-                      Positioned(
-                        bottom: 4,
-                        right: 4,
-                        child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.7),
-                            borderRadius: BorderRadius.circular(4.r),
-                          ),
-                          child: Text(
-                            _formatDuration(content.duration),
-                            style: TextStyle(
-                              fontSize: 10.sp,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    Center(
-                      child: Container(
-                        width: 36.w,
-                        height: 36.w,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.play_arrow_rounded,
-                          size: 22.sp,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            // Info
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      content.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                        fontFamily: 'Nunito',
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Row(
-                      children: [
-                        if (content.duration > 0) ...[
-                          Icon(Icons.access_time_rounded, size: 13.sp, color: AppColors.textSecondary),
-                          SizedBox(width: 4.w),
-                          Text(
-                            _formatDuration(content.duration),
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: AppColors.textSecondary,
-                              fontFamily: 'Nunito',
-                            ),
-                          ),
-                          SizedBox(width: 10.w),
-                        ],
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-                          decoration: BoxDecoration(
-                            color: AppColors.kidPink.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(4.r),
-                          ),
-                          child: Text(
-                            'Davom etish ▶',
-                            style: TextStyle(
-                              fontSize: 10.sp,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.kidPink,
-                              fontFamily: 'Nunito',
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
+  // ===== NAVIGATION =====
   void _navigateToPlayer(BuildContext context, ContentEntity content) {
-    // Oxirgi ko'rilgan sifatida saqlash (in-memory)
     setState(() {
       _lastWatched = content;
     });
 
-    // Local'ga ham saqlash (sahifa qayta ochilganda ham ko'rinadi)
     LocalMonitoringService.instance.saveLastWatched({
       'id': content.id,
       'title': content.title,
@@ -1018,7 +956,6 @@ class _ContentPageState extends State<ContentPage> {
       'ageMax': content.ageMax,
     });
 
-    // Activity log ga qo'shish
     LocalMonitoringService.instance.addActivityLog(
       activityType: 'video_watch',
       contentTitle: content.title,
