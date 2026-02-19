@@ -21,6 +21,10 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
       final subscription =
           SubscriptionModel.fromJson(response.data['subscription']).toEntity();
       return Right(subscription);
+    } on UnauthorizedException catch (e) {
+      return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -36,6 +40,10 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
       final subscriptions =
           data.map((json) => SubscriptionModel.fromJson(json).toEntity()).toList();
       return Right(subscriptions);
+    } on UnauthorizedException catch (e) {
+      return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -61,6 +69,10 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
         orderId: data['orderId'] ?? '',
         amount: data['amount'] ?? 0,
       ));
+    } on UnauthorizedException catch (e) {
+      return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -84,6 +96,10 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
         paid: data['paid'] == true,
         subscription: subscription,
       ));
+    } on UnauthorizedException catch (e) {
+      return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -96,6 +112,10 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     try {
       await apiClient.dio.post('/subscription/cancel', data: {});
       return const Right(null);
+    } on UnauthorizedException catch (e) {
+      return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -114,6 +134,10 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
         return Right(subscription);
       }
       return Left(ServerFailure('Obuna ma\'lumotlari kelmadi'));
+    } on UnauthorizedException catch (e) {
+      return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -141,6 +165,10 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
         type: data['card']?['type'] ?? 'unknown',
         recurrent: data['card']?['recurrent'] ?? false,
       ));
+    } on UnauthorizedException catch (e) {
+      return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -160,6 +188,10 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
         phone: data['phone'] ?? '',
         wait: data['wait'] ?? 60,
       ));
+    } on UnauthorizedException catch (e) {
+      return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -186,6 +218,10 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
         type: card['type'] ?? 'unknown',
         recurrent: card['recurrent'] ?? false,
       ));
+    } on UnauthorizedException catch (e) {
+      return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -217,6 +253,10 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
         message: data['message'],
         subscription: subscription,
       ));
+    } on UnauthorizedException catch (e) {
+      return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {

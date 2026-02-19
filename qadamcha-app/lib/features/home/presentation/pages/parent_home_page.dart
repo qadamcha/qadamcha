@@ -157,12 +157,85 @@ class ParentHomePage extends StatelessWidget {
 
         if (state.paymentStatus == PaymentStatus.failed &&
             state.errorMessage != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.errorMessage!),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          final msg = state.errorMessage!;
+          // Auth xatolik — qayta login talab qilish
+          final isAuthError = msg.toLowerCase().contains('autentifikatsiya') ||
+              msg.toLowerCase().contains('token') ||
+              msg.toLowerCase().contains('tizimga qayta kiring');
+          if (isAuthError) {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (ctx) => AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20.r),
+                ),
+                title: Row(
+                  children: [
+                    Icon(Icons.lock_outline, color: AppColors.error, size: 24.sp),
+                    SizedBox(width: 8.w),
+                    Text(
+                      'Sessiya tugagan',
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w800,
+                        fontFamily: 'Nunito',
+                      ),
+                    ),
+                  ],
+                ),
+                content: Text(
+                  'Xavfsizlik uchun sessiyangiz yakunlangan. '
+                  'Iltimos, qayta tizimga kiring.',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontFamily: 'Nunito',
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text(
+                      'Bekor qilish',
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      // Logout va login sahifasiga o'tish
+                      context.read<AuthBloc>().add(LogoutEvent());
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                    ),
+                    child: Text(
+                      'Qayta kirish',
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(msg),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
         }
       },
       builder: (context, subState) {
