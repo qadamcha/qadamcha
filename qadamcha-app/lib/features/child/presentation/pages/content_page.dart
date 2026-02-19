@@ -352,24 +352,6 @@ class _ContentPageState extends State<ContentPage> {
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
               child: Row(
                 children: [
-                  // Back button
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      width: 40.w,
-                      height: 40.w,
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceVariant,
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        size: 18.sp,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
                   // Logo/Title
                   Text(
                     '🎬 Multfilmlar',
