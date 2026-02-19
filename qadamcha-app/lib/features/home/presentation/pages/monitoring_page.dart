@@ -175,6 +175,15 @@ class _MonitoringPageState extends State<MonitoringPage> {
       (sum, child) => sum + child.todayUsage.gamesPlayed,
     );
 
+    // Debug: Ma'lumot manbalarini ko'rish
+    print('📊 [Monitoring] _buildSummarySection:');
+    print('   children.length=${children.length}');
+    for (var c in children) {
+      print('   child ${c.name}: min=${c.todayUsage.minutesUsed}, vid=${c.todayUsage.videosWatched}, game=${c.todayUsage.gamesPlayed}');
+    }
+    print('   backendTotals: min=$backendMinutes, vid=$backendVideos, game=$backendGames');
+    print('   localStats: min=${localStats.minutesUsed}, vid=${localStats.videosWatched}, game=${localStats.gamesPlayed}');
+
     // Local + Backend: kattasini olish (local yangilangan bo'lishi mumkin)
     final totalMinutes = backendMinutes > localStats.minutesUsed
         ? backendMinutes

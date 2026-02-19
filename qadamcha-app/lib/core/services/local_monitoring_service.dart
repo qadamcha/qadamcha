@@ -127,12 +127,15 @@ class LocalMonitoringService {
   /// Backend'ga sync qilish
   void syncToBackend() {
     if (onSyncToBackend != null) {
+      print('📤 [LocalMonitoring] syncToBackend: min=$_minutesUsed, vid=$_videosWatched, game=$_gamesPlayed, story=$_storiesRead');
       onSyncToBackend!({
         'minutesUsed': _minutesUsed,
         'videosWatched': _videosWatched,
         'gamesPlayed': _gamesPlayed,
         'storiesRead': _storiesRead,
       });
+    } else {
+      print('⚠️ [LocalMonitoring] syncToBackend: onSyncToBackend callback NULL!');
     }
   }
 
@@ -274,13 +277,19 @@ class LocalMonitoringService {
   // ─── Backend dan yuklash (qayta o'rnatishdan keyin) ─────────────────
 
   /// Backend'dan kelgan todayUsage ni lokal counterlar ga sync qilish
-  /// Faqat backend qiymati kattaroq bo'lsa yangilanadi (yangi qurilmada 0 bo'ladi)
+  /// Backend — asosiy haqiqat manbai (source of truth)
+  /// Re-login qilganda backend qiymatlari to'g'ridan-to'g'ri yoziladi
   void loadFromBackend({
     required int minutesUsed,
     required int videosWatched,
     required int gamesPlayed,
     required int storiesRead,
   }) {
+    print('🔄 [LocalMonitoring] loadFromBackend chaqirildi:');
+    print('   Backend: min=$minutesUsed, vid=$videosWatched, game=$gamesPlayed, story=$storiesRead');
+    print('   Local:   min=$_minutesUsed, vid=$_videosWatched, game=$_gamesPlayed, story=$_storiesRead');
+    
+    // Backend va local'dan kattasini olish
     bool changed = false;
     if (minutesUsed > _minutesUsed) {
       _minutesUsed = minutesUsed;
@@ -298,8 +307,12 @@ class LocalMonitoringService {
       _storiesRead = storiesRead;
       changed = true;
     }
+    
     if (changed) {
+      print('   ✅ Yangilandi → min=$_minutesUsed, vid=$_videosWatched, game=$_gamesPlayed, story=$_storiesRead');
       saveToLocal();
+    } else {
+      print('   ℹ️ O\'zgarmadi (local >= backend)');
     }
   }
 

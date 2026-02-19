@@ -132,8 +132,10 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
               prev.status != curr.status && curr.status == ChildStatus.loaded,
           listener: (context, state) {
             // Bolalar yuklanganda monitoring datani ham yuklash
+            print('🟢 [BlocListener] ChildStatus.loaded! children=${state.children.length}');
             if (state.children.isNotEmpty) {
               final child = state.selectedChild ?? state.children.first;
+              print('   child.todayUsage: min=${child.todayUsage.minutesUsed}, vid=${child.todayUsage.videosWatched}, game=${child.todayUsage.gamesPlayed}, story=${child.todayUsage.storiesRead}');
               _loadMonitoringForChild(child.id);
               
               // Backend'dan kelgan todayUsage ni LocalMonitoringService ga sync qilish
