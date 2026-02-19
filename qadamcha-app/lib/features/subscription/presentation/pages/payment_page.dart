@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/back_button_box.dart';
 import '../../domain/entities/subscription_entity.dart';
@@ -450,46 +451,75 @@ class _PaymentPageState extends State<PaymentPage> {
           const SizedBox(height: 24),
 
           // Powered by Payme + Oferta + Xavfsizlik bayonoti
-          // (Payme rasmiy protokoli talabi)
+          // (Payme rasmiy Subscribe API protokoli talabi)
           Center(
             child: Column(
               children: [
+                // Payme logotipi (rasmiy talab)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('🔒', style: TextStyle(fontSize: 14)),
-                    const SizedBox(width: 6),
                     Text(
-                      'Powered by Payme',
+                      'Powered by',
                       style: TextStyle(
                         fontSize: 12,
                         color: AppColors.textSecondary,
                         fontFamily: 'Nunito',
-                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Image.network(
+                      'https://cdn.payme.uz/logo/payme_color.png',
+                      height: 20,
+                      errorBuilder: (_, __, ___) => const Text(
+                        'Payme',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF00CCCC),
+                        ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  'Karta ma\'lumotlari shifrlangan holda faqat\nPayme serverida saqlanadi',
+                const SizedBox(height: 8),
+                // Xavfsizlik bayonoti (rasmiy talab)
+                const Text(
+                  'Karta ma\'lumotlaringiz bizga uzatilmaydi va\nPayme xavfsiz serverida saqlanadi',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 11,
-                    color: AppColors.textSecondary.withValues(alpha: 0.7),
+                    color: AppColors.textSecondary,
                     fontFamily: 'Nunito',
+                    height: 1.4,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
+                // Oferta havolasi (rasmiy talab)
                 GestureDetector(
                   onTap: () => _openPaymeOferta(),
-                  child: Text(
-                    'Payme ofertasi',
+                  child: const Text(
+                    '"Davom etish" tugmasini bosib, siz Payme ofertasi shartlarini qabul qilasiz',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: AppColors.textSecondary,
+                      fontFamily: 'Nunito',
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                GestureDetector(
+                  onTap: () => _openPaymeOferta(),
+                  child: const Text(
+                    'Payme ofertasi shartlari',
                     style: TextStyle(
                       fontSize: 11,
-                      color: AppColors.primary,
+                      color: Color(0xFF00CCCC),
                       fontFamily: 'Nunito',
+                      fontWeight: FontWeight.w600,
                       decoration: TextDecoration.underline,
+                      decorationColor: Color(0xFF00CCCC),
                     ),
                   ),
                 ),
@@ -566,28 +596,19 @@ class _PaymentPageState extends State<PaymentPage> {
     );
   }
 
-  /// Payme oferta sahifasini ochish (rasmiy protokol talabi)
-  void _openPaymeOferta() {
-    // Payme rasmiy oferta URL
-    const ofertaUrl = 'https://cdn.payme.uz/terms/main.html';
-    // URL ni brauzerda ochish
-    // url_launcher paketi mavjud bo'lmasa, SnackBar ko'rsatamiz
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Payme ofertasi: cdn.payme.uz/terms/main.html'),
-        action: SnackBarAction(
-          label: 'OK',
-          onPressed: () {},
-        ),
-      ),
-    );
+  /// Payme oferta sahifasini brauzerda ochish (rasmiy protokol talabi)
+  Future<void> _openPaymeOferta() async {
+    final uri = Uri.parse('https://cdn.payme.uz/terms/main.html');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   Widget _buildSecurityFooter() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.success.withValues(alpha: 0.08),
+        color: const Color(0xFF00CCCC).withValues(alpha: 0.06),
         border: const Border(
           top: BorderSide(color: AppColors.border),
         ),
@@ -595,14 +616,27 @@ class _PaymentPageState extends State<PaymentPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text('🔒', style: TextStyle(fontSize: 16)),
-          const SizedBox(width: 8),
-          Text(
-            'Payme xavfsiz to\'lov tizimi',
+          const Icon(Icons.lock_outline, size: 16, color: Color(0xFF00CCCC)),
+          const SizedBox(width: 6),
+          const Text(
+            'Powered by',
             style: TextStyle(
-              fontSize: 13,
-              color: AppColors.success,
+              fontSize: 12,
+              color: AppColors.textSecondary,
               fontFamily: 'Nunito',
+            ),
+          ),
+          const SizedBox(width: 4),
+          Image.network(
+            'https://cdn.payme.uz/logo/payme_color.png',
+            height: 16,
+            errorBuilder: (_, __, ___) => const Text(
+              'Payme',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF00CCCC),
+              ),
             ),
           ),
         ],
