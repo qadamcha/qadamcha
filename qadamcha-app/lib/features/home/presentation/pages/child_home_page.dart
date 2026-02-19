@@ -473,10 +473,11 @@ class _ChildHomePageState extends State<ChildHomePage> {
     final title = item['title'] ?? 'Multfilm';
     final thumbnailUrl = item['thumbnailUrl'] as String?;
     final type = item['type'] ?? 'video';
+    final category = item['category'] as String? ?? '';
+    final duration = item['duration'] as int? ?? 0;
     
     return GestureDetector(
       onTap: () {
-        // ContentPage ga qaytarish
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const ContentPage()),
@@ -489,64 +490,104 @@ class _ChildHomePageState extends State<ChildHomePage> {
           borderRadius: BorderRadius.circular(16.r),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 16,
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
               offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Thumbnail — katta rasm
-            ClipRRect(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
-              child: SizedBox(
-                width: double.infinity,
-                height: 140.h,
-                child: thumbnailUrl != null && thumbnailUrl.isNotEmpty
-                    ? Image.network(
-                        thumbnailUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          color: AppColors.kidPurple.withOpacity(0.15),
-                          child: Center(
-                            child: Text(
-                              type == 'game' ? '\u{1F3AE}' : '\u{1F3AC}',
-                              style: TextStyle(fontSize: 40.sp),
+            // Thumbnail — VideoCard uslubida
+            Expanded(
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+                    child: thumbnailUrl != null && thumbnailUrl.isNotEmpty
+                        ? Image.network(
+                            thumbnailUrl,
+                            fit: BoxFit.cover,
+                            headers: const {'Referer': 'https://qadamcha.uz/'},
+                            errorBuilder: (_, __, ___) => Container(
+                              color: AppColors.primary.withOpacity(0.1),
+                              child: Icon(Icons.broken_image, color: AppColors.textSecondary, size: 32.sp),
+                            ),
+                          )
+                        : Container(
+                            color: AppColors.primary.withOpacity(0.1),
+                            child: Icon(
+                              Icons.play_circle_outline,
+                              color: AppColors.primary,
+                              size: 48.sp,
                             ),
                           ),
+                  ),
+                  // Duration Badge
+                  if (duration > 0)
+                    Positioned(
+                      right: 8.w,
+                      bottom: 8.h,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.7),
+                          borderRadius: BorderRadius.circular(4.r),
                         ),
-                      )
-                    : Container(
-                        color: AppColors.kidPurple.withOpacity(0.15),
-                        child: Center(
-                          child: Text(
-                            type == 'game' ? '\u{1F3AE}' : '\u{1F3AC}',
-                            style: TextStyle(fontSize: 40.sp),
+                        child: Text(
+                          _formatDuration(duration),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10.sp,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
+                    ),
+                ],
               ),
             ),
-            // Title
+            // Title & Category — VideoCard uslubida
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
-              child: Text(
-                title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                  fontFamily: 'Nunito',
-                ),
+              padding: EdgeInsets.all(12.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  if (category.isNotEmpty) ...[
+                    SizedBox(height: 4.h),
+                    Text(
+                      category,
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  String _formatDuration(int seconds) {
+    final dur = Duration(seconds: seconds);
+    final minutes = dur.inMinutes;
+    final remainingSeconds = dur.inSeconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
   }
 }
