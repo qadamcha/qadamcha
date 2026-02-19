@@ -6,7 +6,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/back_button_box.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../../domain/entities/subscription_entity.dart';
 import '../bloc/subscription_bloc.dart';
 import 'payment_success_page.dart';
@@ -1563,18 +1562,9 @@ class _PaymentPageState extends State<PaymentPage>
                 ),
               ),
               const SizedBox(width: 8),
-              SvgPicture.asset(
-                'assets/icons/payme_logo.svg',
+              Image.asset(
+                'assets/icons/payme_logo.png',
                 height: 20,
-                placeholderBuilder: (context) => const Text(
-                  'Payme',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF00CCCC),
-                    fontFamily: 'Nunito',
-                  ),
-                ),
               ),
             ],
           ),
@@ -1679,18 +1669,9 @@ class _PaymentPageState extends State<PaymentPage>
             color: AppColors.border,
           ),
           const SizedBox(width: 12),
-          SvgPicture.asset(
-            'assets/icons/payme_logo.svg',
+          Image.asset(
+            'assets/icons/payme_logo.png',
             height: 16,
-            placeholderBuilder: (context) => const Text(
-              'Payme',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF00CCCC),
-                fontFamily: 'Nunito',
-              ),
-            ),
           ),
         ],
       ),
