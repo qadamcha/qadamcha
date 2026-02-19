@@ -393,5 +393,55 @@ module.exports = {
         );
 
         return { success: true, activity };
+    },
+
+    // POST /children/:id/sync-usage — Batch sync (LocalMonitoringService → DB)
+    // $max operatori: faqat kattaroq qiymatni yozadi (double counting muammosini hal qiladi)
+    async syncUsage(request, reply) {
+        const { userId } = request.user;
+        const { id } = request.params;
+        const { minutesUsed, videosWatched, gamesPlayed, storiesRead } = request.body;
+
+        // Bola ota-onaga tegishliligini tekshirish
+        const child = await Child.findOne({ _id: id, parentId: userId });
+        if (!child) {
+            return reply.status(404).send({
+                success: false,
+                message: ERRORS.NOT_FOUND
+            });
+        }
+
+        const today = new Date().toISOString().split('T')[0];
+
+        // Kunlik reset tekshirish
+        if (child.lastUsageDate !== today) {
+            await Child.updateOne(
+                { _id: child._id },
+                {
+                    $set: {
+                        lastUsageDate: today,
+                        'todayUsage.minutesUsed': minutesUsed || 0,
+                        'todayUsage.videosWatched': videosWatched || 0,
+                        'todayUsage.gamesPlayed': gamesPlayed || 0,
+                        'todayUsage.storiesRead': storiesRead || 0,
+                    }
+                }
+            );
+        } else {
+            // $max — faqat kattaroq qiymatni saqlash
+            await Child.updateOne(
+                { _id: child._id },
+                {
+                    $max: {
+                        'todayUsage.minutesUsed': minutesUsed || 0,
+                        'todayUsage.videosWatched': videosWatched || 0,
+                        'todayUsage.gamesPlayed': gamesPlayed || 0,
+                        'todayUsage.storiesRead': storiesRead || 0,
+                    }
+                }
+            );
+        }
+
+        return { success: true, message: 'Usage synced' };
     }
 };

@@ -586,9 +586,15 @@ class _MonitoringPageState extends State<MonitoringPage> {
     final totalMinutes = backendMinutes > localStats.minutesUsed
         ? backendMinutes : localStats.minutesUsed;
 
-    // Video va game vaqtlari (local data'dan)
-    final videoCount = localStats.videosWatched;
-    final gameCount = localStats.gamesPlayed;
+    // Video va game vaqtlari (backend + local — kattasini olish)
+    final backendVideos = children.fold<int>(
+      0, (sum, child) => sum + child.todayUsage.videosWatched);
+    final backendGames = children.fold<int>(
+      0, (sum, child) => sum + child.todayUsage.gamesPlayed);
+    final videoCount = backendVideos > localStats.videosWatched
+        ? backendVideos : localStats.videosWatched;
+    final gameCount = backendGames > localStats.gamesPlayed
+        ? backendGames : localStats.gamesPlayed;
     final totalActivities = videoCount + gameCount;
 
     // Foizlarni hisoblash

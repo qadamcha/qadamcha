@@ -87,4 +87,7 @@ module.exports = async function (fastify) {
 
     // POST /children/:id/activity — Faoliyatni yozish (vaqt tracking)
     fastify.post('/:id/activity', childrenController.recordActivity);
+
+    // POST /children/:id/sync-usage — Batch sync (LocalMonitoringService → DB)
+    fastify.post('/:id/sync-usage', childrenController.syncUsage);
 };

@@ -195,6 +195,29 @@ class ChildRepositoryImpl implements ChildRepository {
       return Left(ServerFailure('Faoliyatni yozishda xatolik: $e'));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> syncUsage({
+    required String childId,
+    required int minutesUsed,
+    required int videosWatched,
+    required int gamesPlayed,
+    required int storiesRead,
+  }) async {
+    try {
+      await apiClient.dio.post('/children/$childId/sync-usage', data: {
+        'minutesUsed': minutesUsed,
+        'videosWatched': videosWatched,
+        'gamesPlayed': gamesPlayed,
+        'storiesRead': storiesRead,
+      });
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Usage sync xatolik: $e'));
+    }
+  }
 }
 
 // Models for API responses

@@ -271,6 +271,53 @@ class LocalMonitoringService {
     _prefs?.remove(_keySubscription);
   }
 
+  // ─── Backend dan yuklash (qayta o'rnatishdan keyin) ─────────────────
+
+  /// Backend'dan kelgan todayUsage ni lokal counterlar ga sync qilish
+  /// Faqat backend qiymati kattaroq bo'lsa yangilanadi (yangi qurilmada 0 bo'ladi)
+  void loadFromBackend({
+    required int minutesUsed,
+    required int videosWatched,
+    required int gamesPlayed,
+    required int storiesRead,
+  }) {
+    bool changed = false;
+    if (minutesUsed > _minutesUsed) {
+      _minutesUsed = minutesUsed;
+      changed = true;
+    }
+    if (videosWatched > _videosWatched) {
+      _videosWatched = videosWatched;
+      changed = true;
+    }
+    if (gamesPlayed > _gamesPlayed) {
+      _gamesPlayed = gamesPlayed;
+      changed = true;
+    }
+    if (storiesRead > _storiesRead) {
+      _storiesRead = storiesRead;
+      changed = true;
+    }
+    if (changed) {
+      saveToLocal();
+    }
+  }
+
+  /// Backend'dan kelgan haftalik statistikani lokal ga sync qilish
+  void loadWeeklyFromBackend(List<int> backendWeekly) {
+    if (backendWeekly.length != 7) return;
+    bool changed = false;
+    for (int i = 0; i < 7; i++) {
+      if (backendWeekly[i] > _weeklyMinutes[i]) {
+        _weeklyMinutes[i] = backendWeekly[i];
+        changed = true;
+      }
+    }
+    if (changed) {
+      _saveWeeklyMinutes();
+    }
+  }
+
   // ─── Data setters ───────────────────────────────────────────────────
 
   /// Child ID o'rnatish

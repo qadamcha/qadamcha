@@ -64,6 +64,15 @@ abstract class ChildRepository {
     required String activityType,
     required int durationMinutes,
   });
+
+  /// Batch usage sync (LocalMonitoringService → DB)
+  Future<Either<Failure, void>> syncUsage({
+    required String childId,
+    required int minutesUsed,
+    required int videosWatched,
+    required int gamesPlayed,
+    required int storiesRead,
+  });
 }
 
 class ActivityLog extends Equatable {

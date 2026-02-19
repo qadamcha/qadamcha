@@ -29,19 +29,8 @@ class _GamesPageState extends State<GamesPage> {
 
   @override
   void dispose() {
-    // O'yin vaqt tracking to'xtatish va backendga yuborish
-    final minutes = SessionTracker.instance.endSession('games');
-    if (minutes > 0) {
-      final childId = _childBloc.state.selectedChild?.id;
-      if (childId != null) {
-        _childBloc.add(RecordActivityEvent(
-          childId: childId,
-          contentId: 'games_browse',
-          activityType: 'game_play',
-          durationMinutes: minutes,
-        ));
-      }
-    }
+    // O'yin vaqt tracking to'xtatish (lokal counter yangilanadi, backend batch sync orqali)
+    SessionTracker.instance.endSession('games');
     super.dispose();
   }
 

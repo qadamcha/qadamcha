@@ -46,6 +46,9 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
     // Barcha asosiy ma'lumotlarni backend'dan yuklash
     _loadAllData();
     
+    // Ota-ona menyusiga kirganda monitoring datani sync qilish
+    LocalMonitoringService.instance.syncAllToBackend();
+    
     // Backend sync'ni ulash — LocalMonitoringService → ChildBloc
     _initMonitoringSync();
   }
@@ -89,17 +92,18 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
     final monitoring = LocalMonitoringService.instance;
     final childBloc = context.read<ChildBloc>();
     
-    // Sync callback — har 5 daqiqada monitoring data backend'ga yuboriladi
+    // Sync callback — har 5 daqiqada monitoring data backend'ga batch sync
     monitoring.onSyncToBackend = (data) {
       final state = childBloc.state;
       final childId = state.selectedChild?.id ?? monitoring.childId;
       
-      if (childId != null && data['minutesUsed'] != null && data['minutesUsed']! > 0) {
-        childBloc.add(RecordActivityEvent(
+      if (childId != null) {
+        childBloc.add(SyncUsageEvent(
           childId: childId,
-          contentId: '',
-          activityType: 'app_usage',
-          durationMinutes: data['minutesUsed']!,
+          minutesUsed: data['minutesUsed'] ?? 0,
+          videosWatched: data['videosWatched'] ?? 0,
+          gamesPlayed: data['gamesPlayed'] ?? 0,
+          storiesRead: data['storiesRead'] ?? 0,
         ));
       }
     };
@@ -110,16 +114,41 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<ChildBloc, ChildState>(
-      listenWhen: (prev, curr) =>
-          prev.status != curr.status && curr.status == ChildStatus.loaded,
-      listener: (context, state) {
-        // Bolalar yuklanganda monitoring datani ham yuklash
-        if (state.children.isNotEmpty) {
-          final childId = state.selectedChild?.id ?? state.children.first.id;
-          _loadMonitoringForChild(childId);
-        }
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<ChildBloc, ChildState>(
+          listenWhen: (prev, curr) =>
+              prev.status != curr.status && curr.status == ChildStatus.loaded,
+          listener: (context, state) {
+            // Bolalar yuklanganda monitoring datani ham yuklash
+            if (state.children.isNotEmpty) {
+              final child = state.selectedChild ?? state.children.first;
+              _loadMonitoringForChild(child.id);
+              
+              // Backend'dan kelgan todayUsage ni LocalMonitoringService ga sync qilish
+              // Yangi qurilmada local 0 bo'ladi, backend esa to'g'ri qiymat beradi
+              final monitoring = LocalMonitoringService.instance;
+              monitoring.loadFromBackend(
+                minutesUsed: child.todayUsage.minutesUsed,
+                videosWatched: child.todayUsage.videosWatched,
+                gamesPlayed: child.todayUsage.gamesPlayed,
+                storiesRead: child.todayUsage.storiesRead,
+              );
+            }
+          },
+        ),
+        BlocListener<ChildBloc, ChildState>(
+          listenWhen: (prev, curr) => prev.weeklyStats != curr.weeklyStats,
+          listener: (context, state) {
+            // Haftalik statistikani lokal ga sync qilish
+            if (state.weeklyStats != null) {
+              LocalMonitoringService.instance.loadWeeklyFromBackend(
+                state.weeklyStats!.dailyMinutes,
+              );
+            }
+          },
+        ),
+      ],
       child: Scaffold(
       body: IndexedStack(
         index: _currentIndex,

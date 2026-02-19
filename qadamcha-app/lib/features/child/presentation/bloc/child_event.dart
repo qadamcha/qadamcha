@@ -119,3 +119,23 @@ class RecordActivityEvent extends ChildEvent {
   @override
   List<Object?> get props => [childId, contentId, activityType, durationMinutes];
 }
+
+/// Batch usage sync (LocalMonitoringService → DB)
+class SyncUsageEvent extends ChildEvent {
+  final String childId;
+  final int minutesUsed;
+  final int videosWatched;
+  final int gamesPlayed;
+  final int storiesRead;
+  
+  const SyncUsageEvent({
+    required this.childId,
+    required this.minutesUsed,
+    required this.videosWatched,
+    required this.gamesPlayed,
+    required this.storiesRead,
+  });
+  
+  @override
+  List<Object?> get props => [childId, minutesUsed, videosWatched, gamesPlayed, storiesRead];
+}

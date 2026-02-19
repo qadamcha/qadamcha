@@ -40,6 +40,9 @@ class _ChildHomePageState extends State<ChildHomePage> {
     // Backend sync timer boshlash
     LocalMonitoringService.instance.startSyncTimer();
     
+    // Bola menyusiga kirganda monitoring datani sync qilish
+    LocalMonitoringService.instance.syncAllToBackend();
+    
     // Umumiy vaqt tracking boshlash
     SessionTracker.instance.startSession('child_home');
     
@@ -55,19 +58,8 @@ class _ChildHomePageState extends State<ChildHomePage> {
 
   @override
   void dispose() {
-    // Tracking to'xtatish — local monitoring'ga avtomatik yoziladi
-    final minutes = SessionTracker.instance.endSession('child_home');
-    if (minutes > 0) {
-      final childId = _childBloc.state.selectedChild?.id;
-      if (childId != null) {
-        _childBloc.add(RecordActivityEvent(
-          childId: childId,
-          contentId: 'app_session',
-          activityType: 'app_usage',
-          durationMinutes: minutes,
-        ));
-      }
-    }
+    // Tracking to'xtatish (lokal counter yangilanadi, backend batch sync orqali)
+    SessionTracker.instance.endSession('child_home');
     // Chiqishda barcha ma'lumotlarni backend'ga sync qilish
     LocalMonitoringService.instance.syncAllToBackend();
     super.dispose();

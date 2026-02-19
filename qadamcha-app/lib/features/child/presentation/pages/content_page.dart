@@ -94,20 +94,8 @@ class _ContentPageState extends State<ContentPage> {
 
   @override
   void dispose() {
-    // Multfilm vaqt tracking to'xtatish va backendga yuborish
-    final minutes = SessionTracker.instance.endSession('content');
-    if (minutes > 0) {
-      final childState = _childBloc.state;
-      final childId = childState.selectedChild?.id;
-      if (childId != null) {
-        _childBloc.add(RecordActivityEvent(
-          childId: childId,
-          contentId: 'content_browse',
-          activityType: 'video_watch',
-          durationMinutes: minutes,
-        ));
-      }
-    }
+    // Multfilm vaqt tracking to'xtatish (lokal counter yangilanadi, backend batch sync orqali)
+    SessionTracker.instance.endSession('content');
     _scrollController.dispose();
     super.dispose();
   }

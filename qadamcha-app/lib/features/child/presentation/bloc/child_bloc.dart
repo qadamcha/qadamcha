@@ -19,6 +19,7 @@ class ChildBloc extends Bloc<ChildEvent, ChildState> {
     on<LoadActivityLogsEvent>(_onLoadActivityLogs);
     on<LoadWeeklyStatsEvent>(_onLoadWeeklyStats);
     on<RecordActivityEvent>(_onRecordActivity);
+    on<SyncUsageEvent>(_onSyncUsage);
   }
   
   Future<void> _onLoadChildren(
@@ -209,6 +210,19 @@ class ChildBloc extends Bloc<ChildEvent, ChildState> {
       contentId: event.contentId,
       activityType: event.activityType,
       durationMinutes: event.durationMinutes,
+    );
+  }
+
+  Future<void> _onSyncUsage(
+    SyncUsageEvent event,
+    Emitter<ChildState> emit,
+  ) async {
+    await repository.syncUsage(
+      childId: event.childId,
+      minutesUsed: event.minutesUsed,
+      videosWatched: event.videosWatched,
+      gamesPlayed: event.gamesPlayed,
+      storiesRead: event.storiesRead,
     );
   }
 }
