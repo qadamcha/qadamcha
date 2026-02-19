@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/back_button_box.dart';
 import '../../../../core/services/session_tracker.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/child_bloc.dart';
@@ -55,8 +54,6 @@ class _GamesPageState extends State<GamesPage> {
               padding: EdgeInsets.all(16.w),
               child: Row(
                 children: [
-                  BackButtonBox(onPressed: () => Navigator.pop(context)),
-                  SizedBox(width: 16.w),
                   Text(
                     '🎮 O\'yinlar',
                     style: TextStyle(
