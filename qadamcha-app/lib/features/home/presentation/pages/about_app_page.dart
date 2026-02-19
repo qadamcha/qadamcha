@@ -55,9 +55,6 @@ class _AboutAppPageState extends State<AboutAppPage> {
                     _buildTeamCard(),
                     SizedBox(height: 16.h),
 
-                    // Technical info
-                    _buildTechInfoCard(),
-                    SizedBox(height: 16.h),
 
                     // Social links
                     _buildSocialLinks(),
@@ -400,69 +397,7 @@ class _AboutAppPageState extends State<AboutAppPage> {
     );
   }
 
-  Widget _buildTechInfoCard() {
-    final appName = _packageInfo?.appName ?? 'Qadamcha';
-    final packageName = _packageInfo?.packageName ?? '...';
-    final version = _packageInfo?.version ?? '...';
-    final buildNumber = _packageInfo?.buildNumber ?? '...';
 
-    final techItems = [
-      _TechItem(label: 'Ilova nomi', value: appName),
-      _TechItem(label: 'Paket nomi', value: packageName),
-      _TechItem(label: 'Versiya', value: version),
-      _TechItem(label: 'Build raqami', value: buildNumber),
-      _TechItem(label: 'Framework', value: 'Flutter'),
-      _TechItem(label: 'Backend', value: 'Node.js'),
-    ];
-
-    return _buildCard(
-      icon: Icons.code_rounded,
-      iconColor: const Color(0xFF22C55E),
-      title: 'Texnik ma\'lumotlar',
-      child: Column(
-        children: techItems.asMap().entries.map((entry) {
-          final item = entry.value;
-          final isLast = entry.key == techItems.length - 1;
-          return Container(
-            padding: EdgeInsets.symmetric(vertical: 10.h),
-            decoration: BoxDecoration(
-              border: isLast
-                  ? null
-                  : const Border(
-                      bottom:
-                          BorderSide(color: Color(0xFFF3F4F6), width: 1),
-                    ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  item.label,
-                  style: TextStyle(
-                    fontSize: 13.sp,
-                    color: const Color(0xFF6B7280),
-                    fontFamily: 'Nunito',
-                  ),
-                ),
-                Flexible(
-                  child: Text(
-                    item.value,
-                    textAlign: TextAlign.end,
-                    style: TextStyle(
-                      fontSize: 13.sp,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF1A1A2E),
-                      fontFamily: 'Nunito',
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
 
   Widget _buildSocialLinks() {
     return _buildCard(
@@ -684,9 +619,4 @@ class _FeatureItem {
   });
 }
 
-class _TechItem {
-  final String label;
-  final String value;
 
-  const _TechItem({required this.label, required this.value});
-}

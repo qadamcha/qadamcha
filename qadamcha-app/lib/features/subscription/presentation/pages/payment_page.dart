@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/back_button_box.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../domain/entities/subscription_entity.dart';
 import '../bloc/subscription_bloc.dart';
 import 'payment_success_page.dart';
@@ -1561,21 +1562,17 @@ class _PaymentPageState extends State<PaymentPage>
                   fontFamily: 'Nunito',
                 ),
               ),
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF00CCCC).withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Text(
-                  'payme',
+              const SizedBox(width: 8),
+              SvgPicture.network(
+                'https://cdn.payme.uz/logo/payme_color.svg',
+                height: 20,
+                placeholderBuilder: (context) => const Text(
+                  'Payme',
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
                     color: Color(0xFF00CCCC),
                     fontFamily: 'Nunito',
-                    letterSpacing: 0.5,
                   ),
                 ),
               ),
@@ -1682,19 +1679,17 @@ class _PaymentPageState extends State<PaymentPage>
             color: AppColors.border,
           ),
           const SizedBox(width: 12),
-          Icon(
-            Icons.lock_outline,
-            size: 14,
-            color: const Color(0xFF00CCCC).withValues(alpha: 0.7),
-          ),
-          const SizedBox(width: 4),
-          const Text(
-            'Payme',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF00CCCC),
-              fontFamily: 'Nunito',
+          SvgPicture.network(
+            'https://cdn.payme.uz/logo/payme_color.svg',
+            height: 16,
+            placeholderBuilder: (context) => const Text(
+              'Payme',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF00CCCC),
+                fontFamily: 'Nunito',
+              ),
             ),
           ),
         ],
