@@ -12,22 +12,48 @@ module.exports = {
             isActive: true
         }).sort({ createdAt: -1 });
 
-        // Har bir bola uchun bugungi statistika (xatolik bo'lsa graceful fallback)
+        // Har bir bola uchun bugungi statistika
+        // max(Activity.getDailyStats, Child.todayUsage) — batch sync datani ham hisobga olish
         const today = new Date().toISOString().split('T')[0];
         const childrenWithStats = await Promise.all(
             children.map(async (child) => {
                 try {
                     const stats = await Activity.getDailyStats(child._id, today);
+                    const activityMinutes = Math.round((stats.totalDuration || 0) / 60);
+
+                    // Child.todayUsage (sync-usage endpoint orqali yozilgan)
+                    const syncedUsage = child.todayUsage || {};
+
+                    // Kunni tekshirish — agar bugun emas bo'lsa, sync datani 0 deb hisoblash
+                    const isSameDay = child.lastUsageDate === today;
+                    const syncMinutes = isSameDay ? (syncedUsage.minutesUsed || 0) : 0;
+                    const syncVideos = isSameDay ? (syncedUsage.videosWatched || 0) : 0;
+                    const syncGames = isSameDay ? (syncedUsage.gamesPlayed || 0) : 0;
+                    const syncStories = isSameDay ? (syncedUsage.storiesRead || 0) : 0;
+
+                    // max(activity, synced) — eng katta qiymatni olish
+                    const totalMinutes = Math.max(activityMinutes, syncMinutes);
+
                     return {
                         ...child.toObject(),
-                        todayUsage: stats.totalDuration,
-                        remainingTime: Math.max(0, child.dailyLimit * 60 - stats.totalDuration)
+                        todayUsage: {
+                            minutesUsed: totalMinutes,
+                            videosWatched: Math.max(stats.videosWatched || 0, syncVideos),
+                            gamesPlayed: Math.max(stats.gamesPlayed || 0, syncGames),
+                            storiesRead: Math.max(stats.storiesRead || 0, syncStories),
+                        },
+                        remainingTime: Math.max(0, child.dailyLimit * 60 - totalMinutes * 60)
                     };
                 } catch (err) {
                     request.log.error(`Stats error for child ${child._id}:`, err);
                     return {
                         ...child.toObject(),
-                        todayUsage: 0,
+                        todayUsage: {
+                            minutesUsed: 0,
+                            videosWatched: 0,
+                            gamesPlayed: 0,
+                            storiesRead: 0,
+                        },
                         remainingTime: child.dailyLimit * 60
                     };
                 }

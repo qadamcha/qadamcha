@@ -62,10 +62,21 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
     // 2. Obuna holatini yuklash
     context.read<SubscriptionBloc>().add(LoadSubscriptionEvent());
     
-    // 3. Bolalar yuklanganidan keyin monitoring datani yuklash
+    // 3. Agar bolalar allaqachon yuklangan bo'lsa — monitoring datani darhol yuklash
+    // (BlocListener faqat yangi state o'zgarishini ushlab oladi, eski loaded state ni emas)
     final childState = context.read<ChildBloc>().state;
     if (childState.children.isNotEmpty) {
-      _loadMonitoringForChild(childState.selectedChild?.id ?? childState.children.first.id);
+      final child = childState.selectedChild ?? childState.children.first;
+      _loadMonitoringForChild(child.id);
+      
+      // Backend'dan kelgan todayUsage ni LocalMonitoringService ga sync qilish
+      final monitoring = LocalMonitoringService.instance;
+      monitoring.loadFromBackend(
+        minutesUsed: child.todayUsage.minutesUsed,
+        videosWatched: child.todayUsage.videosWatched,
+        gamesPlayed: child.todayUsage.gamesPlayed,
+        storiesRead: child.todayUsage.storiesRead,
+      );
     }
   }
 

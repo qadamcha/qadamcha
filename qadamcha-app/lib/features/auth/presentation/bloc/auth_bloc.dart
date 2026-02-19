@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/services/local_monitoring_service.dart';
 import '../../data/datasources/auth_local_datasource.dart';
 
 part 'auth_event.dart';
@@ -159,6 +160,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(state.copyWith(status: AuthStatus.loading));
+    
+    // Logout oldidan barcha monitoring datani backend'ga sync qilish
+    LocalMonitoringService.instance.syncAllToBackend();
     
     await repository.logout();
     
