@@ -132,9 +132,6 @@ class ParentHomePage extends StatelessWidget {
   Widget _buildSubscriptionCard(BuildContext context) {
     return BlocConsumer<SubscriptionBloc, SubscriptionState>(
       listener: (context, state) {
-        // To'lov oqimi hozircha ishlatilmaydi
-        // Kelajakda qo'shilganda qayta faollashtirish mumkin
-        /*
         if (state.paymentStatus == PaymentStatus.orderCreated &&
             state.paymentOrder != null) {
           final bloc = context.read<SubscriptionBloc>();
@@ -167,7 +164,6 @@ class ParentHomePage extends StatelessWidget {
             ),
           );
         }
-        */
       },
       builder: (context, subState) {
         final isPremium = subState.isPremium;
@@ -234,7 +230,7 @@ class ParentHomePage extends StatelessWidget {
                         Text(
                           isPremium
                               ? '${subState.currentSubscription?.remainingDays ?? 30} kun qoldi'
-                              : '100 000 so\'m/oy',
+                              : '1 000 so\'m/oy (test)',
                           style: TextStyle(
                             fontSize: 14.sp,
                             color: Colors.white.withOpacity(0.85),
@@ -322,28 +318,9 @@ class ParentHomePage extends StatelessWidget {
                 else
                   GestureDetector(
                     onTap: () {
-                      // To'g'ridan-to'g'ri obunani faollashtirish
+                      // Payme orqali to'lov oqimini boshlash
                       context.read<SubscriptionBloc>().add(
-                        ActivateSubscriptionDirectlyEvent(),
-                      );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Row(
-                            children: [
-                              Text('✅', style: TextStyle(fontSize: 18)),
-                              SizedBox(width: 8),
-                              Text(
-                                'Obuna muvaffaqiyatli faollashtirildi!',
-                                style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w600),
-                              ),
-                            ],
-                          ),
-                          backgroundColor: AppColors.success,
-                          behavior: SnackBarBehavior.floating,
-                          margin: const EdgeInsets.all(16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          duration: const Duration(seconds: 3),
-                        ),
+                        CreateOrderEvent(plan: SubscriptionPlan.monthly),
                       );
                     },
                     child: Container(
