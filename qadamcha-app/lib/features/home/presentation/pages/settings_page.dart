@@ -5,6 +5,9 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../subscription/presentation/bloc/subscription_bloc.dart';
 import '../../../device/presentation/bloc/device_bloc.dart';
 import '../../../device/presentation/pages/device_linking_page.dart';
+import 'privacy_policy_page.dart';
+import 'help_center_page.dart';
+import 'about_app_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -169,28 +172,30 @@ class _SettingsPageState extends State<SettingsPage> {
                         bgColor: const Color(0xFF6B7280).withOpacity(0.08),
                         title: 'Maxfiylik siyosati',
                         trailing: _arrowIcon(),
-                        onTap: () {},
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const PrivacyPolicyPage()),
+                        ),
                       ),
                       _SettingsRow(
                         emoji: '❓',
                         bgColor: const Color(0xFF6B7280).withOpacity(0.08),
                         title: 'Yordam markazi',
                         trailing: _arrowIcon(),
-                        onTap: () {},
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const HelpCenterPage()),
+                        ),
                       ),
                       _SettingsRow(
                         emoji: 'ℹ️',
                         bgColor: const Color(0xFF6B7280).withOpacity(0.08),
                         title: 'Ilova haqida',
-                        trailing: Text(
-                          'v1.0.0',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: const Color(0xFF9CA3AF),
-                            fontFamily: 'Nunito',
-                          ),
+                        trailing: _arrowIcon(),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const AboutAppPage()),
                         ),
-                        onTap: () {},
                         showDivider: false,
                       ),
                     ]),
