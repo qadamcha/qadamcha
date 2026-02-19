@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/services/sms_auto_fill_service.dart';
 import '../bloc/auth_bloc.dart';
 import '../widgets/pin_dots.dart';
 import '../widgets/pin_keypad.dart';
@@ -24,8 +25,12 @@ class _PinResetPageState extends State<PinResetPage> {
   String _error = '';
   bool _isLoading = false;
 
+  // SMS Auto-fill service
+  SmsAutoFillService? _smsService;
+
   @override
   void dispose() {
+    _smsService?.dispose();
     _phoneController.dispose();
     _otpController.dispose();
     super.dispose();
@@ -41,7 +46,29 @@ class _PinResetPageState extends State<PinResetPage> {
       _isLoading = true;
       _error = '';
     });
+
+    // SMS auto-fill ni boshlash
+    _startSmsAutoFill();
+
     context.read<AuthBloc>().add(SendOtpEvent('+998$phone', purpose: 'reset-pin'));
+  }
+
+  /// SMS auto-fill ni boshlash
+  void _startSmsAutoFill() {
+    _smsService?.dispose();
+    _smsService = SmsAutoFillService();
+    _smsService!.listenForSms(
+      onCodeReceived: (code) {
+        if (!mounted || _step != 1) return;
+        setState(() {
+          _otpController.text = code;
+        });
+        // Smooth UX: biroz kutib keyin verify
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted && _step == 1) _verifyOtp();
+        });
+      },
+    );
   }
 
   void _verifyOtp() {

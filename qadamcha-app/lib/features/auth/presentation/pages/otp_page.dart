@@ -5,12 +5,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/back_button_box.dart';
 import '../../../../core/widgets/gradient_button.dart';
+import '../../../../core/services/sms_auto_fill_service.dart';
 import '../bloc/auth_bloc.dart';
 import 'register_page.dart';
 import 'login_page.dart';
 
 /// OTP Page - matching full_architecture.html design
 /// ✉️ icon, 6-digit input boxes, countdown timer
+/// SMS Auto-fill orqali avtomatik to'ldiriladi (Android)
 class OtpPage extends StatefulWidget {
   final String phone;
 
@@ -29,10 +31,43 @@ class _OtpPageState extends State<OtpPage> {
   int _secondsRemaining = 60;
   bool _canResend = false;
 
+  // SMS Auto-fill service
+  late SmsAutoFillService _smsService;
+  bool _autoFilled = false;
+
   @override
   void initState() {
     super.initState();
     _startTimer();
+    _initSmsAutoFill();
+  }
+
+  /// SMS Auto-fill ni boshlash
+  void _initSmsAutoFill() {
+    _smsService = SmsAutoFillService();
+    _smsService.listenForSms(
+      onCodeReceived: (code) {
+        if (!mounted || _autoFilled) return;
+        _autoFillOtp(code);
+      },
+    );
+  }
+
+  /// Kelgan kodni 6 ta inputga tarqatish va avtomatik verify
+  void _autoFillOtp(String code) {
+    if (code.length != 6) return;
+
+    setState(() {
+      _autoFilled = true;
+      for (int i = 0; i < 6; i++) {
+        _controllers[i].text = code[i];
+      }
+    });
+
+    // Smooth UX: biroz kutib keyin verify
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) _verifyOtp();
+    });
   }
 
   void _startTimer() {
@@ -51,6 +86,7 @@ class _OtpPageState extends State<OtpPage> {
   @override
   void dispose() {
     _timer?.cancel();
+    _smsService.dispose();
     for (final controller in _controllers) {
       controller.dispose();
     }
@@ -72,6 +108,11 @@ class _OtpPageState extends State<OtpPage> {
 
   void _resendOtp() {
     if (_canResend) {
+      // Reset auto-fill flag va qayta tinglash
+      _autoFilled = false;
+      _smsService.dispose();
+      _initSmsAutoFill();
+
       context.read<AuthBloc>().add(SendOtpEvent(widget.phone));
       _startTimer();
     }
@@ -136,6 +177,7 @@ class _OtpPageState extends State<OtpPage> {
           for (final controller in _controllers) {
             controller.clear();
           }
+          _autoFilled = false;
           _focusNodes[0].requestFocus();
         }
       },
