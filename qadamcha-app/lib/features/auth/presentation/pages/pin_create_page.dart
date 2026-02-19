@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/back_button_box.dart';
-import '../../../../core/widgets/custom_keypad.dart';
 import '../bloc/auth_bloc.dart';
+import '../widgets/pin_dots.dart';
+import '../widgets/pin_keypad.dart';
 import 'role_selection_page.dart';
 
-/// PIN Create Page - matching full_architecture.html design
-/// 🔐 icon, dot indicators, custom keypad, confirmation step
+/// PIN Create Page — parent_pin_page dizayniga mos
+/// Oq fon, circle emoji icon, PinDots + PinKeypad, 2 bosqichli (yaratish + tasdiqlash)
 class PinCreatePage extends StatefulWidget {
   final String phone;
   final String name;
@@ -31,29 +31,34 @@ class PinCreatePage extends StatefulWidget {
 class _PinCreatePageState extends State<PinCreatePage> {
   String _pin = '';
   String _confirmPin = '';
+  String _error = '';
   bool _isConfirming = false;
-  final int _pinLength = 4;
+  bool _isLoading = false;
 
-  void _onKeyPressed(String key) {
+  void _onDigitEntered(String digit) {
     if (_isConfirming) {
-      if (_confirmPin.length < _pinLength) {
+      if (_confirmPin.length < 4) {
         setState(() {
-          _confirmPin += key;
+          _confirmPin += digit;
+          _error = '';
         });
-        if (_confirmPin.length == _pinLength) {
+        if (_confirmPin.length == 4) {
           _validateAndRegister();
         }
       }
     } else {
-      if (_pin.length < _pinLength) {
+      if (_pin.length < 4) {
         setState(() {
-          _pin += key;
+          _pin += digit;
+          _error = '';
         });
-        if (_pin.length == _pinLength) {
+        if (_pin.length == 4) {
           Future.delayed(const Duration(milliseconds: 300), () {
-            setState(() {
-              _isConfirming = true;
-            });
+            if (mounted) {
+              setState(() {
+                _isConfirming = true;
+              });
+            }
           });
         }
       }
@@ -65,18 +70,21 @@ class _PinCreatePageState extends State<PinCreatePage> {
       if (_confirmPin.isNotEmpty) {
         setState(() {
           _confirmPin = _confirmPin.substring(0, _confirmPin.length - 1);
+          _error = '';
         });
       } else {
-        // Go back to first step
+        // Birinchi bosqichga qaytish
         setState(() {
           _isConfirming = false;
           _pin = '';
+          _error = '';
         });
       }
     } else {
       if (_pin.isNotEmpty) {
         setState(() {
           _pin = _pin.substring(0, _pin.length - 1);
+          _error = '';
         });
       }
     }
@@ -84,6 +92,7 @@ class _PinCreatePageState extends State<PinCreatePage> {
 
   void _validateAndRegister() {
     if (_pin == _confirmPin) {
+      setState(() => _isLoading = true);
       context.read<AuthBloc>().add(RegisterEvent(
             phone: widget.phone,
             name: widget.name,
@@ -93,13 +102,8 @@ class _PinCreatePageState extends State<PinCreatePage> {
             childGender: widget.childGender,
           ));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('PIN kodlar mos kelmaydi. Qaytadan urinib ko\'ring.'),
-          backgroundColor: AppColors.error,
-        ),
-      );
       setState(() {
+        _error = 'PIN kodlar mos kelmaydi. Qaytadan urinib ko\'ring.';
         _confirmPin = '';
         _pin = '';
         _isConfirming = false;
@@ -109,6 +113,8 @@ class _PinCreatePageState extends State<PinCreatePage> {
 
   @override
   Widget build(BuildContext context) {
+    final currentPin = _isConfirming ? _confirmPin : _pin;
+
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state.status == AuthStatus.registered) {
@@ -126,146 +132,135 @@ class _PinCreatePageState extends State<PinCreatePage> {
             (route) => false,
           );
         } else if (state.status == AuthStatus.error) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.errorMessage ?? 'Xatolik yuz berdi'),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          setState(() {
+            _isLoading = false;
+            _error = state.errorMessage ?? 'Xatolik yuz berdi';
+            _pin = '';
+            _confirmPin = '';
+            _isConfirming = false;
+          });
         }
       },
       child: Scaffold(
         backgroundColor: Colors.white,
         body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 22),
-            child: Column(
-              children: [
-                const SizedBox(height: 10),
-                // Back button
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: BackButtonBox(
-                    onPressed: () {
-                      if (_isConfirming) {
-                        setState(() {
-                          _isConfirming = false;
-                          _confirmPin = '';
-                          _pin = '';
-                        });
-                      } else {
-                        Navigator.of(context).pop();
-                      }
-                    },
-                  ),
-                ),
-                const SizedBox(height: 24),
-                // Icon
-                Container(
-                  width: 72,
-                  height: 72,
-                  decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    borderRadius: BorderRadius.circular(22),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withOpacity(0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: const Center(
-                    child: Text('🔐', style: TextStyle(fontSize: 34)),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                // Title
-                Text(
-                  _isConfirming ? 'PIN kodni tasdiqlang' : 'PIN kod yarating',
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                    fontFamily: 'Nunito',
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  _isConfirming
-                      ? 'Xavfsizlik uchun yana bir marta kiriting'
-                      : 'Tez va xavfsiz kirish uchun',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                    fontFamily: 'Nunito',
-                  ),
-                ),
-                const SizedBox(height: 32),
-                // PIN dots
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(_pinLength, (index) {
-                    final currentPin = _isConfirming ? _confirmPin : _pin;
-                    final isFilled = index < currentPin.length;
-                    return Container(
-                      width: 18,
-                      height: 18,
-                      margin: const EdgeInsets.symmetric(horizontal: 10),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isFilled
-                            ? AppColors.primary
-                            : Colors.transparent,
-                        border: Border.all(
-                          color: isFilled
-                              ? AppColors.primary
-                              : AppColors.border,
-                          width: 2.5,
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-                const SizedBox(height: 12),
-                // Step indicator
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceVariant,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    _isConfirming ? '2/2 Tasdiqlash' : '1/2 PIN yaratish',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'Nunito',
+          child: Column(
+            children: [
+              // Back Button
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                      onPressed: () {
+                        if (_isConfirming) {
+                          setState(() {
+                            _isConfirming = false;
+                            _confirmPin = '';
+                            _pin = '';
+                            _error = '';
+                          });
+                        } else {
+                          Navigator.of(context).pop();
+                        }
+                      },
+                      color: AppColors.textPrimary,
                     ),
+                    const Spacer(),
+                  ],
+                ),
+              ),
+
+              const Spacer(flex: 1),
+
+              // Icon — parent_pin_page uslubida
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    _isConfirming ? '✅' : '🔐',
+                    style: const TextStyle(fontSize: 40),
                   ),
                 ),
-                const Spacer(),
-                // Keypad
-                BlocBuilder<AuthBloc, AuthState>(
-                  builder: (context, state) {
-                    if (state.status == AuthStatus.loading) {
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
-                    }
-                    return CustomKeypad(
-                      onKeyPressed: _onKeyPressed,
-                      onBackspace: _onBackspace,
-                    );
-                  },
+              ),
+
+              const SizedBox(height: 24),
+
+              // Title
+              Text(
+                _isConfirming ? 'PIN kodni tasdiqlang' : 'PIN kod yarating',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                  fontFamily: 'Nunito',
                 ),
-                const SizedBox(height: 32),
-              ],
-            ),
+              ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                _isConfirming
+                    ? 'Xavfsizlik uchun yana bir marta kiriting'
+                    : 'Tez va xavfsiz kirish uchun',
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: AppColors.textSecondary,
+                  fontFamily: 'Nunito',
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // PIN Dots — PinDots widgeti
+              PinDots(
+                currentLength: currentPin.length,
+                errorMessage: _error,
+              ),
+
+              const SizedBox(height: 16),
+
+              // Step indicator
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  _isConfirming ? '2/2 Tasdiqlash' : '1/2 PIN yaratish',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Nunito',
+                  ),
+                ),
+              ),
+
+              const Spacer(flex: 2),
+
+              // Keypad — PinKeypad widgeti
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: PinKeypad(
+                  onDigitEntered: _onDigitEntered,
+                  onBackspace: _onBackspace,
+                  isLoading: _isLoading,
+                ),
+              ),
+
+              const SizedBox(height: 32),
+            ],
           ),
         ),
       ),

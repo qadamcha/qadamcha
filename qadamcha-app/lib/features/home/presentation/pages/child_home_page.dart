@@ -454,7 +454,7 @@ class _ChildHomePageState extends State<ChildHomePage> {
         ),
         SizedBox(height: 12.h),
         SizedBox(
-          height: 140.h,
+          height: 200.h,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: watchedItems.length,
@@ -483,14 +483,14 @@ class _ChildHomePageState extends State<ChildHomePage> {
         ).then((_) => _loadLastWatchedList());
       },
       child: Container(
-        width: 160.w,
+        width: 220.w,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16.r),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 12,
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 16,
               offset: const Offset(0, 4),
             ),
           ],
@@ -498,12 +498,12 @@ class _ChildHomePageState extends State<ChildHomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Thumbnail
+            // Thumbnail — katta rasm
             ClipRRect(
               borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
               child: SizedBox(
                 width: double.infinity,
-                height: 85.h,
+                height: 140.h,
                 child: thumbnailUrl != null && thumbnailUrl.isNotEmpty
                     ? Image.network(
                         thumbnailUrl,
@@ -513,7 +513,7 @@ class _ChildHomePageState extends State<ChildHomePage> {
                           child: Center(
                             child: Text(
                               type == 'game' ? '\u{1F3AE}' : '\u{1F3AC}',
-                              style: TextStyle(fontSize: 32.sp),
+                              style: TextStyle(fontSize: 40.sp),
                             ),
                           ),
                         ),
@@ -523,7 +523,7 @@ class _ChildHomePageState extends State<ChildHomePage> {
                         child: Center(
                           child: Text(
                             type == 'game' ? '\u{1F3AE}' : '\u{1F3AC}',
-                            style: TextStyle(fontSize: 32.sp),
+                            style: TextStyle(fontSize: 40.sp),
                           ),
                         ),
                       ),
