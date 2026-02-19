@@ -120,8 +120,8 @@ class SmsService {
         const appHash = config.APP_SMS_HASH || '';
         const hashSuffix = appHash ? `\n${appHash}` : '';
         const smsMessages = {
-            'register': `Kodni hech kimga bermang! QADAMCHA tasdiqlash kodi: ${code}${hashSuffix}`,
-            'reset-pin': `Kodni hech kimga bermang! QADAMCHA PIN tiklash kodi: ${code}${hashSuffix}`,
+            'register': `Kodni hech kimga bermang! QADAMCHA ilovasiga ro'yxatdan o'tish uchun tasdiqlash kodi: ${code}${hashSuffix}`,
+            'reset-pin': `Kodni hech kimga bermang! QADAMCHA ilovasida parolni qayta tiklash uchun tasdiqlash kodi: ${code}${hashSuffix}`,
         };
         const message = smsMessages[purpose] || smsMessages['register'];
 
