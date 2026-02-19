@@ -94,7 +94,7 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   @override
   Future<Either<Failure, void>> cancelSubscription() async {
     try {
-      await apiClient.dio.post('/subscription/cancel');
+      await apiClient.dio.post('/subscription/cancel', data: {});
       return const Right(null);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
@@ -106,7 +106,7 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   @override
   Future<Either<Failure, Subscription>> activateTestSubscription() async {
     try {
-      final response = await apiClient.post('/subscription/activate-test');
+      final response = await apiClient.post('/subscription/activate-test', data: {});
       final data = response.data;
       if (data['subscription'] != null) {
         final subscription =

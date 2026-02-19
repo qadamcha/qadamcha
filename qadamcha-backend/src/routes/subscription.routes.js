@@ -50,7 +50,8 @@ module.exports = async function (fastify) {
 
     // POST /subscription/cancel
     fastify.post('/cancel', {
-        preHandler: [fastify.authenticate]
+        preHandler: [fastify.authenticate],
+        config: { rawBody: true },
     }, subscriptionController.cancel);
 
     // GET /subscription/history
@@ -60,6 +61,7 @@ module.exports = async function (fastify) {
 
     // POST /subscription/activate-test - Test rejimida obunani faollashtirish
     fastify.post('/activate-test', {
-        preHandler: [fastify.authenticate]
+        preHandler: [fastify.authenticate],
+        config: { rawBody: true },
     }, subscriptionController.activateTest);
 };
