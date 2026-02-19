@@ -1563,8 +1563,8 @@ class _PaymentPageState extends State<PaymentPage>
                 ),
               ),
               const SizedBox(width: 8),
-              SvgPicture.network(
-                'https://cdn.payme.uz/logo/payme_color.svg',
+              SvgPicture.asset(
+                'assets/icons/payme_logo.svg',
                 height: 20,
                 placeholderBuilder: (context) => const Text(
                   'Payme',
@@ -1679,8 +1679,8 @@ class _PaymentPageState extends State<PaymentPage>
             color: AppColors.border,
           ),
           const SizedBox(width: 12),
-          SvgPicture.network(
-            'https://cdn.payme.uz/logo/payme_color.svg',
+          SvgPicture.asset(
+            'assets/icons/payme_logo.svg',
             height: 16,
             placeholderBuilder: (context) => const Text(
               'Payme',
