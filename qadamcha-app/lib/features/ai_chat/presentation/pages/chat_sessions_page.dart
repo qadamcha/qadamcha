@@ -255,45 +255,6 @@ class _ChatSessionsPageState extends State<ChatSessionsPage> {
               ),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 28.h),
-            GestureDetector(
-              onTap: _createNewChat,
-              child: Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: 28.w,
-                  vertical: 14.h,
-                ),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF2D6A9F), Color(0xFF4A90D9)],
-                  ),
-                  borderRadius: BorderRadius.circular(14.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color.fromRGBO(45, 106, 159, 0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.add_rounded, color: Colors.white, size: 20.sp),
-                    SizedBox(width: 8.w),
-                    Text(
-                      'Yangi suhbat boshlash',
-                      style: TextStyle(
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                        fontFamily: 'Nunito',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
           ],
         ),
       ),

@@ -104,12 +104,16 @@ Sening asosiy vazifang — O'zbek ota-onalariga farzand tarbiyasi, rivojlanishi 
 
             // Oldingi suhbat tarixini qo'shish
             if (history && history.length > 0) {
+                console.log(`📜 Suhbat tarixi (${history.length} xabar):`);
                 for (const msg of history) {
+                    console.log(`  [${msg.role}]: ${msg.text.substring(0, 50)}...`);
                     contents.push({
                         role: msg.role === 'user' ? 'user' : 'model',
                         parts: [{ text: msg.text }]
                     });
                 }
+            } else {
+                console.log('📜 Yangi suhbat — tarix yo\'q');
             }
 
             // Yangi xabarni qo'shish
