@@ -37,9 +37,19 @@ class _ChildHomePageState extends State<ChildHomePage> {
     ];
 
     // Child ID ni local monitoring'ga saqlash
+    // 1-usul: BLoC state dan olish (agar mavjud bo'lsa)
     final childId = _childBloc.state.selectedChild?.id;
     if (childId != null) {
       LocalMonitoringService.instance.setChildId(childId);
+      print('🆔 [ChildHome] childId BLoC dan olindi: $childId');
+    } else {
+      // 2-usul: LocalMonitoringService ning o'zi SharedPreferences dan yuklagan
+      final storedId = LocalMonitoringService.instance.childId;
+      if (storedId != null && storedId.isNotEmpty) {
+        print('🆔 [ChildHome] childId SharedPreferences dan olindi: $storedId');
+      } else {
+        print('⚠️ [ChildHome] childId hali mavjud emas — BlocListener kutadi');
+      }
     }
 
     // Backend sync timer boshlash (har 5 daqiqada)
@@ -61,33 +71,46 @@ class _ChildHomePageState extends State<ChildHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<SubscriptionBloc, SubscriptionState>(
-      builder: (context, subState) {
-        // Yuklash vaqtida spinner
-        if (subState.status == SubscriptionLoadStatus.loading ||
-            subState.status == SubscriptionLoadStatus.initial) {
-          return Scaffold(
-            body: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFFE8F5E9), Color(0xFFF5F6FA), Colors.white],
+    return BlocListener<ChildBloc, ChildState>(
+      listener: (context, childState) {
+        // ChildBloc state o'zgarganda childId ni o'rnatish
+        final childId = childState.selectedChild?.id;
+        if (childId != null && childId.isNotEmpty) {
+          final currentId = LocalMonitoringService.instance.childId;
+          if (currentId != childId) {
+            LocalMonitoringService.instance.setChildId(childId);
+            print('🆔 [ChildHome] BlocListener: childId yangilandi: $childId');
+          }
+        }
+      },
+      child: BlocBuilder<SubscriptionBloc, SubscriptionState>(
+        builder: (context, subState) {
+          // Yuklash vaqtida spinner
+          if (subState.status == SubscriptionLoadStatus.loading ||
+              subState.status == SubscriptionLoadStatus.initial) {
+            return Scaffold(
+              body: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFFE8F5E9), Color(0xFFF5F6FA), Colors.white],
+                  ),
+                ),
+                child: const Center(
+                  child: CircularProgressIndicator(),
                 ),
               ),
-              child: const Center(
-                child: CircularProgressIndicator(),
-              ),
-            ),
-          );
-        }
+            );
+          }
 
-        if (!subState.isPremium) {
-          return _buildNoSubscriptionScreen(context);
-        }
+          if (!subState.isPremium) {
+            return _buildNoSubscriptionScreen(context);
+          }
 
-        return _buildMainScreen(context);
-      },
+          return _buildMainScreen(context);
+        },
+      ),
     );
   }
 

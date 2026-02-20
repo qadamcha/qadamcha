@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get_it/get_it.dart';
 import '../network/api_client.dart';
@@ -123,8 +124,8 @@ class LocalMonitoringService {
     });
   }
 
-  /// Backend'ga to'g'ridan-to'g'ri sync qilish (ApiClient orqali)
-  /// BLoC yoki callback kerak EMAS — GetIt dan ApiClient olinadi
+  /// Backend'ga to'g'ridan-to'g'ri sync qilish (Dio orqali)
+  /// ApiClient.post() emas, Dio.post() ishlatiladi — to'liq xato ma'lumoti uchun
   Future<void> syncToBackend() async {
     if (_childId == null || _childId!.isEmpty) {
       print('⚠️ [LocalMonitoring] syncToBackend: childId null — sync qilinmadi');
@@ -135,21 +136,26 @@ class LocalMonitoringService {
       final apiClient = GetIt.instance<ApiClient>();
       print('📤 [LocalMonitoring] syncToBackend: childId=$_childId min=$_minutesUsed, vid=$_videosWatched, game=$_gamesPlayed, story=$_storiesRead');
       
-      await apiClient.post('/children/$_childId/sync-usage', data: {
+      final response = await apiClient.dio.post('/children/$_childId/sync-usage', data: {
         'minutesUsed': _minutesUsed,
         'videosWatched': _videosWatched,
         'gamesPlayed': _gamesPlayed,
         'storiesRead': _storiesRead,
       });
       
-      print('✅ [LocalMonitoring] syncToBackend: muvaffaqiyat!');
+      print('✅ [LocalMonitoring] syncToBackend: ${response.statusCode} ${response.data}');
+    } on DioException catch (e) {
+      print('❌ [LocalMonitoring] syncToBackend DioException:');
+      print('   statusCode: ${e.response?.statusCode}');
+      print('   response: ${e.response?.data}');
+      print('   message: ${e.message}');
+      print('   type: ${e.type}');
     } catch (e) {
       print('❌ [LocalMonitoring] syncToBackend xato: $e');
-      // Xato bo'lsa ham local'da saqlangan — keyingi syncda qayta uriniladi
     }
   }
 
-  /// Activity ni backend'ga to'g'ridan-to'g'ri yozish (ApiClient orqali)
+  /// Activity ni backend'ga to'g'ridan-to'g'ri yozish (Dio orqali)
   /// MongoDB `activities` collection ga yozadi
   Future<void> recordActivityToBackend({
     required String activityType,
@@ -164,19 +170,24 @@ class LocalMonitoringService {
 
     try {
       final apiClient = GetIt.instance<ApiClient>();
-      print('📝 [LocalMonitoring] recordActivity: childId=$_childId type=$activityType dur=$durationMinutes');
+      print('📝 [LocalMonitoring] recordActivity: childId=$_childId type=$activityType dur=$durationMinutes title=$contentTitle');
       
-      await apiClient.post('/children/$_childId/activity', data: {
+      final response = await apiClient.dio.post('/children/$_childId/activity', data: {
         'activityType': activityType,
         'durationMinutes': durationMinutes,
         if (contentTitle != null) 'contentTitle': contentTitle,
         if (contentId != null && contentId.isNotEmpty) 'contentId': contentId,
       });
       
-      print('✅ [LocalMonitoring] recordActivity: muvaffaqiyat!');
+      print('✅ [LocalMonitoring] recordActivity: ${response.statusCode} ${response.data}');
+    } on DioException catch (e) {
+      print('❌ [LocalMonitoring] recordActivity DioException:');
+      print('   statusCode: ${e.response?.statusCode}');
+      print('   response: ${e.response?.data}');
+      print('   message: ${e.message}');
+      print('   type: ${e.type}');
     } catch (e) {
       print('❌ [LocalMonitoring] recordActivity xato: $e');
-      // Xato bo'lsa ham local'da saqlangan
     }
   }
 
@@ -382,12 +393,16 @@ class LocalMonitoringService {
 
   // ─── Data setters ───────────────────────────────────────────────────
 
+  /// Child ID ni olish (getter)
+  String? get childId => _childId;
+
   /// Child ID o'rnatish
   void setChildId(String? id) {
     _childId = id;
     if (_prefs != null && id != null) {
       _prefs!.setString(_keyChildId, id);
     }
+    print('🆔 [LocalMonitoring] setChildId: $_childId');
   }
 
   /// Vaqt qo'shish (daqiqalarda)
