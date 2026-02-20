@@ -98,29 +98,11 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
     super.dispose();
   }
 
-  /// LocalMonitoringService → ChildBloc backend sync ulash
+  /// Monitoring sync timer boshlash
   void _initMonitoringSync() {
-    final monitoring = LocalMonitoringService.instance;
-    final childBloc = context.read<ChildBloc>();
-    
-    // Sync callback — har 5 daqiqada monitoring data backend'ga batch sync
-    monitoring.onSyncToBackend = (data) {
-      final state = childBloc.state;
-      final childId = state.selectedChild?.id ?? monitoring.childId;
-      
-      if (childId != null) {
-        childBloc.add(SyncUsageEvent(
-          childId: childId,
-          minutesUsed: data['minutesUsed'] ?? 0,
-          videosWatched: data['videosWatched'] ?? 0,
-          gamesPlayed: data['gamesPlayed'] ?? 0,
-          storiesRead: data['storiesRead'] ?? 0,
-        ));
-      }
-    };
-    
-    // Sync timer'ni boshlash (har 5 daqiqada)
-    monitoring.startSyncTimer();
+    // LocalMonitoringService endi to'g'ridan-to'g'ri ApiClient orqali
+    // backend ga sync qiladi — callback kerak emas
+    LocalMonitoringService.instance.startSyncTimer();
   }
 
   @override

@@ -4,8 +4,11 @@ import 'local_monitoring_service.dart';
 /// SessionTracker — Bola menusida vaqt tracking uchun service
 /// 
 /// Stack-based: har bir sahifa alohida sessiya ochadi, alohida tugatadi.
-/// child_home, content, games — hammasi bir vaqtda kuzatiladi.
-/// LocalMonitoringService bilan integratsiya — real-time vaqt yangilanishi.
+/// content, games, stories — hammasi bir vaqtda kuzatiladi.
+/// LocalMonitoringService bilan integratsiya — local + backend saqlash.
+/// 
+/// ⚠️ child_home sessiyasi faqat tracking — addMinutes/counter chaqirMAYDI
+/// (double counting oldini olish uchun)
 class SessionTracker {
   SessionTracker._internal();
   static final SessionTracker instance = SessionTracker._internal();
@@ -15,14 +18,6 @@ class SessionTracker {
   
   /// Real-time vaqt yangilash uchun timer (har 10 soniyada)
   Timer? _realTimeTimer;
-
-  /// Backend ga activity yozish callback
-  /// SessionTracker sessiya tugatganda chaqiriladi → RecordActivityEvent dispatch qilish uchun
-  void Function({
-    required String activityType,
-    required int durationMinutes,
-    required String contentTitle,
-  })? onActivityRecorded;
 
   /// Sessiya boshlash (oldingi sessiyani o'chirmaydi)
   void startSession(String type) {
@@ -74,21 +69,16 @@ class SessionTracker {
       contentTitle = 'Ilova foydalanish';
     }
     
-    // Activity logga yozish (monitoring page "So'nggi faoliyat" uchun)
+    // Activity logga yozish (local + backend — addActivityLog ichida)
+    // Bu metod local'ga ham, backend'ga ham yozadi
     monitoring.addActivityLog(
       activityType: activityType,
       contentTitle: contentTitle,
       durationMinutes: minutes,
     );
-    
-    // 🔴 Bug #1 fix: Backend ga ham activity yozish (MongoDB activities collection)
-    if (onActivityRecorded != null) {
-      onActivityRecorded!(
-        activityType: activityType,
-        durationMinutes: minutes,
-        contentTitle: contentTitle,
-      );
-    }
+
+    // Sync ham chaqirish — usage counters ni backend ga
+    monitoring.syncToBackend();
     
     // Agar boshqa aktiv sessiya yo'q bo'lsa, timer'ni to'xtatish
     if (_sessions.isEmpty) {

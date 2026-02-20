@@ -1,13 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:get_it/get_it.dart';
+import '../network/api_client.dart';
 
-/// LocalMonitoringService — Monitoring ma'lumotlarini local saqlash
+/// LocalMonitoringService — Monitoring ma'lumotlarini local + backend saqlash
 /// 
 /// - Har 10 soniyada SharedPreferences ga auto-save
-/// - Monitoring page bu service'dan o'qiydi
-/// - Har 5 daqiqada backend'ga sync qilinadi (ChildBloc orqali)
+/// - Har 5 daqiqada backend'ga to'g'ridan-to'g'ri sync (ApiClient orqali)
 /// - Activity log, weekly stats, last watched, subscription ham saqlanadi
+/// - BLoC yoki UI callback'larga bog'liq EMAS
 class LocalMonitoringService {
   LocalMonitoringService._internal();
   static final LocalMonitoringService instance = LocalMonitoringService._internal();
@@ -15,9 +17,6 @@ class LocalMonitoringService {
   SharedPreferences? _prefs;
   Timer? _autoSaveTimer;
   Timer? _syncTimer;
-  
-  // Callback for backend sync
-  void Function(Map<String, int> data)? onSyncToBackend;
 
   // In-memory counters (tez ishlash uchun)
   int _minutesUsed = 0;
@@ -124,18 +123,60 @@ class LocalMonitoringService {
     });
   }
 
-  /// Backend'ga sync qilish
-  void syncToBackend() {
-    if (onSyncToBackend != null) {
-      print('📤 [LocalMonitoring] syncToBackend: min=$_minutesUsed, vid=$_videosWatched, game=$_gamesPlayed, story=$_storiesRead');
-      onSyncToBackend!({
+  /// Backend'ga to'g'ridan-to'g'ri sync qilish (ApiClient orqali)
+  /// BLoC yoki callback kerak EMAS — GetIt dan ApiClient olinadi
+  Future<void> syncToBackend() async {
+    if (_childId == null || _childId!.isEmpty) {
+      print('⚠️ [LocalMonitoring] syncToBackend: childId null — sync qilinmadi');
+      return;
+    }
+
+    try {
+      final apiClient = GetIt.instance<ApiClient>();
+      print('📤 [LocalMonitoring] syncToBackend: childId=$_childId min=$_minutesUsed, vid=$_videosWatched, game=$_gamesPlayed, story=$_storiesRead');
+      
+      await apiClient.post('/children/$_childId/sync-usage', data: {
         'minutesUsed': _minutesUsed,
         'videosWatched': _videosWatched,
         'gamesPlayed': _gamesPlayed,
         'storiesRead': _storiesRead,
       });
-    } else {
-      print('⚠️ [LocalMonitoring] syncToBackend: onSyncToBackend callback NULL!');
+      
+      print('✅ [LocalMonitoring] syncToBackend: muvaffaqiyat!');
+    } catch (e) {
+      print('❌ [LocalMonitoring] syncToBackend xato: $e');
+      // Xato bo'lsa ham local'da saqlangan — keyingi syncda qayta uriniladi
+    }
+  }
+
+  /// Activity ni backend'ga to'g'ridan-to'g'ri yozish (ApiClient orqali)
+  /// MongoDB `activities` collection ga yozadi
+  Future<void> recordActivityToBackend({
+    required String activityType,
+    required int durationMinutes,
+    String? contentTitle,
+    String? contentId,
+  }) async {
+    if (_childId == null || _childId!.isEmpty) {
+      print('⚠️ [LocalMonitoring] recordActivity: childId null — yozilmadi');
+      return;
+    }
+
+    try {
+      final apiClient = GetIt.instance<ApiClient>();
+      print('📝 [LocalMonitoring] recordActivity: childId=$_childId type=$activityType dur=$durationMinutes');
+      
+      await apiClient.post('/children/$_childId/activity', data: {
+        'activityType': activityType,
+        'durationMinutes': durationMinutes,
+        if (contentTitle != null) 'contentTitle': contentTitle,
+        if (contentId != null && contentId.isNotEmpty) 'contentId': contentId,
+      });
+      
+      print('✅ [LocalMonitoring] recordActivity: muvaffaqiyat!');
+    } catch (e) {
+      print('❌ [LocalMonitoring] recordActivity xato: $e');
+      // Xato bo'lsa ham local'da saqlangan
     }
   }
 
@@ -160,12 +201,13 @@ class LocalMonitoringService {
     _prefs!.setString(_keyActivityLogs, jsonEncode(toSave));
   }
 
-  /// Yangi faoliyat qo'shish
+  /// Yangi faoliyat qo'shish (local + backend)
   void addActivityLog({
     required String activityType,
     required String contentTitle,
     required int durationMinutes,
   }) {
+    // Local'ga yozish
     _activityLogs.insert(0, {
       'activityType': activityType,
       'contentTitle': contentTitle,
@@ -177,6 +219,13 @@ class LocalMonitoringService {
       _activityLogs = _activityLogs.sublist(0, 20);
     }
     _saveActivityLogs();
+
+    // Backend'ga ham yozish (asinxron — UI blocklash yo'q)
+    recordActivityToBackend(
+      activityType: activityType,
+      durationMinutes: durationMinutes,
+      contentTitle: contentTitle,
+    );
   }
 
   /// Local activity loglarni olish
@@ -392,6 +441,7 @@ class LocalMonitoringService {
   /// Timerlarni to'xtatish (app background ga o'tganda)
   void dispose() {
     saveToLocal(); // Oxirgi marta saqlash
+    syncToBackend(); // Backend ga ham sync qilish
     _autoSaveTimer?.cancel();
     _syncTimer?.cancel();
   }
