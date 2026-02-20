@@ -435,7 +435,6 @@ class LocalMonitoringService {
   int get videosWatched => _videosWatched;
   int get gamesPlayed => _gamesPlayed;
   int get storiesRead => _storiesRead;
-  String? get childId => _childId;
 
   /// Barcha ma'lumotlarni Map sifatida olish
   Map<String, int> get allStats => {

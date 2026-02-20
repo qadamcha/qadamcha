@@ -23,6 +23,7 @@ class ChildHomePage extends StatefulWidget {
 class _ChildHomePageState extends State<ChildHomePage> {
   int _currentIndex = 0;
   late final ChildBloc _childBloc;
+  bool _childCreating = false;
 
   late final List<Widget> _pages;
 
@@ -36,27 +37,26 @@ class _ChildHomePageState extends State<ChildHomePage> {
       GamesPage(),
     ];
 
-    // Child ID ni local monitoring'ga saqlash
-    // 1-usul: BLoC state dan olish (agar mavjud bo'lsa)
+    // Child ID ni o'rnatish
     final childId = _childBloc.state.selectedChild?.id;
     if (childId != null) {
       LocalMonitoringService.instance.setChildId(childId);
       print('🆔 [ChildHome] childId BLoC dan olindi: $childId');
+      // childId bor — sync boshlash
+      LocalMonitoringService.instance.startSyncTimer();
+      LocalMonitoringService.instance.syncAllToBackend();
     } else {
-      // 2-usul: LocalMonitoringService ning o'zi SharedPreferences dan yuklagan
+      // ChildBloc'da selectedChild yo'q — bolalarni yuklash
+      print('⚠️ [ChildHome] selectedChild null — LoadChildrenEvent yuborilmoqda');
+      _childBloc.add(LoadChildrenEvent());
+      
+      // SharedPreferences'dan fallback
       final storedId = LocalMonitoringService.instance.childId;
       if (storedId != null && storedId.isNotEmpty) {
         print('🆔 [ChildHome] childId SharedPreferences dan olindi: $storedId');
-      } else {
-        print('⚠️ [ChildHome] childId hali mavjud emas — BlocListener kutadi');
+        LocalMonitoringService.instance.startSyncTimer();
       }
     }
-
-    // Backend sync timer boshlash (har 5 daqiqada)
-    LocalMonitoringService.instance.startSyncTimer();
-
-    // Bola menyusiga kirganda monitoring datani sync qilish
-    LocalMonitoringService.instance.syncAllToBackend();
 
     // Umumiy vaqt tracking boshlash
     SessionTracker.instance.startSession('child_home');
@@ -73,13 +73,29 @@ class _ChildHomePageState extends State<ChildHomePage> {
   Widget build(BuildContext context) {
     return BlocListener<ChildBloc, ChildState>(
       listener: (context, childState) {
-        // ChildBloc state o'zgarganda childId ni o'rnatish
-        final childId = childState.selectedChild?.id;
-        if (childId != null && childId.isNotEmpty) {
-          final currentId = LocalMonitoringService.instance.childId;
-          if (currentId != childId) {
-            LocalMonitoringService.instance.setChildId(childId);
-            print('🆔 [ChildHome] BlocListener: childId yangilandi: $childId');
+        if (childState.status == ChildStatus.loaded) {
+          if (childState.children.isEmpty && !_childCreating) {
+            // Backend'da bola profili yo'q — avtomatik yaratish
+            _childCreating = true;
+            print('⚠️ [ChildHome] children=0 — avtomatik bola yaratilmoqda');
+            context.read<ChildBloc>().add(const AddChildEvent(
+              name: 'Bolajon',
+              age: 5,
+              gender: 'male',
+            ));
+            return;
+          }
+          // Bolalar bor — childId o'rnatish
+          final childId = childState.selectedChild?.id;
+          if (childId != null && childId.isNotEmpty) {
+            final currentId = LocalMonitoringService.instance.childId;
+            if (currentId != childId) {
+              LocalMonitoringService.instance.setChildId(childId);
+              print('🆔 [ChildHome] BlocListener: childId yangilandi: $childId');
+              // Sync boshlash — childId endi mavjud
+              LocalMonitoringService.instance.startSyncTimer();
+              LocalMonitoringService.instance.syncAllToBackend();
+            }
           }
         }
       },

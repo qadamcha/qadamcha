@@ -6,6 +6,7 @@ import 'package:qadamcha_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:qadamcha_app/features/auth/presentation/pages/parent_pin_page.dart';
 import 'package:qadamcha_app/features/auth/presentation/pages/child_pin_page.dart';
 import 'package:qadamcha_app/features/auth/presentation/pages/phone_page.dart';
+import 'package:qadamcha_app/features/child/presentation/bloc/child_bloc.dart';
 import 'package:qadamcha_app/features/home/presentation/pages/child_home_page.dart';
 import 'package:qadamcha_app/features/home/presentation/pages/parent_home_page.dart';
 import 'package:qadamcha_app/features/subscription/presentation/bloc/subscription_bloc.dart';
@@ -181,6 +182,9 @@ class RoleSelectionPage extends StatelessWidget {
     if (_isLoggedIn(authState.status)) {
       // Obunani yuklash
       context.read<SubscriptionBloc>().add(LoadSubscriptionEvent());
+      
+      // Bolalarni yuklash — bu childId null muammosini hal qiladi
+      context.read<ChildBloc>().add(LoadChildrenEvent());
       
       // Agar bu qurilma 'child' rejimida bo'lsa yoki parent qurilmasidan
       // "Bola" tanlansa — to'g'ridan-to'g'ri bola sahifasiga
