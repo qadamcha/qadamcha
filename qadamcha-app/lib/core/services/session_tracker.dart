@@ -16,6 +16,14 @@ class SessionTracker {
   /// Real-time vaqt yangilash uchun timer (har 10 soniyada)
   Timer? _realTimeTimer;
 
+  /// Backend ga activity yozish callback
+  /// SessionTracker sessiya tugatganda chaqiriladi → RecordActivityEvent dispatch qilish uchun
+  void Function({
+    required String activityType,
+    required int durationMinutes,
+    required String contentTitle,
+  })? onActivityRecorded;
+
   /// Sessiya boshlash (oldingi sessiyani o'chirmaydi)
   void startSession(String type) {
     _sessions[type] = DateTime.now();
@@ -31,6 +39,16 @@ class SessionTracker {
     final duration = DateTime.now().difference(start);
     // Minimal 1 daqiqa — qisqa sessiyalar ham hisobga olinsin
     final minutes = duration.inMinutes < 1 ? 1 : duration.inMinutes;
+    
+    // ⚠️ child_home — faqat tracker, addMinutes/counter chaqirMASLIK!
+    // content/games/stories sessiyalari alohida hisoblaydi,
+    // child_home ham hisoblasa double counting bo'ladi.
+    if (type == 'child_home') {
+      if (_sessions.isEmpty) {
+        _stopRealTimeUpdates();
+      }
+      return minutes;
+    }
     
     // Sessiya tugaganda local monitoring'ga yozish
     final monitoring = LocalMonitoringService.instance;
@@ -62,6 +80,15 @@ class SessionTracker {
       contentTitle: contentTitle,
       durationMinutes: minutes,
     );
+    
+    // 🔴 Bug #1 fix: Backend ga ham activity yozish (MongoDB activities collection)
+    if (onActivityRecorded != null) {
+      onActivityRecorded!(
+        activityType: activityType,
+        durationMinutes: minutes,
+        contentTitle: contentTitle,
+      );
+    }
     
     // Agar boshqa aktiv sessiya yo'q bo'lsa, timer'ni to'xtatish
     if (_sessions.isEmpty) {

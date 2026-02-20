@@ -210,6 +210,7 @@ class ChildBloc extends Bloc<ChildEvent, ChildState> {
       contentId: event.contentId,
       activityType: event.activityType,
       durationMinutes: event.durationMinutes,
+      contentTitle: event.contentTitle,
     );
   }
 

@@ -63,6 +63,7 @@ abstract class ChildRepository {
     required String contentId,
     required String activityType,
     required int durationMinutes,
+    String? contentTitle,
   });
 
   /// Batch usage sync (LocalMonitoringService → DB)

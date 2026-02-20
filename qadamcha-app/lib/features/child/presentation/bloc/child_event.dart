@@ -108,16 +108,18 @@ class RecordActivityEvent extends ChildEvent {
   final String contentId;
   final String activityType;
   final int durationMinutes;
+  final String? contentTitle;
   
   const RecordActivityEvent({
     required this.childId,
     required this.contentId,
     required this.activityType,
     required this.durationMinutes,
+    this.contentTitle,
   });
   
   @override
-  List<Object?> get props => [childId, contentId, activityType, durationMinutes];
+  List<Object?> get props => [childId, contentId, activityType, durationMinutes, contentTitle];
 }
 
 /// Batch usage sync (LocalMonitoringService → DB)

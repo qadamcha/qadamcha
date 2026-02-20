@@ -42,11 +42,48 @@ class _ChildHomePageState extends State<ChildHomePage> {
       LocalMonitoringService.instance.setChildId(childId);
     }
 
+    // 🔴 Bug #2 fix: onSyncToBackend callback o'rnatish
+    // Bola rejimida ham har 5 daqiqada MongoDB ga sync qilish
+    final monitoring = LocalMonitoringService.instance;
+    monitoring.onSyncToBackend = (data) {
+      final state = _childBloc.state;
+      final syncChildId = state.selectedChild?.id ?? monitoring.childId;
+      
+      if (syncChildId != null) {
+        _childBloc.add(SyncUsageEvent(
+          childId: syncChildId,
+          minutesUsed: data['minutesUsed'] ?? 0,
+          videosWatched: data['videosWatched'] ?? 0,
+          gamesPlayed: data['gamesPlayed'] ?? 0,
+          storiesRead: data['storiesRead'] ?? 0,
+        ));
+      }
+    };
+
+    // 🔴 Bug #1 fix: Sessiya tugatilganda backend ga activity yozish
+    SessionTracker.instance.onActivityRecorded = ({
+      required String activityType,
+      required int durationMinutes,
+      required String contentTitle,
+    }) {
+      final state = _childBloc.state;
+      final recChildId = state.selectedChild?.id ?? monitoring.childId;
+      
+      if (recChildId != null) {
+        _childBloc.add(RecordActivityEvent(
+          childId: recChildId,
+          contentId: '',
+          activityType: activityType,
+          durationMinutes: durationMinutes,
+        ));
+      }
+    };
+
     // Backend sync timer boshlash
-    LocalMonitoringService.instance.startSyncTimer();
+    monitoring.startSyncTimer();
 
     // Bola menyusiga kirganda monitoring datani sync qilish
-    LocalMonitoringService.instance.syncAllToBackend();
+    monitoring.syncAllToBackend();
 
     // Umumiy vaqt tracking boshlash
     SessionTracker.instance.startSession('child_home');

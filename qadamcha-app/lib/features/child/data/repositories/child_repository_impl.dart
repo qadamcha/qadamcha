@@ -181,12 +181,14 @@ class ChildRepositoryImpl implements ChildRepository {
     required String contentId,
     required String activityType,
     required int durationMinutes,
+    String? contentTitle,
   }) async {
     try {
       await apiClient.dio.post('/children/$childId/activity', data: {
         'contentId': contentId,
         'activityType': activityType,
         'durationMinutes': durationMinutes,
+        if (contentTitle != null) 'contentTitle': contentTitle,
       });
       return const Right(null);
     } on ServerException catch (e) {
