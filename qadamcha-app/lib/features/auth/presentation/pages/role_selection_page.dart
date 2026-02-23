@@ -7,16 +7,52 @@ import 'package:qadamcha_app/features/auth/presentation/pages/parent_pin_page.da
 import 'package:qadamcha_app/features/auth/presentation/pages/child_pin_page.dart';
 import 'package:qadamcha_app/features/auth/presentation/pages/phone_page.dart';
 import 'package:qadamcha_app/features/child/presentation/bloc/child_bloc.dart';
+import 'package:qadamcha_app/features/device/presentation/bloc/device_bloc.dart';
 import 'package:qadamcha_app/features/home/presentation/pages/child_home_page.dart';
 import 'package:qadamcha_app/features/home/presentation/pages/parent_home_page.dart';
 import 'package:qadamcha_app/features/subscription/presentation/bloc/subscription_bloc.dart';
 
-class RoleSelectionPage extends StatelessWidget {
+class RoleSelectionPage extends StatefulWidget {
   const RoleSelectionPage({super.key});
 
   @override
+  State<RoleSelectionPage> createState() => _RoleSelectionPageState();
+}
+
+class _RoleSelectionPageState extends State<RoleSelectionPage> {
+  @override
+  void initState() {
+    super.initState();
+    // Qurilma statusini tekshirish
+    final authState = context.read<AuthBloc>().state;
+    if (_isLoggedIn(authState.status)) {
+      context.read<DeviceBloc>().add(CheckDeviceStatusEvent());
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BlocListener<DeviceBloc, DeviceState>(
+      listenWhen: (prev, curr) => 
+          !prev.isCurrentDeviceRemoved && curr.isCurrentDeviceRemoved,
+      listener: (context, state) {
+        if (state.isCurrentDeviceRemoved) {
+          // Qurilma o'chirilgan — avtomatik logout
+          context.read<AuthBloc>().add(LogoutEvent());
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const PhonePage()),
+            (route) => false,
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Bu qurilma akkauntdan o\'chirilgan'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      },
+      child: Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
@@ -68,7 +104,8 @@ class RoleSelectionPage extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ),  // BlocListener.child Scaffold ends
+    );  // BlocListener ends
   }
 
   Widget _buildRoleCard(
@@ -180,6 +217,45 @@ class RoleSelectionPage extends StatelessWidget {
   void _onChildSelected(BuildContext context) {
     final authState = context.read<AuthBloc>().state;
     if (_isLoggedIn(authState.status)) {
+      // Qurilma bloklangan yoki yo'qligini tekshirish
+      try {
+        final deviceState = context.read<DeviceBloc>().state;
+        if (deviceState.isCurrentDeviceBlocked) {
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: const Row(
+                children: [
+                  Text('🚫 ', style: TextStyle(fontSize: 24)),
+                  Text('Bloklangan', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold)),
+                ],
+              ),
+              content: const Text(
+                'Bu qurilma bloklangan.\n\nBola rejimiga kirish uchun ota-ona qurilmadan blokni olib tashlang.',
+                style: TextStyle(fontFamily: 'Nunito', height: 1.4),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text(
+                    'Tushundim',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Nunito',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+          return;
+        }
+      } catch (_) {
+        // DeviceBloc mavjud bo'lmasligi mumkin
+      }
+
       // Obunani yuklash
       context.read<SubscriptionBloc>().add(LoadSubscriptionEvent());
       

@@ -213,6 +213,25 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, String>> changePin({
+    required String currentPin,
+    required String newPin,
+  }) async {
+    try {
+      final message = await remoteDataSource.changePin(currentPin, newPin);
+      // Yangi PIN hash'ni lokal saqlash
+      await localDataSource.cachePinHash(newPin);
+      return Right(message);
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message, e.statusCode));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, User>> updateProfile({required String name}) async {
     try {
       final response = await remoteDataSource.updateProfile(name: name);

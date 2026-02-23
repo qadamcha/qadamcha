@@ -19,6 +19,11 @@ module.exports = async function (fastify) {
         preHandler: [fastify.authenticate]
     }, devicesController.getAll);
 
+    // GET /devices/my-status - Joriy qurilma statusini tekshirish
+    fastify.get('/my-status', {
+        preHandler: [fastify.authenticate]
+    }, devicesController.checkMyStatus);
+
     // POST /devices/generate-code (autentifikatsiya bilan)
     fastify.post('/generate-code', {
         preHandler: [fastify.authenticate]
@@ -38,6 +43,16 @@ module.exports = async function (fastify) {
     fastify.delete('/:id', {
         preHandler: [fastify.authenticate]
     }, devicesController.delete);
+
+    // POST /devices/:id/block - Qurilmani bloklash
+    fastify.post('/:id/block', {
+        preHandler: [fastify.authenticate]
+    }, devicesController.blockDevice);
+
+    // POST /devices/:id/unblock - Qurilmani blokdan chiqarish
+    fastify.post('/:id/unblock', {
+        preHandler: [fastify.authenticate]
+    }, devicesController.unblockDevice);
 
     // PUT /devices/fcm-token (autentifikatsiya bilan)
     fastify.put('/fcm-token', {

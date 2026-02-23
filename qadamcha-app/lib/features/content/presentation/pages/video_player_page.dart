@@ -5,8 +5,11 @@ import 'package:chewie/chewie.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:qadamcha_app/features/content/domain/entities/content_entity.dart';
+import 'package:qadamcha_app/core/services/session_tracker.dart';
 
 /// Bunny.net HLS video player — sifat tanlash + vaqt ko'rsatish
+/// ✅ Video ko'rish tracking: har bir video ochilganda session boshlanadi,
+/// yopilganda endSession → batchUpdate → video_watch activity qayd qilinadi
 class VideoPlayerPage extends StatefulWidget {
   final ContentEntity content;
   final String streamUrl;
@@ -34,6 +37,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   @override
   void initState() {
     super.initState();
+    // ✅ Video ko'rish session boshlash
+    SessionTracker.instance.startSession('content');
     _loadQualities();
   }
 
@@ -437,6 +442,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   @override
   void dispose() {
+    // ✅ Video ko'rish session tugatish — batchUpdate chaqiriladi
+    SessionTracker.instance.endSession('content');
     _videoPlayerController?.dispose();
     _chewieController?.dispose();
     super.dispose();

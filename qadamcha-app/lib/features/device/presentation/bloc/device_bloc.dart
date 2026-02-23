@@ -11,12 +11,11 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
   
   DeviceBloc({required this.repository}) : super(const DeviceState()) {
     on<LoadDevicesEvent>(_onLoadDevices);
-    on<GenerateLinkingCodeEvent>(_onGenerateLinkingCode);
     on<LinkDeviceEvent>(_onLinkDevice);
     on<RemoveDeviceEvent>(_onRemoveDevice);
     on<BlockDeviceEvent>(_onBlockDevice);
     on<UnblockDeviceEvent>(_onUnblockDevice);
-    on<ValidateCodeEvent>(_onValidateCode);
+    on<CheckDeviceStatusEvent>(_onCheckDeviceStatus);
   }
   
   Future<void> _onLoadDevices(
@@ -35,26 +34,6 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
       (devices) => emit(state.copyWith(
         status: DeviceLoadStatus.loaded,
         devices: devices,
-      )),
-    );
-  }
-  
-  Future<void> _onGenerateLinkingCode(
-    GenerateLinkingCodeEvent event,
-    Emitter<DeviceState> emit,
-  ) async {
-    emit(state.copyWith(isGeneratingCode: true));
-    
-    final result = await repository.generateLinkingCode(event.childId);
-    
-    result.fold(
-      (failure) => emit(state.copyWith(
-        isGeneratingCode: false,
-        errorMessage: failure.message,
-      )),
-      (code) => emit(state.copyWith(
-        isGeneratingCode: false,
-        linkingCode: code,
       )),
     );
   }
@@ -141,24 +120,36 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
     );
   }
   
-  Future<void> _onValidateCode(
-    ValidateCodeEvent event,
+  /// Joriy qurilma statusini tekshirish
+  /// Agar removed → isCurrentDeviceRemoved = true
+  /// Agar blocked → isCurrentDeviceBlocked = true
+  Future<void> _onCheckDeviceStatus(
+    CheckDeviceStatusEvent event,
     Emitter<DeviceState> emit,
   ) async {
-    emit(state.copyWith(isValidatingCode: true));
-    
-    final result = await repository.validateLinkingCode(event.code);
+    final result = await repository.checkMyDeviceStatus();
     
     result.fold(
-      (failure) => emit(state.copyWith(
-        isValidatingCode: false,
-        isCodeValid: false,
-        errorMessage: failure.message,
-      )),
-      (isValid) => emit(state.copyWith(
-        isValidatingCode: false,
-        isCodeValid: isValid,
-      )),
+      (failure) {
+        // Network xatolik — hech narsa qilmaymiz
+      },
+      (data) {
+        final status = data['status'] as String?;
+        
+        if (status == 'removed') {
+          emit(state.copyWith(isCurrentDeviceRemoved: true));
+        } else if (status == 'blocked') {
+          emit(state.copyWith(
+            isCurrentDeviceBlocked: true,
+            isCurrentDeviceRemoved: false,
+          ));
+        } else {
+          emit(state.copyWith(
+            isCurrentDeviceBlocked: false,
+            isCurrentDeviceRemoved: false,
+          ));
+        }
+      },
     );
   }
 }

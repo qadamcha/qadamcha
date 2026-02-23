@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/services/session_tracker.dart';
 import '../../../../core/services/local_monitoring_service.dart';
 import '../bloc/child_bloc.dart';
 import '../../../content/domain/entities/content_entity.dart';
@@ -10,8 +9,9 @@ import '../../../content/presentation/bloc/content_bloc.dart';
 import '../../../content/presentation/widgets/video_card.dart';
 import '../../../content/presentation/pages/video_player_page.dart';
 
-/// Content Page — YouTube-style Multfilmlar ekrani
-/// Horizontal category chips + vertical video feed
+  /// Content Page — YouTube-style Multfilmlar ekrani
+/// ✅ OPTIMIZED: Tab-level session tracking olib tashlandi
+/// (phantom 1-min video_watch yaratardi — haqiqiy tracking VideoPlayerPage da ishlaydi)
 class ContentPage extends StatefulWidget {
   const ContentPage({super.key});
 
@@ -51,7 +51,6 @@ class _ContentPageState extends State<ContentPage> {
   void initState() {
     super.initState();
     _childBloc = context.read<ChildBloc>();
-    SessionTracker.instance.startSession('content');
     context.read<ContentBloc>().add(const LoadContentEvent(refresh: true));
     _scrollController.addListener(_onScroll);
     _loadLastWatched();
@@ -95,7 +94,6 @@ class _ContentPageState extends State<ContentPage> {
 
   @override
   void dispose() {
-    SessionTracker.instance.endSession('content');
     _scrollController.dispose();
     super.dispose();
   }

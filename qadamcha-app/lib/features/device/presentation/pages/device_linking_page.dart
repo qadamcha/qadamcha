@@ -22,7 +22,11 @@ class _DeviceLinkingPageState extends State<DeviceLinkingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF1A1A2E),
+        elevation: 0,
         title: const Text('Qurilmalar'),
         actions: [
           IconButton(
@@ -148,6 +152,7 @@ class _DeviceLinkingPageState extends State<DeviceLinkingPage> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
+        backgroundColor: Colors.white,
         title: const Text('Qurilmani o\'chirish'),
         content: Text('${device.deviceName}ni o\'chirishni xohlaysizmi?'),
         actions: [

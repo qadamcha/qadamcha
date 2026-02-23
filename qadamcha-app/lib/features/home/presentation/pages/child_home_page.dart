@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -41,20 +42,15 @@ class _ChildHomePageState extends State<ChildHomePage> {
     final childId = _childBloc.state.selectedChild?.id;
     if (childId != null) {
       LocalMonitoringService.instance.setChildId(childId);
-      print('🆔 [ChildHome] childId BLoC dan olindi: $childId');
-      // childId bor — sync boshlash
-      LocalMonitoringService.instance.startSyncTimer();
-      LocalMonitoringService.instance.syncAllToBackend();
+      if (kDebugMode) print('🆔 [ChildHome] childId BLoC dan olindi: $childId');
     } else {
-      // ChildBloc'da selectedChild yo'q — bolalarni yuklash
-      print('⚠️ [ChildHome] selectedChild null — LoadChildrenEvent yuborilmoqda');
+      if (kDebugMode) print('⚠️ [ChildHome] selectedChild null — LoadChildrenEvent yuborilmoqda');
       _childBloc.add(LoadChildrenEvent());
       
       // SharedPreferences'dan fallback
       final storedId = LocalMonitoringService.instance.childId;
       if (storedId != null && storedId.isNotEmpty) {
-        print('🆔 [ChildHome] childId SharedPreferences dan olindi: $storedId');
-        LocalMonitoringService.instance.startSyncTimer();
+        if (kDebugMode) print('🆔 [ChildHome] childId SharedPreferences dan olindi: $storedId');
       }
     }
 
@@ -65,7 +61,8 @@ class _ChildHomePageState extends State<ChildHomePage> {
   @override
   void dispose() {
     SessionTracker.instance.endSession('child_home');
-    LocalMonitoringService.instance.syncAllToBackend();
+    // ✅ OPTIMIZED: syncAllToBackend olib tashlandi
+    // SessionTracker.endSession ichidagi pauseAutoSave() oxirgi dirty datani saqlaydi
     super.dispose();
   }
 
@@ -77,7 +74,7 @@ class _ChildHomePageState extends State<ChildHomePage> {
           if (childState.children.isEmpty && !_childCreating) {
             // Backend'da bola profili yo'q — avtomatik yaratish
             _childCreating = true;
-            print('⚠️ [ChildHome] children=0 — avtomatik bola yaratilmoqda');
+            if (kDebugMode) print('⚠️ [ChildHome] children=0 — avtomatik bola yaratilmoqda');
             context.read<ChildBloc>().add(const AddChildEvent(
               name: 'Bolajon',
               age: 5,
@@ -91,10 +88,7 @@ class _ChildHomePageState extends State<ChildHomePage> {
             final currentId = LocalMonitoringService.instance.childId;
             if (currentId != childId) {
               LocalMonitoringService.instance.setChildId(childId);
-              print('🆔 [ChildHome] BlocListener: childId yangilandi: $childId');
-              // Sync boshlash — childId endi mavjud
-              LocalMonitoringService.instance.startSyncTimer();
-              LocalMonitoringService.instance.syncAllToBackend();
+              if (kDebugMode) print('🆔 [ChildHome] BlocListener: childId yangilandi: $childId');
             }
           }
         }

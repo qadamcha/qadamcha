@@ -6,47 +6,49 @@ enum LinkingStatus { initial, success, failed }
 class DeviceState extends Equatable {
   final DeviceLoadStatus status;
   final List<Device> devices;
-  final LinkingCode? linkingCode;
-  final bool isGeneratingCode;
   final bool isLinking;
-  final bool isValidatingCode;
-  final bool? isCodeValid;
   final LinkingStatus linkingStatus;
   final String? errorMessage;
+  
+  /// Joriy qurilma bloklangan yoki yo'q
+  final bool isCurrentDeviceBlocked;
+  
+  /// Joriy qurilma o'chirilgan (removed) yoki yo'q
+  final bool isCurrentDeviceRemoved;
+  
+  /// Backend'dan kelgan maxDevices
+  final int maxDevices;
   
   const DeviceState({
     this.status = DeviceLoadStatus.initial,
     this.devices = const [],
-    this.linkingCode,
-    this.isGeneratingCode = false,
     this.isLinking = false,
-    this.isValidatingCode = false,
-    this.isCodeValid,
     this.linkingStatus = LinkingStatus.initial,
     this.errorMessage,
+    this.isCurrentDeviceBlocked = false,
+    this.isCurrentDeviceRemoved = false,
+    this.maxDevices = 3,
   });
   
   DeviceState copyWith({
     DeviceLoadStatus? status,
     List<Device>? devices,
-    LinkingCode? linkingCode,
-    bool? isGeneratingCode,
     bool? isLinking,
-    bool? isValidatingCode,
-    bool? isCodeValid,
     LinkingStatus? linkingStatus,
     String? errorMessage,
+    bool? isCurrentDeviceBlocked,
+    bool? isCurrentDeviceRemoved,
+    int? maxDevices,
   }) {
     return DeviceState(
       status: status ?? this.status,
       devices: devices ?? this.devices,
-      linkingCode: linkingCode ?? this.linkingCode,
-      isGeneratingCode: isGeneratingCode ?? this.isGeneratingCode,
       isLinking: isLinking ?? this.isLinking,
-      isValidatingCode: isValidatingCode ?? this.isValidatingCode,
-      isCodeValid: isCodeValid ?? this.isCodeValid,
       linkingStatus: linkingStatus ?? this.linkingStatus,
       errorMessage: errorMessage,
+      isCurrentDeviceBlocked: isCurrentDeviceBlocked ?? this.isCurrentDeviceBlocked,
+      isCurrentDeviceRemoved: isCurrentDeviceRemoved ?? this.isCurrentDeviceRemoved,
+      maxDevices: maxDevices ?? this.maxDevices,
     );
   }
   
@@ -59,19 +61,15 @@ class DeviceState extends Equatable {
   List<Device> get onlineDevices => 
       devices.where((d) => d.isOnline).toList();
   
-  /// Backend MAX_DEVICES bilan moslashtirish
-  int get maxDevices => 3;
-  
   @override
   List<Object?> get props => [
     status, 
     devices, 
-    linkingCode, 
-    isGeneratingCode, 
     isLinking,
-    isValidatingCode,
-    isCodeValid,
     linkingStatus, 
-    errorMessage
+    errorMessage,
+    isCurrentDeviceBlocked,
+    isCurrentDeviceRemoved,
+    maxDevices,
   ];
 }

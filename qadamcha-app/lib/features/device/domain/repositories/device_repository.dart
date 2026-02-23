@@ -6,12 +6,6 @@ abstract class DeviceRepository {
   /// Barcha qurilmalarni olish
   Future<Either<Failure, List<Device>>> getDevices();
   
-  /// Bola qurilmalarini olish
-  Future<Either<Failure, List<Device>>> getChildDevices(String childId);
-  
-  /// Linking kod yaratish
-  Future<Either<Failure, LinkingCode>> generateLinkingCode(String childId);
-  
   /// Qurilmani ulash (bola qurilmasi)
   Future<Either<Failure, Device>> linkDevice({
     required String code,
@@ -27,12 +21,12 @@ abstract class DeviceRepository {
   /// Qurilmani bloklash
   Future<Either<Failure, Device>> blockDevice(String deviceId);
   
-  /// Qurilmani aktivlashtirish
+  /// Qurilmani blokdan chiqarish
   Future<Either<Failure, Device>> unblockDevice(String deviceId);
   
-  /// Heartbeat yuborish (bola qurilmasidan)
-  Future<Either<Failure, void>> sendHeartbeat(String deviceId);
+  /// Heartbeat yuborish
+  Future<Either<Failure, void>> sendHeartbeat();
   
-  /// Linking kod tekshirish
-  Future<Either<Failure, bool>> validateLinkingCode(String code);
+  /// Joriy qurilma statusini tekshirish
+  Future<Either<Failure, Map<String, dynamic>>> checkMyDeviceStatus();
 }

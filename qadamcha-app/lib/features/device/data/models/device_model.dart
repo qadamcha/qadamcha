@@ -18,18 +18,20 @@ class DeviceModel extends Device {
   factory DeviceModel.fromJson(Map<String, dynamic> json) {
     return DeviceModel(
       id: json['_id'] ?? json['id'] ?? '',
-      userId: json['userId'] ?? '',
-      childId: json['childId'],
-      deviceName: json['deviceName'] ?? '',
-      type: DeviceType.fromString(json['type'] ?? 'parent'),
-      platform: DevicePlatform.fromString(json['platform'] ?? 'android'),
+      userId: json['userId'] is Map ? json['userId']['_id'] ?? '' : json['userId'] ?? '',
+      childId: json['childId'] is Map ? json['childId']['_id'] : json['childId'],
+      deviceName: json['deviceName'] ?? 'Noma\'lum qurilma',
+      type: DeviceType.fromString(json['mode'] ?? json['type'] ?? 'parent'),
+      platform: DevicePlatform.fromString(json['deviceType'] ?? json['platform'] ?? 'android'),
       deviceModel: json['deviceModel'],
-      uniqueId: json['uniqueId'] ?? '',
-      status: DeviceStatus.fromString(json['status'] ?? 'pending'),
-      lastActiveAt: json['lastActiveAt'] != null 
-          ? DateTime.parse(json['lastActiveAt']) 
-          : null,
-      linkedAt: DateTime.parse(json['linkedAt'] ?? json['createdAt'] ?? DateTime.now().toIso8601String()),
+      uniqueId: json['deviceId'] ?? json['uniqueId'] ?? '',
+      status: DeviceStatus.fromString(json['status'] ?? 'active'),
+      lastActiveAt: json['lastSeen'] != null 
+          ? DateTime.parse(json['lastSeen']) 
+          : json['lastActiveAt'] != null 
+              ? DateTime.parse(json['lastActiveAt'])
+              : null,
+      linkedAt: DateTime.parse(json['createdAt'] ?? json['linkedAt'] ?? DateTime.now().toIso8601String()),
     );
   }
 

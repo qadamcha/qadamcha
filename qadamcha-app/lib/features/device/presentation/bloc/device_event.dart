@@ -9,15 +9,6 @@ abstract class DeviceEvent extends Equatable {
 
 class LoadDevicesEvent extends DeviceEvent {}
 
-class GenerateLinkingCodeEvent extends DeviceEvent {
-  final String childId;
-  
-  const GenerateLinkingCodeEvent(this.childId);
-  
-  @override
-  List<Object?> get props => [childId];
-}
-
 class LinkDeviceEvent extends DeviceEvent {
   final String code;
   final String deviceName;
@@ -64,11 +55,5 @@ class UnblockDeviceEvent extends DeviceEvent {
   List<Object?> get props => [deviceId];
 }
 
-class ValidateCodeEvent extends DeviceEvent {
-  final String code;
-  
-  const ValidateCodeEvent(this.code);
-  
-  @override
-  List<Object?> get props => [code];
-}
+/// Joriy qurilma statusini tekshirish (removed/blocked/active)
+class CheckDeviceStatusEvent extends DeviceEvent {}

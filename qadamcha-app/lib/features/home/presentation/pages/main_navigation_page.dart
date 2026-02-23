@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -45,12 +46,6 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
     
     // Barcha asosiy ma'lumotlarni backend'dan yuklash
     _loadAllData();
-    
-    // Ota-ona menyusiga kirganda monitoring datani sync qilish
-    LocalMonitoringService.instance.syncAllToBackend();
-    
-    // Backend sync'ni ulash — LocalMonitoringService → ChildBloc
-    _initMonitoringSync();
   }
 
   /// Barcha kerakli ma'lumotlarni backend'dan yuklash
@@ -93,17 +88,9 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
   @override
   void dispose() {
     _aiChatBloc.close();
-    // Chiqishda barcha ma'lumotlarni backend'ga sync qilish
-    LocalMonitoringService.instance.syncAllToBackend();
     super.dispose();
   }
 
-  /// Monitoring sync timer boshlash
-  void _initMonitoringSync() {
-    // LocalMonitoringService endi to'g'ridan-to'g'ri ApiClient orqali
-    // backend ga sync qiladi — callback kerak emas
-    LocalMonitoringService.instance.startSyncTimer();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -114,10 +101,14 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
               prev.status != curr.status && curr.status == ChildStatus.loaded,
           listener: (context, state) {
             // Bolalar yuklanganda monitoring datani ham yuklash
-            print('🟢 [BlocListener] ChildStatus.loaded! children=${state.children.length}');
+            if (kDebugMode) {
+              print('🟢 [BlocListener] ChildStatus.loaded! children=${state.children.length}');
+            }
             if (state.children.isNotEmpty) {
               final child = state.selectedChild ?? state.children.first;
-              print('   child.todayUsage: min=${child.todayUsage.minutesUsed}, vid=${child.todayUsage.videosWatched}, game=${child.todayUsage.gamesPlayed}, story=${child.todayUsage.storiesRead}');
+              if (kDebugMode) {
+                print('   child.todayUsage: min=${child.todayUsage.minutesUsed}, vid=${child.todayUsage.videosWatched}, game=${child.todayUsage.gamesPlayed}, story=${child.todayUsage.storiesRead}');
+              }
               _loadMonitoringForChild(child.id);
               
               // Backend'dan kelgan todayUsage ni LocalMonitoringService ga sync qilish

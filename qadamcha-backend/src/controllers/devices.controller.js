@@ -230,5 +230,69 @@ module.exports = {
         }
 
         return { success: true };
+    },
+
+    // POST /devices/:id/block - Qurilmani bloklash
+    async blockDevice(request, reply) {
+        const { userId } = request.user;
+        const { id } = request.params;
+
+        const device = await Device.findOneAndUpdate(
+            { _id: id, userId, isActive: true },
+            { status: 'blocked' },
+            { new: true }
+        );
+
+        if (!device) {
+            return reply.status(404).send({
+                success: false,
+                message: ERRORS.NOT_FOUND
+            });
+        }
+
+        return { success: true, message: 'Qurilma bloklandi', device };
+    },
+
+    // POST /devices/:id/unblock - Qurilmani blokdan chiqarish
+    async unblockDevice(request, reply) {
+        const { userId } = request.user;
+        const { id } = request.params;
+
+        const device = await Device.findOneAndUpdate(
+            { _id: id, userId, isActive: true },
+            { status: 'active' },
+            { new: true }
+        );
+
+        if (!device) {
+            return reply.status(404).send({
+                success: false,
+                message: ERRORS.NOT_FOUND
+            });
+        }
+
+        return { success: true, message: 'Qurilma blokdan chiqarildi', device };
+    },
+
+    // GET /devices/my-status - Joriy qurilma statusini tekshirish
+    async checkMyStatus(request, reply) {
+        const { deviceId } = request.user;
+
+        const device = await Device.findOne({ deviceId });
+
+        if (!device || !device.isActive) {
+            return { success: true, status: 'removed' };
+        }
+
+        return {
+            success: true,
+            status: device.status,
+            device: {
+                id: device._id,
+                deviceName: device.deviceName,
+                mode: device.mode,
+                status: device.status
+            }
+        };
     }
 };

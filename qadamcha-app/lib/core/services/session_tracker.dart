@@ -23,6 +23,8 @@ class SessionTracker {
   void startSession(String type) {
     _sessions[type] = DateTime.now();
     _startRealTimeUpdates();
+    // Bola menusiga kirganda auto-save'ni qayta boshlash
+    LocalMonitoringService.instance.resumeAutoSave();
   }
 
   /// Sessiya tugatish va davomiylikni daqiqalarda qaytarish
@@ -36,32 +38,25 @@ class SessionTracker {
     final minutes = duration.inMinutes < 1 ? 1 : duration.inMinutes;
     
     // ⚠️ child_home — faqat tracker, addMinutes/counter chaqirMASLIK!
-    // content/games/stories sessiyalari alohida hisoblaydi,
-    // child_home ham hisoblasa double counting bo'ladi.
     if (type == 'child_home') {
       if (_sessions.isEmpty) {
         _stopRealTimeUpdates();
+        // Bola menusidan chiqqanda auto-save to'xtatish
+        LocalMonitoringService.instance.pauseAutoSave();
       }
       return minutes;
     }
     
-    // Sessiya tugaganda local monitoring'ga yozish
-    final monitoring = LocalMonitoringService.instance;
-    monitoring.addMinutes(minutes);
-    
-    // Activity type ga qarab qo'shimcha counter'larni yangilash
+    // Activity type aniqlash
     String activityType;
     String contentTitle;
     if (type == 'content') {
-      monitoring.addVideoWatched();
       activityType = 'video_watch';
       contentTitle = 'Multfilm ko\'rish';
     } else if (type == 'games') {
-      monitoring.addGamePlayed();
       activityType = 'game_play';
       contentTitle = 'O\'yin o\'ynash';
     } else if (type == 'stories') {
-      monitoring.addStoryRead();
       activityType = 'story_read';
       contentTitle = 'Ertak o\'qish';
     } else {
@@ -69,16 +64,14 @@ class SessionTracker {
       contentTitle = 'Ilova foydalanish';
     }
     
-    // Activity logga yozish (local + backend — addActivityLog ichida)
-    // Bu metod local'ga ham, backend'ga ham yozadi
-    monitoring.addActivityLog(
+    // ✅ OPTIMIZED: Bitta batchUpdate — 1x saveToLocal + 1x API call
+    // (eskisi: addMinutes + addVideoWatched + addActivityLog + syncToBackend = 4x save + 2x API)
+    LocalMonitoringService.instance.batchUpdate(
+      minutes: minutes,
       activityType: activityType,
       contentTitle: contentTitle,
       durationMinutes: minutes,
     );
-
-    // Sync ham chaqirish — usage counters ni backend ga
-    monitoring.syncToBackend();
     
     // Agar boshqa aktiv sessiya yo'q bo'lsa, timer'ni to'xtatish
     if (_sessions.isEmpty) {

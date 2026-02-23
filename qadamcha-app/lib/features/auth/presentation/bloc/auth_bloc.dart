@@ -251,35 +251,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(state.copyWith(status: AuthStatus.loading));
     
-    // Avval joriy PIN ni tekshirish
-    final verifyResult = await repository.verifyPin(event.currentPin);
-    
-    final verified = verifyResult.fold(
-      (failure) {
-        emit(state.copyWith(
-          status: AuthStatus.error,
-          errorMessage: 'Joriy PIN noto\'g\'ri',
-        ));
-        return false;
-      },
-      (_) => true,
-    );
-    
-    if (!verified) return;
-    
-    // Yangi PIN ni o'rnatish
-    final resetResult = await repository.resetPin(
-      phone: event.phone,
+    // PUT /user/pin — bir so'rovda joriy PIN tekshiriladi va yangi PIN o'rnatiladi
+    final result = await repository.changePin(
+      currentPin: event.currentPin,
       newPin: event.newPin,
     );
     
-    resetResult.fold(
+    result.fold(
       (failure) => emit(state.copyWith(
         status: AuthStatus.error,
         errorMessage: failure.message,
       )),
-      (_) => emit(state.copyWith(
+      (message) => emit(state.copyWith(
         status: AuthStatus.authenticated,
+        errorMessage: message,
       )),
     );
   }

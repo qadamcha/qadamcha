@@ -310,6 +310,8 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
                 )
               : null,
           border: InputBorder.none,
+          filled: true,
+          fillColor: Colors.white,
           contentPadding:
               EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         ),

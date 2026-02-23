@@ -12,53 +12,53 @@ module.exports = {
             isActive: true
         }).sort({ createdAt: -1 });
 
-        // Har bir bola uchun bugungi statistika
-        // max(Activity.getDailyStats, Child.todayUsage) — batch sync datani ham hisobga olish
         const today = new Date().toISOString().split('T')[0];
-        const childrenWithStats = await Promise.all(
-            children.map(async (child) => {
-                try {
-                    const stats = await Activity.getDailyStats(child._id, today);
-                    const activityMinutes = Math.round((stats.totalDuration || 0) / 60);
 
-                    // Child.todayUsage (sync-usage endpoint orqali yozilgan)
-                    const syncedUsage = child.todayUsage || {};
-
-                    // Kunni tekshirish — agar bugun emas bo'lsa, sync datani 0 deb hisoblash
-                    const isSameDay = child.lastUsageDate === today;
-                    const syncMinutes = isSameDay ? (syncedUsage.minutesUsed || 0) : 0;
-                    const syncVideos = isSameDay ? (syncedUsage.videosWatched || 0) : 0;
-                    const syncGames = isSameDay ? (syncedUsage.gamesPlayed || 0) : 0;
-                    const syncStories = isSameDay ? (syncedUsage.storiesRead || 0) : 0;
-
-                    // max(activity, synced) — eng katta qiymatni olish
-                    const totalMinutes = Math.max(activityMinutes, syncMinutes);
-
-                    return {
-                        ...child.toObject(),
-                        todayUsage: {
-                            minutesUsed: totalMinutes,
-                            videosWatched: Math.max(stats.videosWatched || 0, syncVideos),
-                            gamesPlayed: Math.max(stats.gamesPlayed || 0, syncGames),
-                            storiesRead: Math.max(stats.storiesRead || 0, syncStories),
-                        },
-                        remainingTime: Math.max(0, child.dailyLimit * 60 - totalMinutes * 60)
-                    };
-                } catch (err) {
-                    request.log.error(`Stats error for child ${child._id}:`, err);
-                    return {
-                        ...child.toObject(),
-                        todayUsage: {
-                            minutesUsed: 0,
-                            videosWatched: 0,
-                            gamesPlayed: 0,
-                            storiesRead: 0,
-                        },
-                        remainingTime: child.dailyLimit * 60
-                    };
+        // ✅ OPTIMIZED: Bitta aggregate — barcha bolalar uchun kunlik stats
+        // Eskisi: N+1 query (har bir bola uchun alohida getDailyStats)
+        // Yangisi: 1 ta aggregate (barcha bolalar uchun bir marta)
+        const childIds = children.map(c => c._id);
+        let statsMap = new Map();
+        try {
+            const allStats = await Activity.aggregate([
+                { $match: { childId: { $in: childIds }, date: today } },
+                {
+                    $group: {
+                        _id: '$childId',
+                        totalDuration: { $sum: '$duration' },
+                        count: { $sum: 1 }
+                    }
                 }
-            })
-        );
+            ]);
+            statsMap = new Map(allStats.map(s => [s._id.toString(), s]));
+        } catch (err) {
+            request.log.error('Aggregate stats error:', err);
+        }
+
+        const childrenWithStats = children.map((child) => {
+            const stats = statsMap.get(child._id.toString()) || { totalDuration: 0, count: 0 };
+            const activityMinutes = Math.round((stats.totalDuration || 0) / 60);
+
+            const syncedUsage = child.todayUsage || {};
+            const isSameDay = child.lastUsageDate === today;
+            const syncMinutes = isSameDay ? (syncedUsage.minutesUsed || 0) : 0;
+            const syncVideos = isSameDay ? (syncedUsage.videosWatched || 0) : 0;
+            const syncGames = isSameDay ? (syncedUsage.gamesPlayed || 0) : 0;
+            const syncStories = isSameDay ? (syncedUsage.storiesRead || 0) : 0;
+
+            const totalMinutes = Math.max(activityMinutes, syncMinutes);
+
+            return {
+                ...child.toObject(),
+                todayUsage: {
+                    minutesUsed: totalMinutes,
+                    videosWatched: Math.max(0, syncVideos),
+                    gamesPlayed: Math.max(0, syncGames),
+                    storiesRead: Math.max(0, syncStories),
+                },
+                remainingTime: Math.max(0, child.dailyLimit * 60 - totalMinutes * 60)
+            };
+        });
 
         return { success: true, children: childrenWithStats };
     },
@@ -295,11 +295,11 @@ module.exports = {
     },
 
     // GET /children/:id/stats/weekly - Haftalik statistika
+    // ✅ OPTIMIZED: 2 ta alohida query o'rniga bitta aggregate
     async getWeeklyStatsEndpoint(request, reply) {
         const { userId } = request.user;
         const { id } = request.params;
 
-        // Bola ota-onaga tegishliligini tekshirish
         const child = await Child.findOne({ _id: id, parentId: userId });
         if (!child) {
             return reply.status(404).send({
@@ -308,44 +308,63 @@ module.exports = {
             });
         }
 
-        const weeklyData = await Activity.getWeeklyStats(child._id);
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-        // Kunlik daqiqalarni to'ldirish (Du-Yak, 7 kun)
+        // Bitta aggregate — dailyMinutes + videosWatched + gamesPlayed
+        const weeklyData = await Activity.aggregate([
+            {
+                $match: {
+                    childId: child._id,
+                    createdAt: { $gte: oneWeekAgo }
+                }
+            },
+            {
+                $group: {
+                    _id: '$date',
+                    totalDuration: { $sum: '$duration' },
+                    sessions: { $sum: 1 },
+                    videosWatched: {
+                        $sum: {
+                            $cond: [
+                                { $in: ['$contentType', ['video', 'cartoon', 'video_watch']] }, 1, 0
+                            ]
+                        }
+                    },
+                    gamesPlayed: {
+                        $sum: {
+                            $cond: [
+                                { $in: ['$contentType', ['game', 'game_play']] }, 1, 0
+                            ]
+                        }
+                    },
+                    storiesRead: {
+                        $sum: {
+                            $cond: [
+                                { $in: ['$contentType', ['story', 'story_read']] }, 1, 0
+                            ]
+                        }
+                    }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
+
         const dailyMinutes = [0, 0, 0, 0, 0, 0, 0];
         let totalMinutes = 0;
         let videosWatched = 0;
         let gamesPlayed = 0;
-
-        // Haftalik ma'lumotlarni qayta ishlash
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        let storiesRead = 0;
 
         for (const day of weeklyData) {
             const date = new Date(day._id);
-            // 0=Yakshanba, 1=Dushanba, ..., 6=Shanba -> Du=0, Se=1, ..., Yak=6
             let dayIndex = date.getDay() - 1;
-            if (dayIndex < 0) dayIndex = 6; // Yakshanba
+            if (dayIndex < 0) dayIndex = 6;
             dailyMinutes[dayIndex] = Math.round((day.totalDuration || 0) / 60);
             totalMinutes += Math.round((day.totalDuration || 0) / 60);
-        }
-
-        // Haftalik video va o'yin sanash
-        const today = new Date().toISOString().split('T')[0];
-        const weekStart = new Date();
-        weekStart.setDate(weekStart.getDate() - 7);
-        const weekStartStr = weekStart.toISOString().split('T')[0];
-
-        const activities = await Activity.find({
-            childId: child._id,
-            date: { $gte: weekStartStr, $lte: today }
-        });
-
-        for (const act of activities) {
-            if (act.contentType === 'video' || act.contentType === 'cartoon') {
-                videosWatched++;
-            } else if (act.contentType === 'game') {
-                gamesPlayed++;
-            }
+            videosWatched += day.videosWatched || 0;
+            gamesPlayed += day.gamesPlayed || 0;
+            storiesRead += day.storiesRead || 0;
         }
 
         return {
@@ -354,7 +373,7 @@ module.exports = {
                 totalMinutes,
                 videosWatched,
                 gamesPlayed,
-                storiesRead: 0,
+                storiesRead,
                 dailyMinutes
             }
         };
@@ -386,7 +405,7 @@ module.exports = {
                     activityType === 'story_read' ? 'Ertak o\'qish' :
                         'Ilova foydalanish');
 
-        // Activity yozish
+        // Activity yozish (faqat Activity collection ga)
         const activity = await Activity.create({
             childId: child._id,
             contentId: contentId || undefined,
@@ -398,25 +417,10 @@ module.exports = {
             endedAt: now,
         });
 
-        // Kunlik reset tekshirish (lazy)
-        if (child.lastUsageDate !== today) {
-            child.todayUsage = { minutesUsed: 0, videosWatched: 0, gamesPlayed: 0, storiesRead: 0 };
-            child.lastUsageDate = today;
-        }
-
-        // Bolaning bugungi foydalanishini yangilash
-        await Child.updateOne(
-            { _id: child._id },
-            {
-                $set: { lastUsageDate: today },
-                $inc: {
-                    'todayUsage.minutesUsed': durationMinutes || 1,
-                    ...(activityType === 'video_watch' ? { 'todayUsage.videosWatched': 1 } : {}),
-                    ...(activityType === 'game_play' ? { 'todayUsage.gamesPlayed': 1 } : {}),
-                    ...(activityType === 'story_read' ? { 'todayUsage.storiesRead': 1 } : {}),
-                }
-            }
-        );
+        // ✅ OPTIMIZED: todayUsage ni $inc bilan yangilamaslik
+        // syncUsage endpoint $max orqali boshqaradi
+        // Eskisi: $inc bu yerda + $max syncUsage da = double counting xavfi
+        // Yangisi: faqat Activity collection ga yozish, todayUsage ni syncUsage boshqaradi
 
         return { success: true, activity };
     },

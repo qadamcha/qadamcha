@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get_it/get_it.dart';
 import '../network/api_client.dart';
@@ -25,6 +26,9 @@ class LocalMonitoringService {
   int _gamesPlayed = 0;
   int _storiesRead = 0;
   String? _childId;
+  
+  // Dirty flag — faqat o'zgarganda saqlash
+  bool _isDirty = false;
   
   // Activity logs (local)
   List<Map<String, dynamic>> _activityLogs = [];
@@ -88,12 +92,32 @@ class LocalMonitoringService {
     _loadActivityLogs();
   }
 
-  /// Auto-save timer boshlash (har 10 soniyada)
+  /// Auto-save timer boshlash (har 10 soniyada, faqat dirty bo'lganda)
   void _startAutoSave() {
     _autoSaveTimer?.cancel();
     _autoSaveTimer = Timer.periodic(const Duration(seconds: 10), (_) {
-      saveToLocal();
+      if (_isDirty) {
+        saveToLocal();
+        _isDirty = false;
+      }
     });
+  }
+
+  /// Auto-save timer'ni to'xtatish (bola menusi yopilganda)
+  void pauseAutoSave() {
+    _autoSaveTimer?.cancel();
+    _autoSaveTimer = null;
+    if (_isDirty) {
+      saveToLocal();
+      _isDirty = false;
+    }
+  }
+
+  /// Auto-save timer'ni qayta boshlash (bola menusiga kirganda)
+  void resumeAutoSave() {
+    if (_autoSaveTimer == null) {
+      _startAutoSave();
+    }
   }
 
   /// Local'ga saqlash (public — SessionTracker ham chaqiradi)
@@ -116,25 +140,23 @@ class LocalMonitoringService {
     }
   }
 
-  /// Backend sync timer boshlash (har 5 daqiqada)
+  /// Backend sync timer — endi kerak emas, batchUpdate har sessiya oxirida sync qiladi
+  /// Backward compatibility uchun saqlab qo'yilgan, lekin hech narsa qilmaydi
   void startSyncTimer() {
-    _syncTimer?.cancel();
-    _syncTimer = Timer.periodic(const Duration(minutes: 5), (_) {
-      syncToBackend();
-    });
+    // NO-OP: batchUpdate har sessiya oxirida recordActivityToBackend chaqiradi
+    // Ushbu metod faqat eski koddan chaqirilganda xato bermasligi uchun qoldirilgan
   }
 
   /// Backend'ga to'g'ridan-to'g'ri sync qilish (Dio orqali)
-  /// ApiClient.post() emas, Dio.post() ishlatiladi — to'liq xato ma'lumoti uchun
   Future<void> syncToBackend() async {
     if (_childId == null || _childId!.isEmpty) {
-      print('⚠️ [LocalMonitoring] syncToBackend: childId null — sync qilinmadi');
+      if (kDebugMode) print('⚠️ [LocalMonitoring] syncToBackend: childId null — sync qilinmadi');
       return;
     }
 
     try {
       final apiClient = GetIt.instance<ApiClient>();
-      print('📤 [LocalMonitoring] syncToBackend: childId=$_childId min=$_minutesUsed, vid=$_videosWatched, game=$_gamesPlayed, story=$_storiesRead');
+      if (kDebugMode) print('📤 [LocalMonitoring] syncToBackend: childId=$_childId min=$_minutesUsed, vid=$_videosWatched, game=$_gamesPlayed, story=$_storiesRead');
       
       final response = await apiClient.dio.post('/children/$_childId/sync-usage', data: {
         'minutesUsed': _minutesUsed,
@@ -143,15 +165,16 @@ class LocalMonitoringService {
         'storiesRead': _storiesRead,
       });
       
-      print('✅ [LocalMonitoring] syncToBackend: ${response.statusCode} ${response.data}');
+      if (kDebugMode) print('✅ [LocalMonitoring] syncToBackend: ${response.statusCode} ${response.data}');
     } on DioException catch (e) {
-      print('❌ [LocalMonitoring] syncToBackend DioException:');
-      print('   statusCode: ${e.response?.statusCode}');
-      print('   response: ${e.response?.data}');
-      print('   message: ${e.message}');
-      print('   type: ${e.type}');
+      if (kDebugMode) {
+        print('❌ [LocalMonitoring] syncToBackend DioException:');
+        print('   statusCode: ${e.response?.statusCode}');
+        print('   response: ${e.response?.data}');
+        print('   message: ${e.message}');
+      }
     } catch (e) {
-      print('❌ [LocalMonitoring] syncToBackend xato: $e');
+      if (kDebugMode) print('❌ [LocalMonitoring] syncToBackend xato: $e');
     }
   }
 
@@ -164,13 +187,13 @@ class LocalMonitoringService {
     String? contentId,
   }) async {
     if (_childId == null || _childId!.isEmpty) {
-      print('⚠️ [LocalMonitoring] recordActivity: childId null — yozilmadi');
+      if (kDebugMode) print('⚠️ [LocalMonitoring] recordActivity: childId null — yozilmadi');
       return;
     }
 
     try {
       final apiClient = GetIt.instance<ApiClient>();
-      print('📝 [LocalMonitoring] recordActivity: childId=$_childId type=$activityType dur=$durationMinutes title=$contentTitle');
+      if (kDebugMode) print('📝 [LocalMonitoring] recordActivity: childId=$_childId type=$activityType dur=$durationMinutes title=$contentTitle');
       
       final response = await apiClient.dio.post('/children/$_childId/activity', data: {
         'activityType': activityType,
@@ -179,15 +202,16 @@ class LocalMonitoringService {
         if (contentId != null && contentId.isNotEmpty) 'contentId': contentId,
       });
       
-      print('✅ [LocalMonitoring] recordActivity: ${response.statusCode} ${response.data}');
+      if (kDebugMode) print('✅ [LocalMonitoring] recordActivity: ${response.statusCode} ${response.data}');
     } on DioException catch (e) {
-      print('❌ [LocalMonitoring] recordActivity DioException:');
-      print('   statusCode: ${e.response?.statusCode}');
-      print('   response: ${e.response?.data}');
-      print('   message: ${e.message}');
-      print('   type: ${e.type}');
+      if (kDebugMode) {
+        print('❌ [LocalMonitoring] recordActivity DioException:');
+        print('   statusCode: ${e.response?.statusCode}');
+        print('   response: ${e.response?.data}');
+        print('   message: ${e.message}');
+      }
     } catch (e) {
-      print('❌ [LocalMonitoring] recordActivity xato: $e');
+      if (kDebugMode) print('❌ [LocalMonitoring] recordActivity xato: $e');
     }
   }
 
@@ -212,26 +236,74 @@ class LocalMonitoringService {
     _prefs!.setString(_keyActivityLogs, jsonEncode(toSave));
   }
 
-  /// Yangi faoliyat qo'shish (local + backend)
-  void addActivityLog({
+  /// Yangi faoliyat qo'shish (faqat local — backend batchUpdate da)
+  void _addActivityLogLocal({
     required String activityType,
     required String contentTitle,
     required int durationMinutes,
   }) {
-    // Local'ga yozish
     _activityLogs.insert(0, {
       'activityType': activityType,
       'contentTitle': contentTitle,
       'durationMinutes': durationMinutes,
       'startedAt': DateTime.now().toIso8601String(),
     });
-    // Oxirgi 20 ta logni saqlash
     if (_activityLogs.length > 20) {
       _activityLogs = _activityLogs.sublist(0, 20);
     }
     _saveActivityLogs();
+  }
 
+  /// Yangi faoliyat qo'shish (local + backend) — backward compatibility
+  void addActivityLog({
+    required String activityType,
+    required String contentTitle,
+    required int durationMinutes,
+  }) {
+    _addActivityLogLocal(
+      activityType: activityType,
+      contentTitle: contentTitle,
+      durationMinutes: durationMinutes,
+    );
     // Backend'ga ham yozish (asinxron — UI blocklash yo'q)
+    recordActivityToBackend(
+      activityType: activityType,
+      durationMinutes: durationMinutes,
+      contentTitle: contentTitle,
+    );
+  }
+
+  /// Batch yangilash — sessiya tugaganda barcha counter'larni
+  /// bir marta saqlash + bitta API call
+  void batchUpdate({
+    required int minutes,
+    required String activityType,
+    required String contentTitle,
+    required int durationMinutes,
+  }) {
+    // 1. Counter'larni oshirish (saveToLocal chaqirMASLIK)
+    _minutesUsed += minutes;
+    if (activityType == 'video_watch') {
+      _videosWatched++;
+    } else if (activityType == 'game_play') {
+      _gamesPlayed++;
+    } else if (activityType == 'story_read') {
+      _storiesRead++;
+    }
+
+    // 2. Activity log qo'shish (faqat local)
+    _addActivityLogLocal(
+      activityType: activityType,
+      contentTitle: contentTitle,
+      durationMinutes: durationMinutes,
+    );
+
+    // 3. Faqat 1 marta saveToLocal
+    saveToLocal();
+    _isDirty = false;
+
+    // 4. Faqat 1 ta API call — recordActivity
+    // (syncToBackend kerak emas — recordActivity backend'da Activity yozadi)
     recordActivityToBackend(
       activityType: activityType,
       durationMinutes: durationMinutes,
@@ -345,11 +417,12 @@ class LocalMonitoringService {
     required int gamesPlayed,
     required int storiesRead,
   }) {
-    print('🔄 [LocalMonitoring] loadFromBackend chaqirildi:');
-    print('   Backend: min=$minutesUsed, vid=$videosWatched, game=$gamesPlayed, story=$storiesRead');
-    print('   Local:   min=$_minutesUsed, vid=$_videosWatched, game=$_gamesPlayed, story=$_storiesRead');
+    if (kDebugMode) {
+      print('🔄 [LocalMonitoring] loadFromBackend chaqirildi:');
+      print('   Backend: min=$minutesUsed, vid=$videosWatched, game=$gamesPlayed, story=$storiesRead');
+      print('   Local:   min=$_minutesUsed, vid=$_videosWatched, game=$_gamesPlayed, story=$_storiesRead');
+    }
     
-    // Backend va local'dan kattasini olish
     bool changed = false;
     if (minutesUsed > _minutesUsed) {
       _minutesUsed = minutesUsed;
@@ -369,10 +442,10 @@ class LocalMonitoringService {
     }
     
     if (changed) {
-      print('   ✅ Yangilandi → min=$_minutesUsed, vid=$_videosWatched, game=$_gamesPlayed, story=$_storiesRead');
+      if (kDebugMode) print('   ✅ Yangilandi → min=$_minutesUsed, vid=$_videosWatched, game=$_gamesPlayed, story=$_storiesRead');
       saveToLocal();
     } else {
-      print('   ℹ️ O\'zgarmadi (local >= backend)');
+      if (kDebugMode) print('   ℹ️ O\'zgarmadi (local >= backend)');
     }
   }
 
@@ -402,31 +475,31 @@ class LocalMonitoringService {
     if (_prefs != null && id != null) {
       _prefs!.setString(_keyChildId, id);
     }
-    print('🆔 [LocalMonitoring] setChildId: $_childId');
+    if (kDebugMode) print('🆔 [LocalMonitoring] setChildId: $_childId');
   }
 
-  /// Vaqt qo'shish (daqiqalarda)
+  /// Vaqt qo'shish (daqiqalarda) — saveToLocal chaqirMAYDI, dirty flag qo'yadi
   void addMinutes(int minutes) {
     _minutesUsed += minutes;
-    saveToLocal();
+    _isDirty = true;
   }
 
-  /// Video ko'rildi
+  /// Video ko'rildi — saveToLocal chaqirMAYDI, dirty flag qo'yadi
   void addVideoWatched() {
     _videosWatched++;
-    saveToLocal();
+    _isDirty = true;
   }
 
-  /// O'yin o'ynaldi
+  /// O'yin o'ynaldi — saveToLocal chaqirMAYDI, dirty flag qo'yadi
   void addGamePlayed() {
     _gamesPlayed++;
-    saveToLocal();
+    _isDirty = true;
   }
 
-  /// Ertak o'qildi
+  /// Ertak o'qildi — saveToLocal chaqirMAYDI, dirty flag qo'yadi
   void addStoryRead() {
     _storiesRead++;
-    saveToLocal();
+    _isDirty = true;
   }
 
   // ─── Data getters ───────────────────────────────────────────────────
@@ -444,9 +517,10 @@ class LocalMonitoringService {
     'storiesRead': _storiesRead,
   };
 
-  /// Barcha ma'lumotlarni backend'ga sync qilish (menu tark etganda)
+  /// Barcha ma'lumotlarni saqlash (menu tark etganda)
   void syncAllToBackend() {
-    syncToBackend();
+    // ✅ OPTIMIZED: syncToBackend olib tashlandi
+    // batchUpdate har sessiya tugaganda recordActivityToBackend chaqiradi
     saveToLocal();
   }
 
@@ -454,8 +528,9 @@ class LocalMonitoringService {
 
   /// Timerlarni to'xtatish (app background ga o'tganda)
   void dispose() {
-    saveToLocal(); // Oxirgi marta saqlash
-    syncToBackend(); // Backend ga ham sync qilish
+    // ✅ OPTIMIZED: syncToBackend olib tashlandi
+    // pauseAutoSave dirty datani saqlaydi, batchUpdate allaqachon backend'ga yozgan
+    saveToLocal(); // Oxirgi marta local saqlash
     _autoSaveTimer?.cancel();
     _syncTimer?.cancel();
   }

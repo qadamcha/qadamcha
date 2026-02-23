@@ -30,6 +30,11 @@ const deviceSchema = new mongoose.Schema({
         enum: ['parent', 'child'],
         default: 'parent'
     },
+    status: {
+        type: String,
+        enum: ['active', 'blocked'],
+        default: 'active'
+    },
 
     // Oila kodi (qurilma ulash uchun)
     familyCode: {

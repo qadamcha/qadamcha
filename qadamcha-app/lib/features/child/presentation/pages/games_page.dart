@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/services/session_tracker.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/child_bloc.dart';
 
 /// O'yinlar sahifasi — full_architecture.html dizaynida
 /// 2x3 grid: Matematika, Alifbo, Pazl, Ranglar, Musiqa, Geografiya
-/// O'yin vaqt tracking: kirishda boshlaydi, chiqishda to'xtaydi
+/// ✅ OPTIMIZED: Tab-level session tracking olib tashlandi
+/// (phantom 1-min game_play activity yaratardi — haqiqiy tracking faqat o'yin ochilganda ishlaydi)
 class GamesPage extends StatefulWidget {
   const GamesPage({super.key});
 
@@ -22,15 +22,6 @@ class _GamesPageState extends State<GamesPage> {
   void initState() {
     super.initState();
     _childBloc = context.read<ChildBloc>();
-    // O'yin vaqt tracking boshlash
-    SessionTracker.instance.startSession('games');
-  }
-
-  @override
-  void dispose() {
-    // O'yin vaqt tracking to'xtatish (lokal counter yangilanadi, backend batch sync orqali)
-    SessionTracker.instance.endSession('games');
-    super.dispose();
   }
 
   @override

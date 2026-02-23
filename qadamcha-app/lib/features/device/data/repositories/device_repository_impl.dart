@@ -26,35 +26,6 @@ class DeviceRepositoryImpl implements DeviceRepository {
   }
 
   @override
-  Future<Either<Failure, List<Device>>> getChildDevices(String childId) async {
-    try {
-      final response = await apiClient.dio.get('/devices/child/$childId');
-      final List<dynamic> data = response.data['devices'] ?? [];
-      final devices = data.map((json) => DeviceModel.fromJson(json).toEntity()).toList();
-      return Right(devices);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Bola qurilmalarini olishda xatolik: $e'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, LinkingCode>> generateLinkingCode(String childId) async {
-    try {
-      final response = await apiClient.dio.post('/devices/link-code', data: {
-        'childId': childId,
-      });
-      final code = LinkingCodeModel.fromJson(response.data).toEntity();
-      return Right(code);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure('Linking kod yaratishda xatolik: $e'));
-    }
-  }
-
-  @override
   Future<Either<Failure, Device>> linkDevice({
     required String code,
     required String deviceName,
@@ -118,9 +89,9 @@ class DeviceRepositoryImpl implements DeviceRepository {
   }
 
   @override
-  Future<Either<Failure, void>> sendHeartbeat(String deviceId) async {
+  Future<Either<Failure, void>> sendHeartbeat() async {
     try {
-      await apiClient.dio.post('/devices/$deviceId/heartbeat');
+      await apiClient.dio.post('/devices/heartbeat');
       return const Right(null);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
@@ -130,15 +101,14 @@ class DeviceRepositoryImpl implements DeviceRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> validateLinkingCode(String code) async {
+  Future<Either<Failure, Map<String, dynamic>>> checkMyDeviceStatus() async {
     try {
-      final response = await apiClient.dio.get('/devices/validate-code/$code');
-      final isValid = response.data['valid'] as bool;
-      return Right(isValid);
+      final response = await apiClient.dio.get('/devices/my-status');
+      return Right(Map<String, dynamic>.from(response.data));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
-      return Left(ServerFailure('Kodni tekshirishda xatolik: $e'));
+      return Left(ServerFailure('Qurilma statusini tekshirishda xatolik: $e'));
     }
   }
 }

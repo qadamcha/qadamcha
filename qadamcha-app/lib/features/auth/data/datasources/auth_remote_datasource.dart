@@ -16,6 +16,7 @@ abstract class AuthRemoteDataSource {
   Future<void> logout();
   Future<String> resetPin(String phone, String newPin);
   Future<void> verifyPin(String pin);
+  Future<String> changePin(String currentPin, String newPin);
   Future<UserModel> updateProfile({required String name});
 }
 
@@ -100,6 +101,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> verifyPin(String pin) async {
     await _client.post('/auth/verify-pin', data: {'pin': pin});
+  }
+
+  @override
+  Future<String> changePin(String currentPin, String newPin) async {
+    final response = await _client.put('/user/pin', data: {
+      'currentPin': currentPin,
+      'newPin': newPin,
+    });
+    return response.data['message'] ?? 'PIN muvaffaqiyatli o\'zgartirildi';
   }
 
   @override

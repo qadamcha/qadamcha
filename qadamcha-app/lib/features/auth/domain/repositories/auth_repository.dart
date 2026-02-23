@@ -46,6 +46,12 @@ abstract class AuthRepository {
   /// PIN kodni tekshirish (faqat token borlar uchun)
   Future<Either<Failure, void>> verifyPin(String pin);
 
+  /// PIN kodni o'zgartirish (joriy PIN + yangi PIN)
+  Future<Either<Failure, String>> changePin({
+    required String currentPin,
+    required String newPin,
+  });
+
   /// Profilni yangilash (ismni o'zgartirish)
   Future<Either<Failure, User>> updateProfile({required String name});
 }

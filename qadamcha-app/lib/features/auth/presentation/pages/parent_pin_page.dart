@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:qadamcha_app/core/theme/app_colors.dart';
 import 'package:qadamcha_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:qadamcha_app/features/auth/presentation/widgets/pin_dots.dart';
@@ -23,7 +24,7 @@ class _ParentPinPageState extends State<ParentPinPage> {
     if (_pin.length < 4) {
       setState(() {
         _pin += digit;
-        _error = ''; // Clear error on new input
+        _error = '';
       });
 
       if (_pin.length == 4) {
@@ -80,64 +81,66 @@ class _ParentPinPageState extends State<ParentPinPage> {
         body: SafeArea(
           child: Column(
             children: [
-              // Back Button & Title
+              // Back Button
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                 child: Row(
                   children: [
                     IconButton(
                       icon: const Icon(Icons.arrow_back_ios_new_rounded),
                       onPressed: () => Navigator.pop(context),
                       color: AppColors.textPrimary,
+                      iconSize: 20.sp,
                     ),
                     const Spacer(),
                   ],
                 ),
               ),
 
-              const Spacer(flex: 1),
+              // Upper content — icon, title, PIN dots
+              const Spacer(flex: 2),
 
               // Icon
               Container(
-                width: 80,
-                height: 80,
+                width: 64.w,
+                height: 64.w,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
                     '👋',
-                    style: TextStyle(fontSize: 40),
+                    style: TextStyle(fontSize: 32.sp),
                   ),
                 ),
               ),
-              
-              const SizedBox(height: 24),
+
+              SizedBox(height: 16.h),
 
               // Title
-              const Text(
+              Text(
                 'Salom, Ota-ona!',
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 22.sp,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
                   fontFamily: 'Nunito',
                 ),
               ),
-              
-              const SizedBox(height: 8),
-              
-              const Text(
+
+              SizedBox(height: 6.h),
+
+              Text(
                 'PIN kodingizni kiriting',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 14.sp,
                   color: AppColors.textSecondary,
                   fontFamily: 'Nunito',
                 ),
               ),
 
-              const SizedBox(height: 32),
+              SizedBox(height: 24.h),
 
               // PIN Dots
               PinDots(
@@ -145,7 +148,7 @@ class _ParentPinPageState extends State<ParentPinPage> {
                 errorMessage: _error,
               ),
 
-              const Spacer(flex: 2),
+              SizedBox(height: 16.h),
 
               // Forgot PIN
               TextButton(
@@ -155,21 +158,22 @@ class _ParentPinPageState extends State<ParentPinPage> {
                     MaterialPageRoute(builder: (_) => const PinResetPage()),
                   );
                 },
-                child: const Text(
+                child: Text(
                   'PIN kodni unutdingizmi?',
                   style: TextStyle(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w600,
                     fontFamily: 'Nunito',
+                    fontSize: 13.sp,
                   ),
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const Spacer(flex: 1),
 
-              // Keypad
+              // Keypad — pastda
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
+                padding: EdgeInsets.symmetric(horizontal: 40.w),
                 child: PinKeypad(
                   onDigitEntered: _onDigitEntered,
                   onBackspace: _onBackspace,
@@ -177,7 +181,7 @@ class _ParentPinPageState extends State<ParentPinPage> {
                 ),
               ),
 
-              const SizedBox(height: 32),
+              SizedBox(height: 16.h),
             ],
           ),
         ),
