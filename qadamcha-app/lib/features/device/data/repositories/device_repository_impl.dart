@@ -71,7 +71,7 @@ class DeviceRepositoryImpl implements DeviceRepository {
   @override
   Future<Either<Failure, Device>> blockDevice(String deviceId) async {
     try {
-      final response = await apiClient.post('/devices/$deviceId/block');
+      final response = await apiClient.post('/devices/$deviceId/block', data: {});
       final device = DeviceModel.fromJson(response.data['device']).toEntity();
       return Right(device);
     } on ServerException catch (e) {
@@ -86,7 +86,7 @@ class DeviceRepositoryImpl implements DeviceRepository {
   @override
   Future<Either<Failure, Device>> unblockDevice(String deviceId) async {
     try {
-      final response = await apiClient.post('/devices/$deviceId/unblock');
+      final response = await apiClient.post('/devices/$deviceId/unblock', data: {});
       final device = DeviceModel.fromJson(response.data['device']).toEntity();
       return Right(device);
     } on ServerException catch (e) {
@@ -101,7 +101,7 @@ class DeviceRepositoryImpl implements DeviceRepository {
   @override
   Future<Either<Failure, void>> sendHeartbeat() async {
     try {
-      await apiClient.post('/devices/heartbeat');
+      await apiClient.post('/devices/heartbeat', data: {});
       return const Right(null);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message, e.statusCode));
