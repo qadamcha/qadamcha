@@ -85,10 +85,11 @@ class ApiClient {
   // DELETE
   Future<Response<T>> delete<T>(
     String path, {
+    dynamic data,
     Options? options,
   }) async {
     try {
-      return await _dio.delete<T>(path, options: options);
+      return await _dio.delete<T>(path, data: data, options: options);
     } on DioException catch (e) {
       throw _handleDioError(e);
     }

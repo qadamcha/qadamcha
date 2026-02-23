@@ -57,7 +57,7 @@ class DeviceRepositoryImpl implements DeviceRepository {
   @override
   Future<Either<Failure, void>> removeDevice(String deviceId) async {
     try {
-      await apiClient.delete('/devices/$deviceId');
+      await apiClient.delete('/devices/$deviceId', data: {});
       return const Right(null);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message, e.statusCode));
