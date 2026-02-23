@@ -217,10 +217,12 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
   void _onChildSelected(BuildContext context) {
     final authState = context.read<AuthBloc>().state;
     if (_isLoggedIn(authState.status)) {
-      // Qurilma bloklangan yoki yo'qligini tekshirish
+      // Qurilma o'chirilgan yoki yo'qligini tekshirish
+      context.read<DeviceBloc>().add(CheckDeviceStatusEvent());
+      
       try {
         final deviceState = context.read<DeviceBloc>().state;
-        if (deviceState.isCurrentDeviceBlocked) {
+        if (deviceState.isCurrentDeviceRemoved) {
           showDialog(
             context: context,
             builder: (ctx) => AlertDialog(
@@ -228,16 +230,25 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
               title: const Row(
                 children: [
                   Text('🚫 ', style: TextStyle(fontSize: 24)),
-                  Text('Bloklangan', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold)),
+                  Text('O\'chirilgan', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold)),
                 ],
               ),
               content: const Text(
-                'Bu qurilma bloklangan.\n\nBola rejimiga kirish uchun ota-ona qurilmadan blokni olib tashlang.',
+                'Bu qurilma akkauntdan o\'chirilgan.\n\nDavom etish uchun qaytadan ro\'yxatdan o\'ting.',
                 style: TextStyle(fontFamily: 'Nunito', height: 1.4),
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(ctx),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    // Logout va PhonePage ga yo'naltirish
+                    context.read<AuthBloc>().add(LogoutEvent());
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const PhonePage()),
+                      (route) => false,
+                    );
+                  },
                   child: const Text(
                     'Tushundim',
                     style: TextStyle(

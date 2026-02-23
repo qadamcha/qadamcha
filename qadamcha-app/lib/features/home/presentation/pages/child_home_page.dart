@@ -298,9 +298,10 @@ class _ChildNavItem extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
         padding: EdgeInsets.symmetric(
-          horizontal: isSelected ? 24.w : 16.w,
+          horizontal: isSelected ? 20.w : 14.w,
           vertical: 10.h,
         ),
         decoration: BoxDecoration(
@@ -312,18 +313,24 @@ class _ChildNavItem extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(emoji, style: TextStyle(fontSize: 22.sp)),
-            if (isSelected) ...[
-              SizedBox(width: 8.w),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  fontFamily: 'Nunito',
-                ),
-              ),
-            ],
+            AnimatedSize(
+              duration: const Duration(milliseconds: 150),
+              curve: Curves.easeOut,
+              child: isSelected
+                  ? Padding(
+                      padding: EdgeInsets.only(left: 8.w),
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          fontFamily: 'Nunito',
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
           ],
         ),
       ),
