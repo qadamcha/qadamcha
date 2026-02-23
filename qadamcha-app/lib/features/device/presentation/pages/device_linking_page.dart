@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/device_entity.dart';
 import '../bloc/device_bloc.dart';
@@ -17,6 +18,12 @@ class _DeviceLinkingPageState extends State<DeviceLinkingPage> {
   void initState() {
     super.initState();
     context.read<DeviceBloc>().add(LoadDevicesEvent());
+  }
+
+  Future<void> _onRefresh() async {
+    context.read<DeviceBloc>().add(LoadDevicesEvent());
+    // BlocBuilder yangilanishini kutish
+    await Future.delayed(const Duration(milliseconds: 800));
   }
 
   @override
@@ -37,29 +44,52 @@ class _DeviceLinkingPageState extends State<DeviceLinkingPage> {
           ),
         ],
       ),
-      body: BlocBuilder<DeviceBloc, DeviceState>(
+      body: BlocConsumer<DeviceBloc, DeviceState>(
+        listenWhen: (prev, curr) => curr.errorMessage != null && curr.errorMessage!.isNotEmpty && prev.errorMessage != curr.errorMessage,
+        listener: (context, state) {
+          if (state.errorMessage != null && state.errorMessage!.isNotEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.errorMessage!),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
+        },
         builder: (context, state) {
-          if (state.status == DeviceLoadStatus.loading) {
+          // Birinchi marta yuklanganda spinner ko'rsatish
+          if (state.status == DeviceLoadStatus.loading && state.devices.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          return SingleChildScrollView(
-            padding: EdgeInsets.all(16.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          return RefreshIndicator(
+            onRefresh: _onRefresh,
+            child: ListView(
+              padding: EdgeInsets.all(16.w),
               children: [
                 // Info section
                 _buildAutoLinkingInfo(),
                 SizedBox(height: 24.h),
                 
-                // Devices List
-                Text(
-                  'Ulangan qurilmalar',
-                  style: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
+                // Devices List header
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Ulangan qurilmalar',
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    if (state.status == DeviceLoadStatus.loading)
+                      SizedBox(
+                        width: 16.w,
+                        height: 16.w,
+                        child: const CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                  ],
                 ),
                 SizedBox(height: 12.h),
                 
@@ -110,7 +140,7 @@ class _DeviceLinkingPageState extends State<DeviceLinkingPage> {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14.sp,
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               height: 1.4,
             ),
           ),
@@ -187,6 +217,11 @@ class _DeviceCard extends StatelessWidget {
     required this.onRemove,
   });
 
+  String _formatDate(DateTime? date) {
+    if (date == null) return '';
+    return DateFormat('dd.MM.yyyy HH:mm').format(date);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -197,7 +232,7 @@ class _DeviceCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -209,9 +244,9 @@ class _DeviceCard extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(12.w),
             decoration: BoxDecoration(
-              color: device.isOnline 
-                  ? AppColors.success.withOpacity(0.1) 
-                  : AppColors.surfaceVariant,
+              color: device.status == DeviceStatus.blocked
+                  ? AppColors.error.withValues(alpha: 0.1)
+                  : AppColors.success.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12.r),
             ),
             child: Text(
@@ -225,28 +260,18 @@ class _DeviceCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      device.deviceName,
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    SizedBox(width: 8.w),
-                    Container(
-                      width: 8.w,
-                      height: 8.w,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: device.isOnline ? AppColors.success : AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
+                // Qurilma nomi
+                Text(
+                  device.deviceName,
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
                 SizedBox(height: 4.h),
+                // Turi (Ota-ona/Bola) • Platform • Login vaqti
                 Text(
                   '${device.type.label} • ${device.platform.label}',
                   style: TextStyle(
@@ -254,12 +279,31 @@ class _DeviceCard extends StatelessWidget {
                     color: AppColors.textSecondary,
                   ),
                 ),
+                SizedBox(height: 2.h),
+                // Login sanasi
+                Text(
+                  '🕐 ${_formatDate(device.linkedAt)}',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                if (device.lastActiveAt != null) ...[
+                  SizedBox(height: 2.h),
+                  Text(
+                    '📡 ${_formatDate(device.lastActiveAt)}',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
                 if (device.status == DeviceStatus.blocked) ...[
                   SizedBox(height: 4.h),
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
                     decoration: BoxDecoration(
-                      color: AppColors.error.withOpacity(0.1),
+                      color: AppColors.error.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4.r),
                     ),
                     child: Text(
@@ -275,41 +319,47 @@ class _DeviceCard extends StatelessWidget {
               ],
             ),
           ),
-          // Actions
-          PopupMenuButton(
-            icon: const Icon(Icons.more_vert),
-            itemBuilder: (_) => [
-              if (device.status == DeviceStatus.blocked)
-                PopupMenuItem(
-                  onTap: onUnblock,
-                  child: const Row(
-                    children: [
-                      Icon(Icons.lock_open, color: AppColors.success),
-                      SizedBox(width: 8),
-                      Text('Blokdan chiqarish'),
-                    ],
-                  ),
-                )
-              else
-                PopupMenuItem(
-                  onTap: onBlock,
-                  child: const Row(
-                    children: [
-                      Icon(Icons.block, color: AppColors.warning),
-                      SizedBox(width: 8),
-                      Text('Bloklash'),
-                    ],
-                  ),
+          // Actions — PopupMenuButton o'rniga alohida IconButton'lar
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Block/Unblock button
+              IconButton(
+                icon: Icon(
+                  device.status == DeviceStatus.blocked 
+                      ? Icons.lock_open 
+                      : Icons.block,
+                  color: device.status == DeviceStatus.blocked 
+                      ? AppColors.success 
+                      : AppColors.warning,
+                  size: 20.sp,
                 ),
-              PopupMenuItem(
-                onTap: onRemove,
-                child: const Row(
-                  children: [
-                    Icon(Icons.delete, color: AppColors.error),
-                    SizedBox(width: 8),
-                    Text('O\'chirish', style: TextStyle(color: AppColors.error)),
-                  ],
+                tooltip: device.status == DeviceStatus.blocked 
+                    ? 'Blokdan chiqarish' 
+                    : 'Bloklash',
+                onPressed: device.status == DeviceStatus.blocked 
+                    ? onUnblock 
+                    : onBlock,
+                constraints: BoxConstraints(
+                  minWidth: 36.w,
+                  minHeight: 36.w,
                 ),
+                padding: EdgeInsets.zero,
+              ),
+              // Delete button
+              IconButton(
+                icon: Icon(
+                  Icons.delete_outline,
+                  color: AppColors.error,
+                  size: 20.sp,
+                ),
+                tooltip: 'O\'chirish',
+                onPressed: onRemove,
+                constraints: BoxConstraints(
+                  minWidth: 36.w,
+                  minHeight: 36.w,
+                ),
+                padding: EdgeInsets.zero,
               ),
             ],
           ),
