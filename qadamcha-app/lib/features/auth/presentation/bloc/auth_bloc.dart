@@ -140,6 +140,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       phone: event.phone,
       pin: event.pin,
       deviceId: event.deviceId,
+      deviceName: event.deviceName,
+      deviceType: event.deviceType,
     );
     
     result.fold(

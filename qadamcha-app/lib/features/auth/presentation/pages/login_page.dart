@@ -24,28 +24,38 @@ class _LoginPageState extends State<LoginPage> {
   String _error = '';
   bool _isLoading = false;
   String _deviceId = '';
+  String _deviceName = '';
+  String _deviceType = 'android';
 
   @override
   void initState() {
     super.initState();
-    _getDeviceId();
+    _getDeviceInfo();
   }
 
-  Future<void> _getDeviceId() async {
+  Future<void> _getDeviceInfo() async {
     final deviceInfo = DeviceInfoPlugin();
     try {
       final androidInfo = await deviceInfo.androidInfo;
       _deviceId = androidInfo.id;
+      _deviceName = '${androidInfo.brand} ${androidInfo.model}';
+      _deviceType = 'android';
     } catch (_) {
       try {
         final iosInfo = await deviceInfo.iosInfo;
         _deviceId = iosInfo.identifierForVendor ?? 'unknown';
+        _deviceName = iosInfo.name ?? iosInfo.model ?? 'iPhone';
+        _deviceType = 'ios';
       } catch (_) {
         try {
           final windowsInfo = await deviceInfo.windowsInfo;
           _deviceId = windowsInfo.deviceId;
+          _deviceName = windowsInfo.computerName;
+          _deviceType = 'android'; // backend faqat android/ios qabul qiladi
         } catch (_) {
           _deviceId = 'unknown-${DateTime.now().millisecondsSinceEpoch}';
+          _deviceName = 'Noma\'lum qurilma';
+          _deviceType = 'android';
         }
       }
     }
@@ -79,6 +89,8 @@ class _LoginPageState extends State<LoginPage> {
           phone: widget.phone,
           pin: _pin,
           deviceId: _deviceId,
+          deviceName: _deviceName,
+          deviceType: _deviceType,
         ));
   }
 

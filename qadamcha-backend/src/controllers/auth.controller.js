@@ -237,6 +237,20 @@ module.exports = {
         } else {
             // Mavjud qurilma — uning mode'ini olish
             deviceMode = device.mode;
+
+            // Agar qurilma nomi hali 'Unknown Device' bo'lsa, yangilash
+            if (deviceName && device.deviceName === 'Unknown Device') {
+                device.deviceName = deviceName;
+            }
+            // deviceType yangilash agar mavjud bo'lsa
+            if (deviceType && device.deviceType !== deviceType) {
+                device.deviceType = deviceType;
+            }
+            // Agar qurilma o'chirilgan bo'lsa, qayta faollashtirish
+            if (!device.isActive) {
+                device.isActive = true;
+                device.status = 'active';
+            }
         }
 
         // Generate tokens with JTI

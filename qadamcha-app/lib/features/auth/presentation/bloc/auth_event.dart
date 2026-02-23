@@ -54,15 +54,19 @@ class LoginEvent extends AuthEvent {
   final String phone;
   final String pin;
   final String deviceId;
+  final String? deviceName;
+  final String? deviceType;
   
   const LoginEvent({
     required this.phone,
     required this.pin,
     required this.deviceId,
+    this.deviceName,
+    this.deviceType,
   });
   
   @override
-  List<Object?> get props => [phone, pin, deviceId];
+  List<Object?> get props => [phone, pin, deviceId, deviceName, deviceType];
 }
 
 class LogoutEvent extends AuthEvent {}
