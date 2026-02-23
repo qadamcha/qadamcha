@@ -1,4 +1,5 @@
 const { Device, Child } = require('../models');
+const mongoose = require('mongoose');
 const config = require('../config/env');
 const { ERRORS, SUCCESS } = require('../config/constants');
 
@@ -166,24 +167,38 @@ module.exports = {
         const { userId } = request.user;
         const { id } = request.params;
 
-        const device = await Device.findOneAndUpdate(
-            { _id: id, userId },
-            {
-                isActive: false,
-                refreshToken: null,
-                familyCode: null
-            },
-            { new: true }
-        );
-
-        if (!device) {
-            return reply.status(404).send({
+        if (!mongoose.isValidObjectId(id)) {
+            return reply.status(400).send({
                 success: false,
-                message: ERRORS.NOT_FOUND
+                message: 'Noto\'g\'ri qurilma ID'
             });
         }
 
-        return { success: true, message: SUCCESS.DELETED };
+        try {
+            const device = await Device.findOneAndUpdate(
+                { _id: id, userId },
+                {
+                    isActive: false,
+                    refreshToken: null,
+                    familyCode: null
+                },
+                { new: true }
+            );
+
+            if (!device) {
+                return reply.status(404).send({
+                    success: false,
+                    message: ERRORS.NOT_FOUND
+                });
+            }
+
+            return { success: true, message: SUCCESS.DELETED };
+        } catch (err) {
+            return reply.status(500).send({
+                success: false,
+                message: 'Qurilmani o\'chirishda xatolik'
+            });
+        }
     },
 
     // PUT /devices/fcm-token - FCM tokenni saqlash
@@ -237,20 +252,34 @@ module.exports = {
         const { userId } = request.user;
         const { id } = request.params;
 
-        const device = await Device.findOneAndUpdate(
-            { _id: id, userId, isActive: true },
-            { status: 'blocked' },
-            { new: true }
-        );
-
-        if (!device) {
-            return reply.status(404).send({
+        if (!mongoose.isValidObjectId(id)) {
+            return reply.status(400).send({
                 success: false,
-                message: ERRORS.NOT_FOUND
+                message: 'Noto\'g\'ri qurilma ID'
             });
         }
 
-        return { success: true, message: 'Qurilma bloklandi', device };
+        try {
+            const device = await Device.findOneAndUpdate(
+                { _id: id, userId, isActive: true },
+                { status: 'blocked' },
+                { new: true }
+            );
+
+            if (!device) {
+                return reply.status(404).send({
+                    success: false,
+                    message: ERRORS.NOT_FOUND
+                });
+            }
+
+            return { success: true, message: 'Qurilma bloklandi', device };
+        } catch (err) {
+            return reply.status(500).send({
+                success: false,
+                message: 'Qurilmani bloklashda xatolik'
+            });
+        }
     },
 
     // POST /devices/:id/unblock - Qurilmani blokdan chiqarish
@@ -258,20 +287,34 @@ module.exports = {
         const { userId } = request.user;
         const { id } = request.params;
 
-        const device = await Device.findOneAndUpdate(
-            { _id: id, userId, isActive: true },
-            { status: 'active' },
-            { new: true }
-        );
-
-        if (!device) {
-            return reply.status(404).send({
+        if (!mongoose.isValidObjectId(id)) {
+            return reply.status(400).send({
                 success: false,
-                message: ERRORS.NOT_FOUND
+                message: 'Noto\'g\'ri qurilma ID'
             });
         }
 
-        return { success: true, message: 'Qurilma blokdan chiqarildi', device };
+        try {
+            const device = await Device.findOneAndUpdate(
+                { _id: id, userId, isActive: true },
+                { status: 'active' },
+                { new: true }
+            );
+
+            if (!device) {
+                return reply.status(404).send({
+                    success: false,
+                    message: ERRORS.NOT_FOUND
+                });
+            }
+
+            return { success: true, message: 'Qurilma blokdan chiqarildi', device };
+        } catch (err) {
+            return reply.status(500).send({
+                success: false,
+                message: 'Qurilmani blokdan chiqarishda xatolik'
+            });
+        }
     },
 
     // GET /devices/my-status - Joriy qurilma statusini tekshirish

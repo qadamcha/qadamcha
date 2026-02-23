@@ -14,12 +14,14 @@ class DeviceRepositoryImpl implements DeviceRepository {
   @override
   Future<Either<Failure, List<Device>>> getDevices() async {
     try {
-      final response = await apiClient.dio.get('/devices');
+      final response = await apiClient.get('/devices');
       final List<dynamic> data = response.data['devices'] ?? [];
       final devices = data.map((json) => DeviceModel.fromJson(json).toEntity()).toList();
       return Right(devices);
     } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
+      return Left(ServerFailure(e.message, e.statusCode));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } catch (e) {
       return Left(ServerFailure('Qurilmalarni olishda xatolik: $e'));
     }
@@ -34,7 +36,7 @@ class DeviceRepositoryImpl implements DeviceRepository {
     required DevicePlatform platform,
   }) async {
     try {
-      final response = await apiClient.dio.post('/devices/link', data: {
+      final response = await apiClient.post('/devices/link', data: {
         'code': code,
         'deviceName': deviceName,
         'deviceModel': deviceModel,
@@ -44,7 +46,9 @@ class DeviceRepositoryImpl implements DeviceRepository {
       final device = DeviceModel.fromJson(response.data['device']).toEntity();
       return Right(device);
     } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
+      return Left(ServerFailure(e.message, e.statusCode));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } catch (e) {
       return Left(ServerFailure('Qurilmani ulashda xatolik: $e'));
     }
@@ -53,10 +57,12 @@ class DeviceRepositoryImpl implements DeviceRepository {
   @override
   Future<Either<Failure, void>> removeDevice(String deviceId) async {
     try {
-      await apiClient.dio.delete('/devices/$deviceId');
+      await apiClient.delete('/devices/$deviceId');
       return const Right(null);
     } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
+      return Left(ServerFailure(e.message, e.statusCode));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } catch (e) {
       return Left(ServerFailure('Qurilmani o\'chirishda xatolik: $e'));
     }
@@ -65,11 +71,13 @@ class DeviceRepositoryImpl implements DeviceRepository {
   @override
   Future<Either<Failure, Device>> blockDevice(String deviceId) async {
     try {
-      final response = await apiClient.dio.post('/devices/$deviceId/block');
+      final response = await apiClient.post('/devices/$deviceId/block');
       final device = DeviceModel.fromJson(response.data['device']).toEntity();
       return Right(device);
     } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
+      return Left(ServerFailure(e.message, e.statusCode));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } catch (e) {
       return Left(ServerFailure('Qurilmani bloklashda xatolik: $e'));
     }
@@ -78,11 +86,13 @@ class DeviceRepositoryImpl implements DeviceRepository {
   @override
   Future<Either<Failure, Device>> unblockDevice(String deviceId) async {
     try {
-      final response = await apiClient.dio.post('/devices/$deviceId/unblock');
+      final response = await apiClient.post('/devices/$deviceId/unblock');
       final device = DeviceModel.fromJson(response.data['device']).toEntity();
       return Right(device);
     } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
+      return Left(ServerFailure(e.message, e.statusCode));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } catch (e) {
       return Left(ServerFailure('Qurilmani blokdan chiqarishda xatolik: $e'));
     }
@@ -91,10 +101,12 @@ class DeviceRepositoryImpl implements DeviceRepository {
   @override
   Future<Either<Failure, void>> sendHeartbeat() async {
     try {
-      await apiClient.dio.post('/devices/heartbeat');
+      await apiClient.post('/devices/heartbeat');
       return const Right(null);
     } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
+      return Left(ServerFailure(e.message, e.statusCode));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } catch (e) {
       return Left(ServerFailure('Heartbeat yuborishda xatolik: $e'));
     }
@@ -103,10 +115,12 @@ class DeviceRepositoryImpl implements DeviceRepository {
   @override
   Future<Either<Failure, Map<String, dynamic>>> checkMyDeviceStatus() async {
     try {
-      final response = await apiClient.dio.get('/devices/my-status');
+      final response = await apiClient.get('/devices/my-status');
       return Right(Map<String, dynamic>.from(response.data));
     } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
+      return Left(ServerFailure(e.message, e.statusCode));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } catch (e) {
       return Left(ServerFailure('Qurilma statusini tekshirishda xatolik: $e'));
     }

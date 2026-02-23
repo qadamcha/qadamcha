@@ -280,24 +280,14 @@ class _DeviceCard extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 2.h),
-                // Login sanasi
+                // Ro'yxatdan o'tgan sana
                 Text(
-                  '🕐 ${_formatDate(device.linkedAt)}',
+                  '📅 ${_formatDate(device.linkedAt)}',
                   style: TextStyle(
                     fontSize: 12.sp,
                     color: AppColors.textSecondary,
                   ),
                 ),
-                if (device.lastActiveAt != null) ...[
-                  SizedBox(height: 2.h),
-                  Text(
-                    '📡 ${_formatDate(device.lastActiveAt)}',
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
                 if (device.status == DeviceStatus.blocked) ...[
                   SizedBox(height: 4.h),
                   Container(
