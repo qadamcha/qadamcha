@@ -239,16 +239,7 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
               ),
               actions: [
                 TextButton(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    // Logout va PhonePage ga yo'naltirish
-                    context.read<AuthBloc>().add(LogoutEvent());
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (_) => const PhonePage()),
-                      (route) => false,
-                    );
-                  },
+                  onPressed: () => Navigator.pop(ctx),
                   child: const Text(
                     'Tushundim',
                     style: TextStyle(
