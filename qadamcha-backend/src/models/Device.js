@@ -13,8 +13,7 @@ const deviceSchema = new mongoose.Schema({
     },
     deviceId: {
         type: String,
-        required: [true, 'Device ID majburiy'],
-        unique: true
+        required: [true, 'Device ID majburiy']
     },
     deviceName: {
         type: String,
@@ -71,8 +70,9 @@ const deviceSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// Indexes (deviceId index already created by unique: true)
-deviceSchema.index({ userId: 1 });
+// Indexes
+deviceSchema.index({ userId: 1, deviceId: 1 }, { unique: true }); // bitta user bitta qurilmada faqat bitta record
+deviceSchema.index({ deviceId: 1 }); // tezkor qidirish uchun
 deviceSchema.index({ familyCode: 1 });
 deviceSchema.index({ userId: 1, isActive: 1 });
 

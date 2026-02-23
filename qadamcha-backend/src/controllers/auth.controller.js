@@ -203,8 +203,8 @@ module.exports = {
             });
         }
 
-        // Device check
-        let device = await Device.findOne({ deviceId });
+        // Device check — faqat shu user ga tegishli qurilmani qidirish
+        let device = await Device.findOne({ deviceId, userId: user._id });
         let deviceMode = 'parent';
 
         if (!device) {

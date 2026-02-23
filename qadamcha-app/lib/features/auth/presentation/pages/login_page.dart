@@ -37,7 +37,14 @@ class _LoginPageState extends State<LoginPage> {
     final deviceInfo = DeviceInfoPlugin();
     try {
       final androidInfo = await deviceInfo.androidInfo;
-      _deviceId = androidInfo.id;
+      // serialNumber — eng noyob hardware ID
+      // fingerprint — brand/product/device:version — qurilma+build noyob
+      // id — faqat build label, BARCHA qurilmalarda bir xil!
+      if (androidInfo.serialNumber.isNotEmpty && androidInfo.serialNumber != 'unknown') {
+        _deviceId = androidInfo.serialNumber;
+      } else {
+        _deviceId = androidInfo.fingerprint;
+      }
       _deviceName = '${androidInfo.brand} ${androidInfo.model}';
       _deviceType = 'android';
     } catch (_) {
