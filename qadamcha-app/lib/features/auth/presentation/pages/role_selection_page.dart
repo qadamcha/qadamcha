@@ -174,11 +174,19 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
         status == AuthStatus.pinReset;
   }
 
-  /// Qurilma o'chirilganligini tekshirish
+  /// Qurilma o'chirilganligini tekshirish (har safar serverdan so'raydi)
   /// Agar o'chirilgan bo'lsa PhonePage ga yo'naltiriladi
-  bool _checkDeviceRemoved(BuildContext context) {
+  Future<bool> _checkDeviceRemoved(BuildContext context) async {
     try {
-      final deviceState = context.read<DeviceBloc>().state;
+      final deviceBloc = context.read<DeviceBloc>();
+      deviceBloc.add(CheckDeviceStatusEvent());
+      
+      // Serverdan natijani kutish (max 3 soniya)
+      final deviceState = await deviceBloc.stream.first.timeout(
+        const Duration(seconds: 3),
+        onTimeout: () => deviceBloc.state,
+      );
+      
       if (deviceState.isCurrentDeviceRemoved) {
         Navigator.push(
           context,
@@ -196,11 +204,11 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
     return false;
   }
 
-  void _onParentSelected(BuildContext context) {
+  void _onParentSelected(BuildContext context) async {
     final authState = context.read<AuthBloc>().state;
     if (_isLoggedIn(authState.status)) {
       // Qurilma o'chirilganligini tekshirish
-      if (_checkDeviceRemoved(context)) return;
+      if (await _checkDeviceRemoved(context)) return;
       
       // Obunani yuklash
       context.read<SubscriptionBloc>().add(LoadSubscriptionEvent());
@@ -218,11 +226,11 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
     }
   }
 
-  void _onChildSelected(BuildContext context) {
+  void _onChildSelected(BuildContext context) async {
     final authState = context.read<AuthBloc>().state;
     if (_isLoggedIn(authState.status)) {
       // Qurilma o'chirilganligini tekshirish
-      if (_checkDeviceRemoved(context)) return;
+      if (await _checkDeviceRemoved(context)) return;
       
       // Obunani yuklash
       context.read<SubscriptionBloc>().add(LoadSubscriptionEvent());
