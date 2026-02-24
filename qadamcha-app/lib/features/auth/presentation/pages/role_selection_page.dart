@@ -32,26 +32,7 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<DeviceBloc, DeviceState>(
-      listenWhen: (prev, curr) => 
-          !prev.isCurrentDeviceRemoved && curr.isCurrentDeviceRemoved,
-      listener: (context, state) {
-        if (state.isCurrentDeviceRemoved) {
-          // Qurilma o'chirilgan — PhonePage ga yuborish (orqaga qaytsa RoleSelection ga qaytadi)
-          context.read<AuthBloc>().add(LogoutEvent());
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const PhonePage()),
-          );
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Bu qurilma akkauntdan o\'chirilgan'),
-              backgroundColor: AppColors.error,
-            ),
-          );
-        }
-      },
-      child: Scaffold(
+    return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
@@ -98,13 +79,11 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
                 color: AppColors.secondary,
                 onTap: () => _onChildSelected(context),
               ),
-              const Spacer(flex: 4),
             ],
           ),
         ),
       ),
-    ),  // BlocListener.child Scaffold ends
-    );  // BlocListener ends
+    );
   }
 
   Widget _buildRoleCard(
@@ -216,61 +195,56 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
   void _onChildSelected(BuildContext context) {
     final authState = context.read<AuthBloc>().state;
     if (_isLoggedIn(authState.status)) {
-      // Qurilma o'chirilgan yoki yo'qligini tekshirish
-      context.read<DeviceBloc>().add(CheckDeviceStatusEvent());
+      // Avval tekshirish — qurilma o'chirilganmi?
+      final deviceBloc = context.read<DeviceBloc>();
+      deviceBloc.add(CheckDeviceStatusEvent());
       
-      try {
-        final deviceState = context.read<DeviceBloc>().state;
+      // Stream orqali natijani kutish
+      late final Function() cancelListener;
+      bool handled = false;
+      
+      final subscription = deviceBloc.stream.listen((deviceState) {
+        if (handled) return;
+        
         if (deviceState.isCurrentDeviceRemoved) {
-          showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              title: const Row(
-                children: [
-                  Text('🚫 ', style: TextStyle(fontSize: 24)),
-                  Text('O\'chirilgan', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold)),
-                ],
-              ),
-              content: const Text(
-                'Bu qurilma akkauntdan o\'chirilgan.\n\nDavom etish uchun qaytadan ro\'yxatdan o\'ting.',
-                style: TextStyle(fontFamily: 'Nunito', height: 1.4),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text(
-                    'Tushundim',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Nunito',
-                    ),
-                  ),
-                ),
-              ],
+          handled = true;
+          // Qurilma o'chirilgan — PhonePage ga yuborish
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const PhonePage()),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Bu qurilma akkauntdan o\'chirilgan'),
+              backgroundColor: AppColors.error,
             ),
           );
-          return;
+        } else if (!deviceState.isCurrentDeviceRemoved) {
+          handled = true;
+          // Qurilma faol — bola sahifasiga o'tish
+          context.read<SubscriptionBloc>().add(LoadSubscriptionEvent());
+          context.read<ChildBloc>().add(LoadChildrenEvent());
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ChildHomePage()),
+          );
         }
-      } catch (_) {
-        // DeviceBloc mavjud bo'lmasligi mumkin
-      }
-
-      // Obunani yuklash
-      context.read<SubscriptionBloc>().add(LoadSubscriptionEvent());
+      });
       
-      // Bolalarni yuklash — bu childId null muammosini hal qiladi
-      context.read<ChildBloc>().add(LoadChildrenEvent());
-      
-      // Agar bu qurilma 'child' rejimida bo'lsa yoki parent qurilmasidan
-      // "Bola" tanlansa — to'g'ridan-to'g'ri bola sahifasiga
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const ChildHomePage(),
-        ),
-      );
+      // 5 soniyadan keyin timeout — default behavior
+      Future.delayed(const Duration(seconds: 5), () {
+        if (!handled) {
+          handled = true;
+          subscription.cancel();
+          // Timeout bo'lsa ham kirishga ruxsat
+          context.read<SubscriptionBloc>().add(LoadSubscriptionEvent());
+          context.read<ChildBloc>().add(LoadChildrenEvent());
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ChildHomePage()),
+          );
+        }
+      });
     } else {
       // Token yo'q — avval ro'yxatdan o'tish kerak
       showDialog(
