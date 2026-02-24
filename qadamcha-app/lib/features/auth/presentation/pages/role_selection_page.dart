@@ -37,7 +37,12 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
           !prev.isCurrentDeviceRemoved && curr.isCurrentDeviceRemoved,
       listener: (context, state) {
         if (state.isCurrentDeviceRemoved) {
-          // Qurilma o'chirilgan — faqat xabar ko'rsatish
+          // Qurilma o'chirilgan — PhonePage ga yuborish (orqaga qaytsa RoleSelection ga qaytadi)
+          context.read<AuthBloc>().add(LogoutEvent());
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const PhonePage()),
+          );
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Bu qurilma akkauntdan o\'chirilgan'),
