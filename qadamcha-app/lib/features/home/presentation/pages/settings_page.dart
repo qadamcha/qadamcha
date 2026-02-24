@@ -81,7 +81,17 @@ class _SettingsPageState extends State<SettingsPage> {
 
             // Content
             Expanded(
-              child: SingleChildScrollView(
+              child: RefreshIndicator(
+                color: const Color(0xFF2D6A9F),
+                onRefresh: () async {
+                  // Profil, qurilmalar va obunani yangilash
+                  context.read<AuthBloc>().add(CheckAuthStatusEvent());
+                  context.read<DeviceBloc>().add(LoadDevicesEvent());
+                  context.read<SubscriptionBloc>().add(LoadSubscriptionEvent());
+                  await Future.delayed(const Duration(milliseconds: 500));
+                },
+                child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 padding: EdgeInsets.all(16.w),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -208,6 +218,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     SizedBox(height: 32.h),
                   ],
                 ),
+              ),
               ),
             ),
           ],
