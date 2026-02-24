@@ -79,6 +79,7 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
                 color: AppColors.secondary,
                 onTap: () => _onChildSelected(context),
               ),
+              const Spacer(flex: 4),
             ],
           ),
         ),
