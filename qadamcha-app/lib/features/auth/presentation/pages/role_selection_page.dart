@@ -174,18 +174,15 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
         status == AuthStatus.pinReset;
   }
 
-  /// Qurilma o'chirilganligini tekshirish (har safar serverdan so'raydi)
-  /// Agar o'chirilgan bo'lsa PhonePage ga yo'naltiriladi
-  Future<bool> _checkDeviceRemoved(BuildContext context) async {
+  /// Qurilma o'chirilganligini tekshirish (keshdan — darhol)
+  /// Fondan yangi status yuklaydi (keyingi safar uchun)
+  bool _checkDeviceRemoved(BuildContext context) {
     try {
       final deviceBloc = context.read<DeviceBloc>();
-      deviceBloc.add(CheckDeviceStatusEvent());
+      final deviceState = deviceBloc.state;
       
-      // Serverdan natijani kutish (max 3 soniya)
-      final deviceState = await deviceBloc.stream.first.timeout(
-        const Duration(seconds: 3),
-        onTimeout: () => deviceBloc.state,
-      );
+      // Fondan yangi status yuklash (keyingi safar uchun)
+      deviceBloc.add(CheckDeviceStatusEvent());
       
       if (deviceState.isCurrentDeviceRemoved) {
         Navigator.push(
@@ -204,11 +201,11 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
     return false;
   }
 
-  void _onParentSelected(BuildContext context) async {
+  void _onParentSelected(BuildContext context) {
     final authState = context.read<AuthBloc>().state;
     if (_isLoggedIn(authState.status)) {
       // Qurilma o'chirilganligini tekshirish
-      if (await _checkDeviceRemoved(context)) return;
+      if (_checkDeviceRemoved(context)) return;
       
       // Obunani yuklash
       context.read<SubscriptionBloc>().add(LoadSubscriptionEvent());
@@ -226,11 +223,11 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
     }
   }
 
-  void _onChildSelected(BuildContext context) async {
+  void _onChildSelected(BuildContext context) {
     final authState = context.read<AuthBloc>().state;
     if (_isLoggedIn(authState.status)) {
       // Qurilma o'chirilganligini tekshirish
-      if (await _checkDeviceRemoved(context)) return;
+      if (_checkDeviceRemoved(context)) return;
       
       // Obunani yuklash
       context.read<SubscriptionBloc>().add(LoadSubscriptionEvent());
