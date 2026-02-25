@@ -233,6 +233,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     UpdateProfileEvent event,
     Emitter<AuthState> emit,
   ) async {
+    emit(state.copyWith(status: AuthStatus.loading));
     final result = await repository.updateProfile(name: event.name);
     
     result.fold(

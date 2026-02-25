@@ -114,7 +114,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<UserModel> updateProfile({required String name}) async {
-    final response = await _client.put('/auth/profile', data: {
+    final response = await _client.put('/user/profile', data: {
       'name': name,
     });
     return UserModel.fromJson(response.data['user'] ?? response.data);

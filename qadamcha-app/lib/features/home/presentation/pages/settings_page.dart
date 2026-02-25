@@ -576,106 +576,140 @@ class _SettingsPageState extends State<SettingsPage> {
   // ============= Dialoglar =============
 
   /// Profil tahrirlash dialog — ismni o'zgartirish
-  void _showEditProfileDialog(BuildContext context, String currentName) {
+  void _showEditProfileDialog(BuildContext parentContext, String currentName) {
     final controller = TextEditingController(text: currentName);
+    bool isSubmitted = false;
 
     showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-        title: Text(
-          'Profilni tahrirlash',
-          style: TextStyle(
-            fontWeight: FontWeight.w800,
-            fontFamily: 'Nunito',
-            fontSize: 18.sp,
-          ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: controller,
-              style: TextStyle(
-                color: const Color(0xFF1A1A2E),
-                fontSize: 15.sp,
-                fontFamily: 'Nunito',
+      context: parentContext,
+      builder: (dialogContext) => BlocProvider.value(
+        value: parentContext.read<AuthBloc>(),
+        child: BlocConsumer<AuthBloc, AuthState>(
+          listener: (context, state) {
+            if (isSubmitted && state.status == AuthStatus.authenticated && state.errorMessage == null) {
+              Navigator.pop(dialogContext);
+              ScaffoldMessenger.of(parentContext).showSnackBar(
+                const SnackBar(
+                  content: Text('Profil yangilandi ✅'),
+                  backgroundColor: Color(0xFF22C55E),
+                ),
+              );
+            } else if (isSubmitted && state.status == AuthStatus.error) {
+              isSubmitted = false;
+              ScaffoldMessenger.of(parentContext).showSnackBar(
+                SnackBar(
+                  content: Text(state.errorMessage ?? 'Xatolik yuz berdi'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          },
+          builder: (context, state) {
+            final isLoading = isSubmitted && state.status == AuthStatus.loading;
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+              title: Text(
+                'Profilni tahrirlash',
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontFamily: 'Nunito',
+                  fontSize: 18.sp,
+                ),
               ),
-              decoration: InputDecoration(
-                labelText: 'Ism',
-                labelStyle: TextStyle(
-                  color: const Color(0xFF6B7280),
-                  fontSize: 14.sp,
-                ),
-                hintText: 'Ismingizni kiriting',
-                hintStyle: TextStyle(
-                  color: const Color(0xFF9CA3AF),
-                  fontSize: 14.sp,
-                ),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: const BorderSide(color: Color(0xFF2D6A9F), width: 2),
-                ),
-                prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF6B7280)),
-              ),
-              textCapitalization: TextCapitalization.words,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Bekor qilish',
-              style: TextStyle(
-                color: const Color(0xFF6B7280),
-                fontFamily: 'Nunito',
-                fontWeight: FontWeight.w600,
-                fontSize: 14.sp,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final newName = controller.text.trim();
-              if (newName.isNotEmpty && newName.length >= 2) {
-                context.read<AuthBloc>().add(UpdateProfileEvent(name: newName));
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Profil yangilandi ✅'),
-                    backgroundColor: Color(0xFF22C55E),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: controller,
+                    enabled: !isLoading,
+                    style: TextStyle(
+                      color: const Color(0xFF1A1A2E),
+                      fontSize: 15.sp,
+                      fontFamily: 'Nunito',
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'Ism',
+                      labelStyle: TextStyle(
+                        color: const Color(0xFF6B7280),
+                        fontSize: 14.sp,
+                      ),
+                      hintText: 'Ismingizni kiriting',
+                      hintStyle: TextStyle(
+                        color: const Color(0xFF9CA3AF),
+                        fontSize: 14.sp,
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: const BorderSide(color: Color(0xFF2D6A9F), width: 2),
+                      ),
+                      prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF6B7280)),
+                    ),
+                    textCapitalization: TextCapitalization.words,
                   ),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2D6A9F),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
-            ),
-            child: Text(
-              'Saqlash',
-              style: TextStyle(
-                color: Colors.white,
-                fontFamily: 'Nunito',
-                fontWeight: FontWeight.w700,
-                fontSize: 14.sp,
+                ],
               ),
-            ),
-          ),
-        ],
+              actions: [
+                TextButton(
+                  onPressed: isLoading ? null : () => Navigator.pop(dialogContext),
+                  child: Text(
+                    'Bekor qilish',
+                    style: TextStyle(
+                      color: const Color(0xFF6B7280),
+                      fontFamily: 'Nunito',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14.sp,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: isLoading
+                      ? null
+                      : () {
+                          final newName = controller.text.trim();
+                          if (newName.isNotEmpty && newName.length >= 2) {
+                            isSubmitted = true;
+                            context.read<AuthBloc>().add(UpdateProfileEvent(name: newName));
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2D6A9F),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+                  ),
+                  child: isLoading
+                      ? SizedBox(
+                          width: 20.w,
+                          height: 20.w,
+                          child: const CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(
+                          'Saqlash',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontFamily: 'Nunito',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14.sp,
+                          ),
+                        ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
