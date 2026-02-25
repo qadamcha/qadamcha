@@ -34,15 +34,32 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final isLoggedIn = await repository.isLoggedIn();
     
     if (isLoggedIn) {
-      final result = await repository.getCachedUser();
-      if (result.isRight()) {
-        final user = result.getOrElse(() => null);
+      // Device mode ni lokal cache dan olish
+      String deviceMode = 'parent';
+      if (localDataSource != null) {
+        deviceMode = await localDataSource!.getDeviceMode();
+      }
+
+      // Avval backenddan yangi profil olishga harakat qilamiz
+      final profileResult = await repository.getProfile();
+      final profileSuccess = profileResult.fold(
+        (_) => false,
+        (user) {
+          emit(state.copyWith(
+            status: AuthStatus.authenticated,
+            user: user,
+            deviceMode: deviceMode,
+          ));
+          return true;
+        },
+      );
+      if (profileSuccess) return;
+
+      // Backend ishlamasa — lokal cache dan o'qiymiz (fallback)
+      final cachedResult = await repository.getCachedUser();
+      if (cachedResult.isRight()) {
+        final user = cachedResult.getOrElse(() => null);
         if (user != null) {
-          // Device mode ni lokal cache dan olish
-          String deviceMode = 'parent';
-          if (localDataSource != null) {
-            deviceMode = await localDataSource!.getDeviceMode();
-          }
           emit(state.copyWith(
             status: AuthStatus.authenticated,
             user: user,

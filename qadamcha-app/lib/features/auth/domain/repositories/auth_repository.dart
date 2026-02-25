@@ -54,4 +54,7 @@ abstract class AuthRepository {
 
   /// Profilni yangilash (ismni o'zgartirish)
   Future<Either<Failure, User>> updateProfile({required String name});
+
+  /// Profilni serverdan olish (yangi ma'lumot)
+  Future<Either<Failure, User>> getProfile();
 }

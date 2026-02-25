@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/device_entity.dart';
 import '../bloc/device_bloc.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 
 class DeviceLinkingPage extends StatefulWidget {
   const DeviceLinkingPage({super.key});
@@ -47,12 +48,22 @@ class _DeviceLinkingPageState extends State<DeviceLinkingPage> {
         listenWhen: (prev, curr) => curr.errorMessage != null && curr.errorMessage!.isNotEmpty && prev.errorMessage != curr.errorMessage,
         listener: (context, state) {
           if (state.errorMessage != null && state.errorMessage!.isNotEmpty) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.errorMessage!),
-                backgroundColor: AppColors.error,
-              ),
-            );
+            if (state.errorMessage!.contains('AUTH_REQUIRED')) {
+               ScaffoldMessenger.of(context).showSnackBar(
+                 const SnackBar(
+                   content: Text('Sessiya muddati tugagi. Tizimga qayta kiring.'),
+                   backgroundColor: AppColors.error,
+                 ),
+               );
+               context.read<AuthBloc>().add(LogoutEvent());
+            } else {
+               ScaffoldMessenger.of(context).showSnackBar(
+                 SnackBar(
+                   content: Text(state.errorMessage!),
+                   backgroundColor: AppColors.error,
+                 ),
+               );
+            }
           }
         },
         builder: (context, state) {

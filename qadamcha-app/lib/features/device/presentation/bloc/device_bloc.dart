@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/device_entity.dart';
 import '../../domain/repositories/device_repository.dart';
+import '../../../../core/errors/failures.dart';
 
 part 'device_event.dart';
 part 'device_state.dart';
@@ -27,10 +28,19 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
     final result = await repository.getDevices();
     
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: DeviceLoadStatus.error,
-        errorMessage: failure.message,
-      )),
+      (failure) {
+        if (failure is AuthFailure) {
+          emit(state.copyWith(
+            status: DeviceLoadStatus.error,
+            errorMessage: 'AUTH_REQUIRED: ${failure.message}',
+          ));
+        } else {
+          emit(state.copyWith(
+            status: DeviceLoadStatus.error,
+            errorMessage: failure.message,
+          ));
+        }
+      },
       (devices) => emit(state.copyWith(
         status: DeviceLoadStatus.loaded,
         devices: devices,

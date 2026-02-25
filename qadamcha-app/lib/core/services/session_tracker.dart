@@ -7,24 +7,25 @@ import 'local_monitoring_service.dart';
 /// content, games, stories — hammasi bir vaqtda kuzatiladi.
 /// LocalMonitoringService bilan integratsiya — local + backend saqlash.
 /// 
-/// ⚠️ child_home sessiyasi faqat tracking — addMinutes/counter chaqirMAYDI
-/// (double counting oldini olish uchun)
+/// ⚠️ child_home sessiyasi — GLOBAL TIMER
+/// Bola menuga kirganda soniya timer boshlanadi, chiqqanda to'xtaydi.
+/// Alohida content/games/stories sessiyalari faqat activity counter oshiradi.
 class SessionTracker {
   SessionTracker._internal();
   static final SessionTracker instance = SessionTracker._internal();
 
   /// Har bir sessiya turi uchun alohida start vaqt
   final Map<String, DateTime> _sessions = {};
-  
-  /// Real-time vaqt yangilash uchun timer (har 10 soniyada)
-  Timer? _realTimeTimer;
 
   /// Sessiya boshlash (oldingi sessiyani o'chirmaydi)
   void startSession(String type) {
     _sessions[type] = DateTime.now();
-    _startRealTimeUpdates();
-    // Bola menusiga kirganda auto-save'ni qayta boshlash
-    LocalMonitoringService.instance.resumeAutoSave();
+    
+    if (type == 'child_home') {
+      // Global soniya timer boshlash
+      LocalMonitoringService.instance.startSecondTimer();
+      LocalMonitoringService.instance.resumeAutoSave();
+    }
   }
 
   /// Sessiya tugatish va davomiylikni daqiqalarda qaytarish
@@ -37,13 +38,14 @@ class SessionTracker {
     // Minimal 1 daqiqa — qisqa sessiyalar ham hisobga olinsin
     final minutes = duration.inMinutes < 1 ? 1 : duration.inMinutes;
     
-    // ⚠️ child_home — faqat tracker, addMinutes/counter chaqirMASLIK!
+    // ⚠️ child_home — GLOBAL TIMER to'xtatish + sync
     if (type == 'child_home') {
-      if (_sessions.isEmpty) {
-        _stopRealTimeUpdates();
-        // Bola menusidan chiqqanda auto-save to'xtatish
-        LocalMonitoringService.instance.pauseAutoSave();
-      }
+      // Soniya timerni to'xtatish
+      LocalMonitoringService.instance.stopSecondTimer();
+      // Bola menusidan chiqqanda auto-save to'xtatish
+      LocalMonitoringService.instance.pauseAutoSave();
+      // Backend'ga sync qilish (chiqqanda)
+      LocalMonitoringService.instance.syncToBackend();
       return minutes;
     }
     
@@ -64,37 +66,16 @@ class SessionTracker {
       contentTitle = 'Ilova foydalanish';
     }
     
-    // ✅ OPTIMIZED: Bitta batchUpdate — 1x saveToLocal + 1x API call
-    // (eskisi: addMinutes + addVideoWatched + addActivityLog + syncToBackend = 4x save + 2x API)
+    // ✅ batchUpdate — faqat activity counter oshiradi
+    // (vaqt global timer tomonidan allaqachon hisoblanmoqda)
     LocalMonitoringService.instance.batchUpdate(
-      minutes: minutes,
+      seconds: duration.inSeconds,
       activityType: activityType,
       contentTitle: contentTitle,
       durationMinutes: minutes,
     );
     
-    // Agar boshqa aktiv sessiya yo'q bo'lsa, timer'ni to'xtatish
-    if (_sessions.isEmpty) {
-      _stopRealTimeUpdates();
-    }
-    
     return minutes;
-  }
-
-  /// Real-time vaqt yangilash timer'ni boshlash
-  void _startRealTimeUpdates() {
-    if (_realTimeTimer != null) return; // Allaqachon ishlayapti
-    _realTimeTimer = Timer.periodic(const Duration(seconds: 10), (_) {
-      // Har 10 soniyada local monitoring'ga joriy vaqtni saqlash
-      // Bu monitoring page'da real-time ko'rinishi uchun
-      LocalMonitoringService.instance.saveToLocal();
-    });
-  }
-
-  /// Real-time timer'ni to'xtatish
-  void _stopRealTimeUpdates() {
-    _realTimeTimer?.cancel();
-    _realTimeTimer = null;
   }
 
   /// Joriy sessiya davomiyligini sekundlarda qaytarish

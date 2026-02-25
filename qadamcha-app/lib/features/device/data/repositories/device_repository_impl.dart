@@ -18,6 +18,8 @@ class DeviceRepositoryImpl implements DeviceRepository {
       final List<dynamic> data = response.data['devices'] ?? [];
       final devices = data.map((json) => DeviceModel.fromJson(json).toEntity()).toList();
       return Right(devices);
+    } on UnauthorizedException catch (e) {
+      return Left(AuthFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message, e.statusCode));
     } on NetworkException catch (e) {
@@ -45,6 +47,8 @@ class DeviceRepositoryImpl implements DeviceRepository {
       });
       final device = DeviceModel.fromJson(response.data['device']).toEntity();
       return Right(device);
+    } on UnauthorizedException catch (e) {
+      return Left(AuthFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message, e.statusCode));
     } on NetworkException catch (e) {
@@ -59,6 +63,8 @@ class DeviceRepositoryImpl implements DeviceRepository {
     try {
       await apiClient.delete('/devices/$deviceId', data: {});
       return const Right(null);
+    } on UnauthorizedException catch (e) {
+      return Left(AuthFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message, e.statusCode));
     } on NetworkException catch (e) {
@@ -74,6 +80,8 @@ class DeviceRepositoryImpl implements DeviceRepository {
       final response = await apiClient.post('/devices/$deviceId/block', data: {});
       final device = DeviceModel.fromJson(response.data['device']).toEntity();
       return Right(device);
+    } on UnauthorizedException catch (e) {
+      return Left(AuthFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message, e.statusCode));
     } on NetworkException catch (e) {
@@ -89,6 +97,8 @@ class DeviceRepositoryImpl implements DeviceRepository {
       final response = await apiClient.post('/devices/$deviceId/unblock', data: {});
       final device = DeviceModel.fromJson(response.data['device']).toEntity();
       return Right(device);
+    } on UnauthorizedException catch (e) {
+      return Left(AuthFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message, e.statusCode));
     } on NetworkException catch (e) {
@@ -103,6 +113,8 @@ class DeviceRepositoryImpl implements DeviceRepository {
     try {
       await apiClient.post('/devices/heartbeat', data: {});
       return const Right(null);
+    } on UnauthorizedException catch (e) {
+      return Left(AuthFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message, e.statusCode));
     } on NetworkException catch (e) {
@@ -117,6 +129,8 @@ class DeviceRepositoryImpl implements DeviceRepository {
     try {
       final response = await apiClient.get('/devices/my-status');
       return Right(Map<String, dynamic>.from(response.data));
+    } on UnauthorizedException catch (e) {
+      return Left(AuthFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message, e.statusCode));
     } on NetworkException catch (e) {

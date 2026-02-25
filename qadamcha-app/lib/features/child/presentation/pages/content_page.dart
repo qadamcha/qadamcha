@@ -936,11 +936,8 @@ class _ContentPageState extends State<ContentPage> {
       'ageMax': content.ageMax,
     });
 
-    LocalMonitoringService.instance.addActivityLog(
-      activityType: 'video_watch',
-      contentTitle: content.title,
-      durationMinutes: (content.duration / 60).round(),
-    );
+    // ✅ Faqat video counter oshirish (vaqt global timer tomonidan hisoblanadi)
+    LocalMonitoringService.instance.addVideoWatched();
 
     final streamUrl = content.streamUrl ??
         'https://vz-b4d1a082-e06.b-cdn.net/${content.videoId}/playlist.m3u8';

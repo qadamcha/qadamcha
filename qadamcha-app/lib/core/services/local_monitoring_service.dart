@@ -8,8 +8,9 @@ import '../network/api_client.dart';
 
 /// LocalMonitoringService — Monitoring ma'lumotlarini local + backend saqlash
 /// 
+/// - Vaqt SONIYALARDA hisoblanadi (ichki), UI da daqiqaga o'tkaziladi
 /// - Har 10 soniyada SharedPreferences ga auto-save
-/// - Har 5 daqiqada backend'ga to'g'ridan-to'g'ri sync (ApiClient orqali)
+/// - Bola menuga kirganda backend→local sync, chiqqanda local→backend sync
 /// - Activity log, weekly stats, last watched, subscription ham saqlanadi
 /// - BLoC yoki UI callback'larga bog'liq EMAS
 class LocalMonitoringService {
@@ -19,9 +20,10 @@ class LocalMonitoringService {
   SharedPreferences? _prefs;
   Timer? _autoSaveTimer;
   Timer? _syncTimer;
+  Timer? _secondTimer; // Har soniyada counter oshiruvchi timer
 
   // In-memory counters (tez ishlash uchun)
-  int _minutesUsed = 0;
+  int _secondsUsed = 0; // Bugungi umumiy SONIYALAR
   int _videosWatched = 0;
   int _gamesPlayed = 0;
   int _storiesRead = 0;
@@ -33,12 +35,12 @@ class LocalMonitoringService {
   // Activity logs (local)
   List<Map<String, dynamic>> _activityLogs = [];
   
-  // Weekly stats (local)
+  // Weekly stats (local) — daqiqalarda (backend bilan mos)
   List<int> _weeklyMinutes = [0, 0, 0, 0, 0, 0, 0];
   
   // Prefix for SharedPreferences keys
   static const _keyPrefix = 'monitoring_';
-  static const _keyMinutes = '${_keyPrefix}minutesUsed';
+  static const _keySeconds = '${_keyPrefix}secondsUsed';
   static const _keyVideos = '${_keyPrefix}videosWatched';
   static const _keyGames = '${_keyPrefix}gamesPlayed';
   static const _keyStories = '${_keyPrefix}storiesRead';
@@ -66,7 +68,7 @@ class LocalMonitoringService {
     
     if (savedDate != today) {
       // Yangi kun — kunlik counters'ni reset
-      _minutesUsed = 0;
+      _secondsUsed = 0;
       _videosWatched = 0;
       _gamesPlayed = 0;
       _storiesRead = 0;
@@ -82,7 +84,7 @@ class LocalMonitoringService {
       saveToLocal();
       _prefs!.setString(_keyDate, today);
     } else {
-      _minutesUsed = _prefs!.getInt(_keyMinutes) ?? 0;
+      _secondsUsed = _prefs!.getInt(_keySeconds) ?? 0;
       _videosWatched = _prefs!.getInt(_keyVideos) ?? 0;
       _gamesPlayed = _prefs!.getInt(_keyGames) ?? 0;
       _storiesRead = _prefs!.getInt(_keyStories) ?? 0;
@@ -120,10 +122,33 @@ class LocalMonitoringService {
     }
   }
 
+  // ─── Soniya Timer (Global child_home uchun) ────────────────────────
+
+  /// Har soniyada counter oshiruvchi timerni boshlash
+  void startSecondTimer() {
+    _secondTimer?.cancel();
+    _secondTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      _secondsUsed++;
+      _isDirty = true;
+    });
+    if (kDebugMode) print('⏱️ [LocalMonitoring] Soniya timer boshlandi');
+  }
+
+  /// Soniya timerni to'xtatish
+  void stopSecondTimer() {
+    _secondTimer?.cancel();
+    _secondTimer = null;
+    saveToLocal(); // Oxirgi holatni saqlash
+    if (kDebugMode) print('⏹️ [LocalMonitoring] Soniya timer to\'xtatildi (total: ${_secondsUsed}s = ${_secondsUsed ~/ 60}m)');
+  }
+
+  /// Soniya timer ishlayaptimi
+  bool get isSecondTimerActive => _secondTimer != null;
+
   /// Local'ga saqlash (public — SessionTracker ham chaqiradi)
   void saveToLocal() {
     if (_prefs == null) return;
-    _prefs!.setInt(_keyMinutes, _minutesUsed);
+    _prefs!.setInt(_keySeconds, _secondsUsed);
     _prefs!.setInt(_keyVideos, _videosWatched);
     _prefs!.setInt(_keyGames, _gamesPlayed);
     _prefs!.setInt(_keyStories, _storiesRead);
@@ -132,22 +157,21 @@ class LocalMonitoringService {
     }
     _prefs!.setString(_keyDate, DateTime.now().toIso8601String().split('T')[0]);
     
-    // Haftalik stats'da bugungi kunni yangilash
+    // Haftalik stats'da bugungi kunni yangilash (daqiqalarda)
     final todayIndex = DateTime.now().weekday - 1;
     if (todayIndex >= 0 && todayIndex < 7) {
-      _weeklyMinutes[todayIndex] = _minutesUsed;
+      _weeklyMinutes[todayIndex] = _secondsUsed ~/ 60;
       _saveWeeklyMinutes();
     }
   }
 
   /// Backend sync timer — endi kerak emas, batchUpdate har sessiya oxirida sync qiladi
-  /// Backward compatibility uchun saqlab qo'yilgan, lekin hech narsa qilmaydi
   void startSyncTimer() {
-    // NO-OP: batchUpdate har sessiya oxirida recordActivityToBackend chaqiradi
-    // Ushbu metod faqat eski koddan chaqirilganda xato bermasligi uchun qoldirilgan
+    // NO-OP: backward compatibility
   }
 
   /// Backend'ga to'g'ridan-to'g'ri sync qilish (Dio orqali)
+  /// Soniyalarni daqiqaga o'tkazib yuboradi
   Future<void> syncToBackend() async {
     if (_childId == null || _childId!.isEmpty) {
       if (kDebugMode) print('⚠️ [LocalMonitoring] syncToBackend: childId null — sync qilinmadi');
@@ -156,10 +180,11 @@ class LocalMonitoringService {
 
     try {
       final apiClient = GetIt.instance<ApiClient>();
-      if (kDebugMode) print('📤 [LocalMonitoring] syncToBackend: childId=$_childId min=$_minutesUsed, vid=$_videosWatched, game=$_gamesPlayed, story=$_storiesRead');
+      final minutes = _secondsUsed ~/ 60;
+      if (kDebugMode) print('📤 [LocalMonitoring] syncToBackend: childId=$_childId sec=$_secondsUsed (${minutes}m), vid=$_videosWatched, game=$_gamesPlayed, story=$_storiesRead');
       
       final response = await apiClient.dio.post('/children/$_childId/sync-usage', data: {
-        'minutesUsed': _minutesUsed,
+        'minutesUsed': minutes,
         'videosWatched': _videosWatched,
         'gamesPlayed': _gamesPlayed,
         'storiesRead': _storiesRead,
@@ -273,16 +298,16 @@ class LocalMonitoringService {
     );
   }
 
-  /// Batch yangilash — sessiya tugaganda barcha counter'larni
-  /// bir marta saqlash + bitta API call
+  /// Batch yangilash — sessiya tugaganda faqat counter'larni oshirish
+  /// Vaqt global timer tomonidan hisoblanadi — bu yerda vaqt QO'SHILMAYDI
   void batchUpdate({
-    required int minutes,
+    required int seconds,
     required String activityType,
     required String contentTitle,
     required int durationMinutes,
   }) {
-    // 1. Counter'larni oshirish (saveToLocal chaqirMASLIK)
-    _minutesUsed += minutes;
+    // 1. Faqat activity turi bo'yicha counter oshiriladi
+    // Vaqt global timer (_secondTimer) tomonidan allaqachon hisoblanmoqda
     if (activityType == 'video_watch') {
       _videosWatched++;
     } else if (activityType == 'game_play') {
@@ -291,7 +316,7 @@ class LocalMonitoringService {
       _storiesRead++;
     }
 
-    // 2. Activity log qo'shish (faqat local)
+    // 2. Activity log qo'shish (faqat local — UI uchun)
     _addActivityLogLocal(
       activityType: activityType,
       contentTitle: contentTitle,
@@ -302,13 +327,9 @@ class LocalMonitoringService {
     saveToLocal();
     _isDirty = false;
 
-    // 4. Faqat 1 ta API call — recordActivity
-    // (syncToBackend kerak emas — recordActivity backend'da Activity yozadi)
-    recordActivityToBackend(
-      activityType: activityType,
-      durationMinutes: durationMinutes,
-      contentTitle: contentTitle,
-    );
+    // ❌ recordActivityToBackend OLIB TASHLANDI
+    // Vaqt faqat syncToBackend orqali (child_home chiqqanda) yuboriladi
+    // Bu double-counting muammosini to'liq hal qiladi
   }
 
   /// Local activity loglarni olish
@@ -409,7 +430,7 @@ class LocalMonitoringService {
   // ─── Backend dan yuklash (qayta o'rnatishdan keyin) ─────────────────
 
   /// Backend'dan kelgan todayUsage ni lokal counterlar ga sync qilish
-  /// Backend — asosiy haqiqat manbai (source of truth)
+  /// Backend daqiqada yuboradi — biz soniyaga o'tkazib saqlaymiz
   /// Re-login qilganda backend qiymatlari to'g'ridan-to'g'ri yoziladi
   void loadFromBackend({
     required int minutesUsed,
@@ -420,12 +441,14 @@ class LocalMonitoringService {
     if (kDebugMode) {
       print('🔄 [LocalMonitoring] loadFromBackend chaqirildi:');
       print('   Backend: min=$minutesUsed, vid=$videosWatched, game=$gamesPlayed, story=$storiesRead');
-      print('   Local:   min=$_minutesUsed, vid=$_videosWatched, game=$_gamesPlayed, story=$_storiesRead');
+      print('   Local:   sec=$_secondsUsed (${_secondsUsed ~/ 60}m), vid=$_videosWatched, game=$_gamesPlayed, story=$_storiesRead');
     }
     
     bool changed = false;
-    if (minutesUsed > _minutesUsed) {
-      _minutesUsed = minutesUsed;
+    // Backend daqiqani soniyaga o'tkazish
+    final backendSeconds = minutesUsed * 60;
+    if (backendSeconds > _secondsUsed) {
+      _secondsUsed = backendSeconds;
       changed = true;
     }
     if (videosWatched > _videosWatched) {
@@ -442,7 +465,7 @@ class LocalMonitoringService {
     }
     
     if (changed) {
-      if (kDebugMode) print('   ✅ Yangilandi → min=$_minutesUsed, vid=$_videosWatched, game=$_gamesPlayed, story=$_storiesRead');
+      if (kDebugMode) print('   ✅ Yangilandi → sec=$_secondsUsed (${_secondsUsed ~/ 60}m), vid=$_videosWatched, game=$_gamesPlayed, story=$_storiesRead');
       saveToLocal();
     } else {
       if (kDebugMode) print('   ℹ️ O\'zgarmadi (local >= backend)');
@@ -478,9 +501,9 @@ class LocalMonitoringService {
     if (kDebugMode) print('🆔 [LocalMonitoring] setChildId: $_childId');
   }
 
-  /// Vaqt qo'shish (daqiqalarda) — saveToLocal chaqirMAYDI, dirty flag qo'yadi
-  void addMinutes(int minutes) {
-    _minutesUsed += minutes;
+  /// Soniya qo'shish — saveToLocal chaqirMAYDI, dirty flag qo'yadi
+  void addSeconds(int seconds) {
+    _secondsUsed += seconds;
     _isDirty = true;
   }
 
@@ -504,14 +527,20 @@ class LocalMonitoringService {
 
   // ─── Data getters ───────────────────────────────────────────────────
 
-  int get minutesUsed => _minutesUsed;
+  /// Umumiy soniyalar (ichki)
+  int get secondsUsed => _secondsUsed;
+
+  /// Umumiy daqiqalar (UI uchun — soniyani daqiqaga o'tkazadi)
+  int get minutesUsed => _secondsUsed ~/ 60;
+
   int get videosWatched => _videosWatched;
   int get gamesPlayed => _gamesPlayed;
   int get storiesRead => _storiesRead;
 
   /// Barcha ma'lumotlarni Map sifatida olish
   Map<String, int> get allStats => {
-    'minutesUsed': _minutesUsed,
+    'secondsUsed': _secondsUsed,
+    'minutesUsed': _secondsUsed ~/ 60,
     'videosWatched': _videosWatched,
     'gamesPlayed': _gamesPlayed,
     'storiesRead': _storiesRead,
@@ -519,8 +548,6 @@ class LocalMonitoringService {
 
   /// Barcha ma'lumotlarni saqlash (menu tark etganda)
   void syncAllToBackend() {
-    // ✅ OPTIMIZED: syncToBackend olib tashlandi
-    // batchUpdate har sessiya tugaganda recordActivityToBackend chaqiradi
     saveToLocal();
   }
 
@@ -528,16 +555,15 @@ class LocalMonitoringService {
 
   /// Timerlarni to'xtatish (app background ga o'tganda)
   void dispose() {
-    // ✅ OPTIMIZED: syncToBackend olib tashlandi
-    // pauseAutoSave dirty datani saqlaydi, batchUpdate allaqachon backend'ga yozgan
     saveToLocal(); // Oxirgi marta local saqlash
     _autoSaveTimer?.cancel();
     _syncTimer?.cancel();
+    _secondTimer?.cancel();
   }
 
   /// Kunlik reset (yangi kun boshlanganda)
   void resetDaily() {
-    _minutesUsed = 0;
+    _secondsUsed = 0;
     _videosWatched = 0;
     _gamesPlayed = 0;
     _storiesRead = 0;

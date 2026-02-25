@@ -18,6 +18,7 @@ abstract class AuthRemoteDataSource {
   Future<void> verifyPin(String pin);
   Future<String> changePin(String currentPin, String newPin);
   Future<UserModel> updateProfile({required String name});
+  Future<UserModel> getProfile();
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -117,6 +118,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     final response = await _client.put('/user/profile', data: {
       'name': name,
     });
+    return UserModel.fromJson(response.data['user'] ?? response.data);
+  }
+
+  @override
+  Future<UserModel> getProfile() async {
+    final response = await _client.get('/user/profile');
     return UserModel.fromJson(response.data['user'] ?? response.data);
   }
 }

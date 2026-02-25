@@ -54,15 +54,36 @@ class _ChildHomePageState extends State<ChildHomePage> {
       }
     }
 
-    // Umumiy vaqt tracking boshlash
+    // Umumiy vaqt tracking boshlash (global soniya timer)
     SessionTracker.instance.startSession('child_home');
+
+    // Backend'dan sync qilish (kirganda)
+    _syncFromBackend();
+  }
+
+  /// Bola menuga kirganda backend'dan ma'lumot sync qilish
+  Future<void> _syncFromBackend() async {
+    try {
+      final childState = _childBloc.state;
+      if (childState.selectedChild != null) {
+        final usage = childState.selectedChild!.todayUsage;
+        LocalMonitoringService.instance.loadFromBackend(
+          minutesUsed: usage.minutesUsed,
+          videosWatched: usage.videosWatched,
+          gamesPlayed: usage.gamesPlayed,
+          storiesRead: usage.storiesRead,
+        );
+        if (kDebugMode) print('🔄 [ChildHome] Backend dan sync qilindi');
+      }
+    } catch (e) {
+      if (kDebugMode) print('⚠️ [ChildHome] Backend sync xato: $e');
+    }
   }
 
   @override
   void dispose() {
+    // Sessiya timer to'xtatish va backend'ga sync (SessionTracker ichida)
     SessionTracker.instance.endSession('child_home');
-    // ✅ OPTIMIZED: syncAllToBackend olib tashlandi
-    // SessionTracker.endSession ichidagi pauseAutoSave() oxirgi dirty datani saqlaydi
     super.dispose();
   }
 
