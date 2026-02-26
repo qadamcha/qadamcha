@@ -163,14 +163,14 @@ class _ChatSessionsPageState extends State<ChatSessionsPage> {
             height: 38.w,
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF7C4DFF), Color(0xFFB388FF)],
+                colors: [Color(0xFF2D6A9F), Color(0xFF4A90D9)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(11.r),
             ),
             child: Center(
-              child: Text('🤖', style: TextStyle(fontSize: 20.sp)),
+              child: Icon(Icons.psychology_rounded, size: 22.sp, color: Colors.white),
             ),
           ),
           SizedBox(width: 10.w),
@@ -222,14 +222,14 @@ class _ChatSessionsPageState extends State<ChatSessionsPage> {
               height: 80.w,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF7C4DFF), Color(0xFFB388FF)],
+                  colors: [Color(0xFF2D6A9F), Color(0xFF4A90D9)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(24.r),
               ),
               child: Center(
-                child: Text('🤖', style: TextStyle(fontSize: 40.sp)),
+                child: Icon(Icons.psychology_rounded, size: 44.sp, color: Colors.white),
               ),
             ),
             SizedBox(height: 20.h),
@@ -313,14 +313,14 @@ class _ChatSessionsPageState extends State<ChatSessionsPage> {
                 height: 42.w,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF7C4DFF), Color(0xFFB388FF)],
+                    colors: [Color(0xFF2D6A9F), Color(0xFF4A90D9)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Center(
-                  child: Text('💬', style: TextStyle(fontSize: 20.sp)),
+                  child: Icon(Icons.chat_bubble_rounded, size: 20.sp, color: Colors.white),
                 ),
               ),
               SizedBox(width: 12.w),

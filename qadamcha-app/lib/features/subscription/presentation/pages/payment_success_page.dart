@@ -134,7 +134,7 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
                   FadeTransition(
                     opacity: _fadeAnimation,
                     child: const Text(
-                      'Tabriklaymiz! 🎉',
+                      'Tabriklaymiz!',
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w800,
@@ -339,22 +339,30 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
             ),
           ),
           const SizedBox(height: 12),
-          _buildBenefitRow('📺', 'Cheksiz multfilmlar'),
-          _buildBenefitRow('🎮', 'Barcha o\'yinlar'),
-          _buildBenefitRow('🤖', 'AI Yordamchi'),
-          _buildBenefitRow('📊', 'To\'liq monitoring'),
-          _buildBenefitRow('👨‍👩‍👧', 'Cheksiz bolalar profili'),
+          _buildBenefitRow(Icons.live_tv_rounded, const Color(0xFF2D6A9F), 'Cheksiz multfilmlar'),
+          _buildBenefitRow(Icons.sports_esports_rounded, const Color(0xFF22C55E), 'Barcha o\'yinlar'),
+          _buildBenefitRow(Icons.smart_toy_rounded, const Color(0xFF7C4DFF), 'AI Yordamchi'),
+          _buildBenefitRow(Icons.bar_chart_rounded, const Color(0xFFF59E0B), 'To\'liq monitoring'),
+          _buildBenefitRow(Icons.family_restroom_rounded, const Color(0xFF4A90D9), 'Cheksiz bolalar profili'),
         ],
       ),
     );
   }
 
-  Widget _buildBenefitRow(String emoji, String text) {
+  Widget _buildBenefitRow(IconData icon, Color color, String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 18)),
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 18, color: color),
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -378,12 +386,12 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
   List<Widget> _buildConfetti() {
     final random = math.Random(42);
     final colors = [
-      const Color(0xFF00CCCC),
+      const Color(0xFF2D6A9F),
       const Color(0xFF22C55E),
       const Color(0xFFF59E0B),
-      const Color(0xFFFF4081),
-      const Color(0xFF7C4DFF),
-      const Color(0xFF2D6A9F),
+      const Color(0xFF4A90D9),
+      const Color(0xFF6BB5F0),
+      const Color(0xFF1A4A73),
     ];
 
     return List.generate(30, (i) {

@@ -19,16 +19,29 @@ class StoryDetailPage extends StatelessWidget {
     required this.language,
   });
 
-  String get _typeEmoji {
+  IconData get _typeIcon {
     switch (type) {
       case 'jahon':
-        return '🌍';
+        return Icons.public_rounded;
       case 'ozbek':
-        return '🇺🇿';
+        return Icons.flag_rounded;
       case 'islomiy':
-        return '☪️';
+        return Icons.auto_stories_rounded;
       default:
-        return '📖';
+        return Icons.menu_book_rounded;
+    }
+  }
+
+  Color get _typeColor {
+    switch (type) {
+      case 'jahon':
+        return AppColors.primary;
+      case 'ozbek':
+        return AppColors.primaryDark;
+      case 'islomiy':
+        return const Color(0xFF2E7D32);
+      default:
+        return AppColors.primary;
     }
   }
 
@@ -48,20 +61,20 @@ class StoryDetailPage extends StatelessWidget {
   String get _languageLabel {
     switch (language) {
       case 'uz':
-        return "🇺🇿 O'zbek";
+        return "O'zbek";
       case 'ru':
-        return '🇷🇺 Русский';
+        return 'Русский';
       case 'en':
-        return '🇬🇧 English';
+        return 'English';
       default:
-        return "🇺🇿 O'zbek";
+        return "O'zbek";
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF8F0),
+      backgroundColor: const Color(0xFFF0F4F8),
       body: SafeArea(
         child: Column(
           children: [
@@ -87,11 +100,11 @@ class StoryDetailPage extends StatelessWidget {
                       width: 42.w,
                       height: 42.w,
                       decoration: BoxDecoration(
-                        gradient: AppColors.storiesGradient,
+                        gradient: AppColors.primaryGradient,
                         borderRadius: BorderRadius.circular(12.r),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.purple.withOpacity(0.3),
+                            color: AppColors.primary.withOpacity(0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
@@ -110,16 +123,24 @@ class StoryDetailPage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          '$_typeEmoji $title',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
-                            fontFamily: 'Nunito',
-                          ),
+                        Row(
+                          children: [
+                            Icon(_typeIcon, size: 20.sp, color: _typeColor),
+                            SizedBox(width: 6.w),
+                            Expanded(
+                              child: Text(
+                                title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 18.sp,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.textPrimary,
+                                  fontFamily: 'Nunito',
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         SizedBox(height: 2.h),
                         Row(
@@ -130,7 +151,7 @@ class StoryDetailPage extends StatelessWidget {
                                 vertical: 2.h,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.purple.withOpacity(0.1),
+                                color: _typeColor.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(6.r),
                               ),
                               child: Text(
@@ -138,12 +159,14 @@ class StoryDetailPage extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 11.sp,
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.purple,
+                                  color: _typeColor,
                                   fontFamily: 'Nunito',
                                 ),
                               ),
                             ),
                             SizedBox(width: 8.w),
+                            Icon(Icons.translate_rounded, size: 12.sp, color: AppColors.textSecondary),
+                            SizedBox(width: 4.w),
                             Text(
                               _languageLabel,
                               style: TextStyle(
@@ -180,7 +203,7 @@ class StoryDetailPage extends StatelessWidget {
                       ),
                     ],
                     border: Border.all(
-                      color: AppColors.purple.withOpacity(0.08),
+                      color: AppColors.primary.withOpacity(0.08),
                     ),
                   ),
                   child: Column(
@@ -192,20 +215,21 @@ class StoryDetailPage extends StatelessWidget {
                           width: 64.w,
                           height: 64.w,
                           decoration: BoxDecoration(
-                            gradient: AppColors.storiesGradient,
+                            gradient: AppColors.primaryGradient,
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.purple.withOpacity(0.25),
+                                color: AppColors.primary.withOpacity(0.25),
                                 blurRadius: 16,
                                 offset: const Offset(0, 6),
                               ),
                             ],
                           ),
                           child: Center(
-                            child: Text(
-                              _typeEmoji,
-                              style: TextStyle(fontSize: 28.sp),
+                            child: Icon(
+                              _typeIcon,
+                              size: 28.sp,
+                              color: Colors.white,
                             ),
                           ),
                         ),
@@ -234,7 +258,7 @@ class StoryDetailPage extends StatelessWidget {
                           width: 60.w,
                           height: 3.h,
                           decoration: BoxDecoration(
-                            gradient: AppColors.storiesGradient,
+                            gradient: AppColors.primaryGradient,
                             borderRadius: BorderRadius.circular(2.r),
                           ),
                         ),
@@ -261,7 +285,7 @@ class StoryDetailPage extends StatelessWidget {
                           '— ✦ —',
                           style: TextStyle(
                             fontSize: 18.sp,
-                            color: AppColors.purple.withOpacity(0.3),
+                            color: AppColors.primary.withOpacity(0.3),
                             fontFamily: 'Nunito',
                           ),
                         ),

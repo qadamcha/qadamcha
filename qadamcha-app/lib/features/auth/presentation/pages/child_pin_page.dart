@@ -73,7 +73,7 @@ class _ChildPinPageState extends State<ChildPinPage> {
           height: double.infinity,
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF7C4DFF), Color(0xFFB388FF), Color(0xFFF3E5F5)],
+              colors: [Color(0xFF1A4A73), Color(0xFF2D6A9F), Color(0xFFE8F0F8)],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               stops: [0.0, 0.4, 1.0],
@@ -115,7 +115,7 @@ class _ChildPinPageState extends State<ChildPinPage> {
                     ],
                   ),
                   child: Center(
-                    child: Text('👶', style: TextStyle(fontSize: 44.sp)),
+                    child: Icon(Icons.child_care_rounded, size: 44.sp, color: Colors.white),
                   ),
                 ),
 
@@ -123,7 +123,7 @@ class _ChildPinPageState extends State<ChildPinPage> {
 
                 // Title
                 Text(
-                  'Salom, ${widget.childName}! 👋',
+                  'Salom, ${widget.childName}!',
                   style: TextStyle(
                     fontSize: 24.sp,
                     fontWeight: FontWeight.w800,

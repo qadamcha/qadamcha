@@ -76,7 +76,7 @@ class ChildrenListPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('👶', style: TextStyle(fontSize: 80.sp)),
+            Icon(Icons.child_care_rounded, size: 80.sp, color: AppColors.primary),
             SizedBox(height: 24.h),
             Text(
               'Hali bola qo\'shilmagan',

@@ -151,16 +151,16 @@ class _StoriesPageState extends State<StoriesPage> {
     _filteredStories = result;
   }
 
-  String _getTypeEmoji(String type) {
+  IconData _getTypeIcon(String type) {
     switch (type) {
       case 'jahon':
-        return '🌍';
+        return Icons.public_rounded;
       case 'ozbek':
-        return '🇺🇿';
+        return Icons.flag_rounded;
       case 'islomiy':
-        return '☪️';
+        return Icons.auto_stories_rounded;
       default:
-        return '📖';
+        return Icons.menu_book_rounded;
     }
   }
 
@@ -193,13 +193,13 @@ class _StoriesPageState extends State<StoriesPage> {
   Color _getTypeColor(String type) {
     switch (type) {
       case 'jahon':
-        return AppColors.kidBlue;
+        return AppColors.primary;
       case 'ozbek':
-        return AppColors.kidPurple;
+        return AppColors.primaryDark;
       case 'islomiy':
         return const Color(0xFF2E7D32);
       default:
-        return AppColors.kidPurple;
+        return AppColors.primary;
     }
   }
 
@@ -214,7 +214,7 @@ class _StoriesPageState extends State<StoriesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF8FF),
+      backgroundColor: const Color(0xFFF0F4F8),
       body: SafeArea(
         child: Column(
           children: [
@@ -223,8 +223,20 @@ class _StoriesPageState extends State<StoriesPage> {
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
               child: Row(
                 children: [
+                  Container(
+                    width: 36.w,
+                    height: 36.w,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Center(
+                      child: Icon(Icons.auto_stories_rounded, size: 20.sp, color: AppColors.primary),
+                    ),
+                  ),
+                  SizedBox(width: 10.w),
                   Text(
-                    '📚 Ertaklar',
+                    'Ertaklar',
                     style: TextStyle(
                       fontSize: 22.sp,
                       fontWeight: FontWeight.w800,
@@ -278,7 +290,7 @@ class _StoriesPageState extends State<StoriesPage> {
                             child: Container(
                               padding: EdgeInsets.symmetric(horizontal: 22.w),
                               decoration: BoxDecoration(
-                                gradient: selected ? AppColors.storiesGradient : null,
+                                gradient: selected ? AppColors.primaryGradient : null,
                                 color: selected ? null : AppColors.surfaceVariant,
                                 borderRadius: BorderRadius.circular(20.r),
                               ),
@@ -307,11 +319,11 @@ class _StoriesPageState extends State<StoriesPage> {
                       padding: EdgeInsets.symmetric(horizontal: 14.w),
                       decoration: BoxDecoration(
                         color: _hasActiveFilters
-                            ? AppColors.purple.withOpacity(0.1)
+                            ? AppColors.primary.withOpacity(0.1)
                             : AppColors.surfaceVariant,
                         borderRadius: BorderRadius.circular(20.r),
                         border: _hasActiveFilters
-                            ? Border.all(color: AppColors.purple.withOpacity(0.3))
+                            ? Border.all(color: AppColors.primary.withOpacity(0.3))
                             : null,
                       ),
                       child: Row(
@@ -321,7 +333,7 @@ class _StoriesPageState extends State<StoriesPage> {
                             Icons.tune_rounded,
                             size: 18.sp,
                             color: _hasActiveFilters
-                                ? AppColors.purple
+                                ? AppColors.primary
                                 : AppColors.textSecondary,
                           ),
                           SizedBox(width: 4.w),
@@ -331,7 +343,7 @@ class _StoriesPageState extends State<StoriesPage> {
                               fontSize: 13.sp,
                               fontWeight: FontWeight.w600,
                               color: _hasActiveFilters
-                                  ? AppColors.purple
+                                  ? AppColors.primary
                                   : AppColors.textSecondary,
                               fontFamily: 'Nunito',
                             ),
@@ -342,7 +354,7 @@ class _StoriesPageState extends State<StoriesPage> {
                               width: 18.w,
                               height: 18.w,
                               decoration: BoxDecoration(
-                                color: AppColors.purple,
+                                color: AppColors.primary,
                                 shape: BoxShape.circle,
                               ),
                               child: Center(
@@ -423,7 +435,7 @@ class _StoriesPageState extends State<StoriesPage> {
             width: 48.w,
             height: 48.w,
             child: CircularProgressIndicator(
-              color: AppColors.purple,
+              color: AppColors.primary,
               strokeWidth: 3.w,
             ),
           ),
@@ -456,7 +468,7 @@ class _StoriesPageState extends State<StoriesPage> {
                 shape: BoxShape.circle,
               ),
               child: Center(
-                child: Text('😔', style: TextStyle(fontSize: 36.sp)),
+                child: Icon(Icons.sentiment_dissatisfied_rounded, size: 36.sp, color: AppColors.error),
               ),
             ),
             SizedBox(height: 16.h),
@@ -486,7 +498,7 @@ class _StoriesPageState extends State<StoriesPage> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
                 decoration: BoxDecoration(
-                  gradient: AppColors.storiesGradient,
+                  gradient: AppColors.primaryGradient,
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Text(
@@ -519,7 +531,7 @@ class _StoriesPageState extends State<StoriesPage> {
               shape: BoxShape.circle,
             ),
             child: Center(
-              child: Text('📖', style: TextStyle(fontSize: 36.sp)),
+              child: Icon(Icons.menu_book_rounded, size: 36.sp, color: AppColors.primary),
             ),
           ),
           SizedBox(height: 16.h),
@@ -556,7 +568,7 @@ class _StoriesPageState extends State<StoriesPage> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
                 decoration: BoxDecoration(
-                  color: AppColors.purple.withOpacity(0.1),
+                  color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Text(
@@ -564,7 +576,7 @@ class _StoriesPageState extends State<StoriesPage> {
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.purple,
+                    color: AppColors.primary,
                     fontFamily: 'Nunito',
                   ),
                 ),
@@ -579,7 +591,7 @@ class _StoriesPageState extends State<StoriesPage> {
   Widget _buildStoryList() {
     return RefreshIndicator(
       onRefresh: _loadStories,
-      color: AppColors.purple,
+      color: AppColors.primary,
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
@@ -646,9 +658,10 @@ class _StoriesPageState extends State<StoriesPage> {
                 borderRadius: BorderRadius.circular(16.r),
               ),
               child: Center(
-                child: Text(
-                  _getTypeEmoji(type),
-                  style: TextStyle(fontSize: 28.sp),
+                child: Icon(
+                  _getTypeIcon(type),
+                  size: 28.sp,
+                  color: typeColor,
                 ),
               ),
             ),
@@ -705,14 +718,21 @@ class _StoriesPageState extends State<StoriesPage> {
                       ),
                       SizedBox(width: 8.w),
                       // Yosh chegarasi
-                      Text(
-                        '👶 $ageMin-$ageMax',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: AppColors.textSecondary,
-                          fontFamily: 'Nunito',
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.child_care_rounded, size: 14.sp, color: AppColors.textSecondary),
+                            SizedBox(width: 2.w),
+                            Text(
+                              '$ageMin-$ageMax',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: AppColors.textSecondary,
+                                fontFamily: 'Nunito',
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
                     ],
                   ),
                 ],
@@ -780,7 +800,7 @@ class _StoriesPageState extends State<StoriesPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '🎛️ Filtr',
+                        '\ud83c\udf9b\ufe0f Filtr',
                         style: TextStyle(
                           fontSize: 20.sp,
                           fontWeight: FontWeight.w800,
@@ -857,11 +877,11 @@ class _StoriesPageState extends State<StoriesPage> {
                       width: double.infinity,
                       padding: EdgeInsets.symmetric(vertical: 14.h),
                       decoration: BoxDecoration(
-                        gradient: AppColors.storiesGradient,
+                        gradient: AppColors.primaryGradient,
                         borderRadius: BorderRadius.circular(14.r),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.purple.withOpacity(0.3),
+                            color: AppColors.primary.withOpacity(0.3),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -918,7 +938,7 @@ class _StoriesPageState extends State<StoriesPage> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
                 decoration: BoxDecoration(
-                  gradient: isSelected ? AppColors.storiesGradient : null,
+                  gradient: isSelected ? AppColors.primaryGradient : null,
                   color: isSelected ? null : AppColors.surfaceVariant,
                   borderRadius: BorderRadius.circular(12.r),
                   border: isSelected

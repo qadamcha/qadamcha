@@ -48,17 +48,29 @@ class _MonitoringPageState extends State<MonitoringPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF0F4F8),
       body: SafeArea(
         child: Column(
           children: [
             // Header
             Padding(
-              padding: EdgeInsets.all(16.w),
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
               child: Row(
                 children: [
+                  Container(
+                    width: 36.w,
+                    height: 36.w,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Center(
+                      child: Icon(Icons.analytics_rounded, size: 20.sp, color: AppColors.primary),
+                    ),
+                  ),
+                  SizedBox(width: 10.w),
                   Text(
-                    '📊 Monitoring',
+                    'Monitoring',
                     style: TextStyle(
                       fontSize: 22.sp,
                       fontWeight: FontWeight.w800,
@@ -78,21 +90,21 @@ class _MonitoringPageState extends State<MonitoringPage> {
                         vertical: 6.h,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.surfaceVariant,
+                        color: AppColors.primary.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(20.r),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.refresh_rounded,
-                              size: 14.sp, color: AppColors.textSecondary),
+                              size: 14.sp, color: AppColors.primary),
                           SizedBox(width: 4.w),
                           Text(
                             'Yangilash',
                             style: TextStyle(
                               fontSize: 13.sp,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary,
+                              color: AppColors.primary,
                               fontFamily: 'Nunito',
                             ),
                           ),
@@ -204,19 +216,19 @@ class _MonitoringPageState extends State<MonitoringPage> {
           children: [
             Expanded(
               child: _SummaryCard(
-                icon: '⏱️',
+                iconData: Icons.timer_rounded,
                 title: 'Umumiy vaqt',
                 value: _formatMinutes(totalMinutes),
-                color: const Color(0xFF667eea),
+                color: AppColors.primary,
               ),
             ),
             SizedBox(width: 14.w),
             Expanded(
               child: _SummaryCard(
-                icon: '🎬',
+                iconData: Icons.movie_rounded,
                 title: 'Video ko\'rildi',
                 value: '$totalVideos ta',
-                color: const Color(0xFFf093fb),
+                color: AppColors.primaryLight,
               ),
             ),
           ],
@@ -226,19 +238,19 @@ class _MonitoringPageState extends State<MonitoringPage> {
           children: [
             Expanded(
               child: _SummaryCard(
-                icon: '🎮',
+                iconData: Icons.videogame_asset_rounded,
                 title: 'O\'yin o\'ynaldi',
                 value: '$totalGames ta',
-                color: const Color(0xFF4ecdc4),
+                color: const Color(0xFF00CCCC),
               ),
             ),
             SizedBox(width: 14.w),
             Expanded(
               child: _SummaryCard(
-                icon: '📖',
+                iconData: Icons.auto_stories_rounded,
                 title: 'Ertak o\'qildi',
                 value: '${localStats.storiesRead} ta',
-                color: const Color(0xFFffecd2),
+                color: AppColors.primaryDark,
               ),
             ),
           ],
@@ -298,8 +310,10 @@ class _MonitoringPageState extends State<MonitoringPage> {
         children: [
           Row(
             children: [
+              Icon(Icons.bar_chart_rounded, size: 18.sp, color: AppColors.primary),
+              SizedBox(width: 6.w),
               Text(
-                '📊 Haftalik foydalanish',
+                'Haftalik foydalanish',
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w700,
@@ -357,7 +371,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
             style: TextStyle(
               fontSize: 9.sp,
               fontWeight: FontWeight.w600,
-              color: isToday ? const Color(0xFF667eea) : AppColors.textSecondary,
+              color: isToday ? AppColors.primary : AppColors.textSecondary,
               fontFamily: 'Nunito',
             ),
           ),
@@ -369,14 +383,14 @@ class _MonitoringPageState extends State<MonitoringPage> {
                 ? const LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                    colors: [Color(0xFF2D6A9F), Color(0xFF4A90D9)],
                   )
                 : LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      const Color(0xFF667eea).withOpacity(0.6),
-                      const Color(0xFF667eea).withOpacity(0.3),
+                      AppColors.primary.withOpacity(0.5),
+                      AppColors.primary.withOpacity(0.2),
                     ],
                   ),
             borderRadius: BorderRadius.circular(6.r),
@@ -388,7 +402,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
           style: TextStyle(
             fontSize: 12.sp,
             fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
-            color: isToday ? const Color(0xFF667eea) : AppColors.textSecondary,
+            color: isToday ? AppColors.primary : AppColors.textSecondary,
             fontFamily: 'Nunito',
           ),
         ),
@@ -448,8 +462,10 @@ class _MonitoringPageState extends State<MonitoringPage> {
         children: [
           Row(
             children: [
+              Icon(Icons.history_rounded, size: 18.sp, color: AppColors.primary),
+              SizedBox(width: 6.w),
               Text(
-                '📋 So\'nggi faoliyat',
+                'So\'nggi faoliyat',
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w700,
@@ -496,9 +512,9 @@ class _MonitoringPageState extends State<MonitoringPage> {
     final isVideo = log.activityType == 'video' ||
         log.activityType == 'video_watch' ||
         log.activityType == 'cartoon';
-    final icon = isVideo ? '🎬' : '🎮';
+    final iconData = isVideo ? Icons.movie_rounded : Icons.videogame_asset_rounded;
     final label = isVideo ? 'Multfilm ko\'rdi' : 'O\'yin o\'ynadi';
-    final color = isVideo ? const Color(0xFFf093fb) : const Color(0xFF4facfe);
+    final color = isVideo ? AppColors.primaryLight : const Color(0xFF00CCCC);
 
     // Vaqt formatlash
     final timeAgo = _formatTimeAgo(log.startedAt);
@@ -516,7 +532,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
               borderRadius: BorderRadius.circular(12.r),
             ),
             child: Center(
-              child: Text(icon, style: TextStyle(fontSize: 20.sp)),
+              child: Icon(iconData, size: 22.sp, color: color),
             ),
           ),
           SizedBox(width: 14.w),
@@ -634,28 +650,34 @@ class _MonitoringPageState extends State<MonitoringPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '📊 Kategoriya bo\'yicha',
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-              fontFamily: 'Nunito',
-            ),
+          Row(
+            children: [
+              Icon(Icons.pie_chart_rounded, size: 18.sp, color: AppColors.primary),
+              SizedBox(width: 6.w),
+              Text(
+                'Kategoriya bo\'yicha',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                  fontFamily: 'Nunito',
+                ),
+              ),
+            ],
           ),
           SizedBox(height: 16.h),
           _buildCategoryRow(
-            '🎬',
+            Icons.movie_rounded,
             'Multfilmlar',
             videoPercent,
-            const Color(0xFFf093fb),
+            AppColors.primary,
           ),
           SizedBox(height: 14.h),
           _buildCategoryRow(
-            '🎮',
+            Icons.videogame_asset_rounded,
             'O\'yinlar',
             gamePercent,
-            const Color(0xFF4facfe),
+            const Color(0xFF00CCCC),
           ),
           if (totalMinutes == 0) ...[
             SizedBox(height: 14.h),
@@ -676,14 +698,22 @@ class _MonitoringPageState extends State<MonitoringPage> {
   }
 
   Widget _buildCategoryRow(
-    String icon,
+    IconData iconData,
     String label,
     int percent,
     Color color,
   ) {
     return Row(
       children: [
-        Text(icon, style: TextStyle(fontSize: 22.sp)),
+        Container(
+          width: 36.w,
+          height: 36.w,
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10.r),
+          ),
+          child: Center(child: Icon(iconData, size: 18.sp, color: color)),
+        ),
         SizedBox(width: 12.w),
         Expanded(
           child: Column(
@@ -733,13 +763,13 @@ class _MonitoringPageState extends State<MonitoringPage> {
 // ─── Summary Card Widget ────────────────────────────────────────────────
 
 class _SummaryCard extends StatelessWidget {
-  final String icon;
+  final IconData iconData;
   final String title;
   final String value;
   final Color color;
 
   const _SummaryCard({
-    required this.icon,
+    required this.iconData,
     required this.title,
     required this.value,
     required this.color,
@@ -750,14 +780,30 @@ class _SummaryCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(18.r),
-        border: Border.all(color: color.withOpacity(0.15)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(icon, style: TextStyle(fontSize: 28.sp)),
+          Container(
+            width: 42.w,
+            height: 42.w,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Center(
+              child: Icon(iconData, size: 22.sp, color: color),
+            ),
+          ),
           SizedBox(height: 10.h),
           Text(
             title,

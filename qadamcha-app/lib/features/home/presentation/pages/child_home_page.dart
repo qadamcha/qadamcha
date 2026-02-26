@@ -125,7 +125,7 @@ class _ChildHomePageState extends State<ChildHomePage> {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Color(0xFFE8F5E9), Color(0xFFF5F6FA), Colors.white],
+                    colors: [Color(0xFFE8F0F8), Color(0xFFF0F4F8), Colors.white],
                   ),
                 ),
                 child: const Center(
@@ -155,7 +155,7 @@ class _ChildHomePageState extends State<ChildHomePage> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFFFE0E0), Color(0xFFFFF5F5), Colors.white],
+            colors: [Color(0xFFE8F0F8), Color(0xFFF0F4F8), Colors.white],
           ),
         ),
         child: SafeArea(
@@ -169,11 +169,15 @@ class _ChildHomePageState extends State<ChildHomePage> {
                     width: 100.w,
                     height: 100.w,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFF6B6B).withOpacity(0.1),
+                      color: AppColors.primary.withOpacity(0.08),
                       shape: BoxShape.circle,
                     ),
                     child: Center(
-                      child: Text('\u{1F512}', style: TextStyle(fontSize: 48.sp)),
+                      child: Icon(
+                        Icons.lock_rounded,
+                        size: 48.sp,
+                        color: AppColors.primary,
+                      ),
                     ),
                   ),
                   SizedBox(height: 24.h),
@@ -208,12 +212,12 @@ class _ChildHomePageState extends State<ChildHomePage> {
                       padding: EdgeInsets.symmetric(vertical: 16.h),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                          colors: [Color(0xFF2D6A9F), Color(0xFF4A90D9)],
                         ),
                         borderRadius: BorderRadius.circular(16.r),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF667eea).withOpacity(0.35),
+                            color: const Color(0xFF2D6A9F).withOpacity(0.35),
                             blurRadius: 16,
                             offset: const Offset(0, 6),
                           ),

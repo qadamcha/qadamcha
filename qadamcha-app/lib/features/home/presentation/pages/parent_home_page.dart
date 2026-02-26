@@ -9,26 +9,49 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import 'settings_page.dart';
 import '../../../auth/presentation/pages/role_selection_page.dart';
 
-/// Parent Home Page — Bosh sahifa
-/// Faqat obuna paneli
+/// Parent Home Page — Ko'k-oq premium dizayn
 class ParentHomePage extends StatelessWidget {
   const ParentHomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(context),
-              SizedBox(height: 28.h),
-              _buildSubscriptionCard(context),
-              SizedBox(height: 20.h),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF2D6A9F),
+              Color(0xFF1A4A73),
+              Color(0xFFF0F4F8),
+              Color(0xFFF0F4F8),
             ],
+            stops: [0.0, 0.22, 0.42, 1.0],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // === HEADER (gradient ustida) ===
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+                  child: _buildHeader(context),
+                ),
+
+                SizedBox(height: 16.h),
+
+                // === CONTENT (oq fonda) ===
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w),
+                  child: _buildSubscriptionCard(context),
+                ),
+
+                SizedBox(height: 24.h),
+              ],
+            ),
           ),
         ),
       ),
@@ -41,7 +64,7 @@ class ParentHomePage extends StatelessWidget {
 
     return Row(
       children: [
-        // Back button
+        // Back / Role switch
         GestureDetector(
           onTap: () => Navigator.pushReplacement(
             context,
@@ -51,61 +74,69 @@ class ParentHomePage extends StatelessWidget {
             width: 42.w,
             height: 42.w,
             decoration: BoxDecoration(
-              color: AppColors.surfaceVariant,
+              color: Colors.white.withOpacity(0.15),
               borderRadius: BorderRadius.circular(12.r),
             ),
             child: Icon(
-              Icons.arrow_back_ios_new_rounded,
-              size: 18.sp,
-              color: AppColors.textPrimary,
+              Icons.swap_horiz_rounded,
+              size: 20.sp,
+              color: Colors.white,
             ),
           ),
         ),
         SizedBox(width: 12.w),
+
+        // Avatar
         Container(
-          width: 52.w,
-          height: 52.w,
+          width: 48.w,
+          height: 48.w,
           decoration: BoxDecoration(
-            gradient: AppColors.primaryGradient,
+            color: Colors.white.withOpacity(0.2),
             borderRadius: BorderRadius.circular(16.r),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withOpacity(0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            border: Border.all(
+              color: Colors.white.withOpacity(0.3),
+              width: 2,
+            ),
           ),
           child: Center(
-            child: Text('\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}', style: TextStyle(fontSize: 24.sp)),
+            child: Icon(
+              Icons.person_rounded,
+              size: 26.sp,
+              color: Colors.white,
+            ),
           ),
         ),
-        SizedBox(width: 14.w),
+        SizedBox(width: 12.w),
+
+        // Greeting
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Salom, $userName! \u{1F44B}',
+                'Salom, $userName! 👋',
                 style: TextStyle(
-                  fontSize: 14.sp,
-                  color: AppColors.textSecondary,
+                  fontSize: 13.sp,
+                  color: Colors.white.withOpacity(0.8),
                   fontFamily: 'Nunito',
                 ),
               ),
+              SizedBox(height: 2.h),
               Text(
                 'Ota-ona paneli',
                 style: TextStyle(
                   fontSize: 20.sp,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
+                  color: Colors.white,
                   fontFamily: 'Nunito',
+                  letterSpacing: -0.5,
                 ),
               ),
             ],
           ),
         ),
-        // Settings Icon
+
+        // Settings
         GestureDetector(
           onTap: () => Navigator.push(
             context,
@@ -115,13 +146,13 @@ class ParentHomePage extends StatelessWidget {
             width: 42.w,
             height: 42.w,
             decoration: BoxDecoration(
-              color: AppColors.surfaceVariant,
+              color: Colors.white.withOpacity(0.15),
               borderRadius: BorderRadius.circular(12.r),
             ),
             child: Icon(
               Icons.settings_rounded,
-              size: 22.sp,
-              color: AppColors.textPrimary,
+              size: 20.sp,
+              color: Colors.white,
             ),
           ),
         ),
@@ -158,7 +189,6 @@ class ParentHomePage extends StatelessWidget {
         if (state.paymentStatus == PaymentStatus.failed &&
             state.errorMessage != null) {
           final msg = state.errorMessage!;
-          // Auth xatolik — qayta login talab qilish
           final isAuthError = msg.toLowerCase().contains('autentifikatsiya') ||
               msg.toLowerCase().contains('token') ||
               msg.toLowerCase().contains('tizimga qayta kiring');
@@ -207,7 +237,6 @@ class ParentHomePage extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () {
                       Navigator.pop(ctx);
-                      // Logout va login sahifasiga o'tish
                       context.read<AuthBloc>().add(LogoutEvent());
                     },
                     style: ElevatedButton.styleFrom(
@@ -233,6 +262,8 @@ class ParentHomePage extends StatelessWidget {
               SnackBar(
                 content: Text(msg),
                 backgroundColor: AppColors.error,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             );
           }
@@ -243,136 +274,44 @@ class ParentHomePage extends StatelessWidget {
         return Container(
           padding: EdgeInsets.all(24.w),
           decoration: BoxDecoration(
-            gradient: isPremium
-                ? const LinearGradient(
-                    colors: [Color(0xFF6C63FF), Color(0xFF4834DF)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : const LinearGradient(
-                    colors: [Color(0xFFFF6B6B), Color(0xFFEE5A24)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-            borderRadius: BorderRadius.circular(28.r),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24.r),
             boxShadow: [
               BoxShadow(
-                color: (isPremium
-                        ? const Color(0xFF6C63FF)
-                        : const Color(0xFFFF6B6B))
-                    .withOpacity(0.35),
+                color: AppColors.primary.withOpacity(0.08),
                 blurRadius: 24,
-                offset: const Offset(0, 10),
+                offset: const Offset(0, 8),
               ),
             ],
           ),
           child: Column(
             children: [
-              // Header row
-              Row(
-                children: [
-                  Container(
-                    width: 60.w,
-                    height: 60.w,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(18.r),
-                    ),
-                    child: Center(
-                      child: Text(
-                        isPremium ? '\u{1F451}' : '\u{1F512}',
-                        style: TextStyle(fontSize: 32.sp),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          isPremium ? 'Premium obuna' : 'Obuna faol emas',
-                          style: TextStyle(
-                            fontSize: 20.sp,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                            fontFamily: 'Nunito',
-                          ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          isPremium
-                              ? '${subState.currentSubscription?.remainingDays ?? 30} kun qoldi'
-                              : '1 000 so\'m/oy (test)',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            color: Colors.white.withOpacity(0.85),
-                            fontFamily: 'Nunito',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 20.h),
-
-              // Features list
+              // Status badge
               Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(16.w),
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(18.r),
+                  color: isPremium
+                      ? AppColors.success.withOpacity(0.1)
+                      : AppColors.primary.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(20.r),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
+                    Icon(
+                      isPremium ? Icons.verified_rounded : Icons.lock_outline_rounded,
+                      size: 16.sp,
+                      color: isPremium ? AppColors.success : AppColors.primary,
+                    ),
+                    SizedBox(width: 6.w),
                     Text(
-                      'Obuna imkoniyatlari',
+                      isPremium ? 'Premium faol' : 'Bepul rejim',
                       style: TextStyle(
-                        fontSize: 15.sp,
+                        fontSize: 12.sp,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                        color: isPremium ? AppColors.success : AppColors.primary,
                         fontFamily: 'Nunito',
                       ),
-                    ),
-                    SizedBox(height: 12.h),
-                    _featureRow(
-                      '\u{1F3AC}',
-                      'Barcha multfilmlar',
-                      isPremium,
-                    ),
-                    SizedBox(height: 8.h),
-                    _featureRow(
-                      '\u{1F3AE}',
-                      'Ta\'limiy o\'yinlar',
-                      isPremium,
-                    ),
-                    SizedBox(height: 8.h),
-                    _featureRow(
-                      '\u{1F6AB}',
-                      'Reklamasiz kontent',
-                      isPremium,
-                    ),
-                    SizedBox(height: 8.h),
-                    _featureRow(
-                      '\u{1F4CA}',
-                      'Monitoring va statistika',
-                      isPremium,
-                    ),
-                    SizedBox(height: 8.h),
-                    _featureRow(
-                      '\u{1F916}',
-                      'AI maslahatlar',
-                      isPremium,
-                    ),
-                    SizedBox(height: 8.h),
-                    _featureRow(
-                      '\u{1F46A}',
-                      '5 tagacha bola profili',
-                      isPremium,
                     ),
                   ],
                 ),
@@ -380,42 +319,130 @@ class ParentHomePage extends StatelessWidget {
 
               SizedBox(height: 16.h),
 
+              // Icon
+              Container(
+                width: 72.w,
+                height: 72.w,
+                decoration: BoxDecoration(
+                  gradient: isPremium
+                      ? const LinearGradient(
+                          colors: [Color(0xFF2D6A9F), Color(0xFF4A90D9)],
+                        )
+                      : null,
+                  color: isPremium ? null : const Color(0xFFF0F4F8),
+                  shape: BoxShape.circle,
+                  boxShadow: isPremium
+                      ? [
+                          BoxShadow(
+                            color: AppColors.primary.withOpacity(0.3),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Center(
+                  child: Icon(
+                    isPremium ? Icons.diamond_rounded : Icons.workspace_premium_rounded,
+                    size: 36.sp,
+                    color: isPremium ? Colors.white : AppColors.primary,
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 14.h),
+
+              // Title
+              Text(
+                isPremium ? 'Premium obuna' : 'Obunangiz yo\'q',
+                style: TextStyle(
+                  fontSize: 22.sp,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  fontFamily: 'Nunito',
+                  letterSpacing: -0.5,
+                ),
+              ),
+
+              SizedBox(height: 4.h),
+
+              Text(
+                isPremium
+                    ? '${subState.currentSubscription?.remainingDays ?? 30} kun qoldi'
+                    : "Barcha imkoniyatlardan foydalaning",
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: AppColors.textSecondary,
+                  fontFamily: 'Nunito',
+                ),
+              ),
+
+              SizedBox(height: 20.h),
+
+              // Divider
+              Container(
+                height: 1,
+                color: const Color(0xFFF0F2F5),
+              ),
+
+              SizedBox(height: 16.h),
+
+              // Features grid
+              _featureItem(Icons.movie_rounded, 'Multfilmlar', isPremium),
+              SizedBox(height: 10.h),
+              _featureItem(Icons.videogame_asset_rounded, "Ta'limiy o'yinlar", isPremium),
+              SizedBox(height: 10.h),
+              _featureItem(Icons.block_rounded, 'Reklamasiz', isPremium),
+              SizedBox(height: 10.h),
+              _featureItem(Icons.analytics_rounded, 'Monitoring', isPremium),
+              SizedBox(height: 10.h),
+              _featureItem(Icons.psychology_rounded, 'AI maslahatlar', isPremium),
+              SizedBox(height: 10.h),
+              _featureItem(Icons.family_restroom_rounded, '5 ta bola profili', isPremium),
+
+              SizedBox(height: 20.h),
+
               // Action button
               if (!isPremium) ...[
                 if (subState.paymentStatus == PaymentStatus.creatingOrder)
-                  const Center(
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
+                  Center(
+                    child: SizedBox(
+                      width: 24.w,
+                      height: 24.w,
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                        strokeWidth: 2.5,
+                      ),
                     ),
                   )
                 else
                   GestureDetector(
                     onTap: () {
-                      // Payme orqali to'lov oqimini boshlash
                       context.read<SubscriptionBloc>().add(
                         CreateOrderEvent(plan: SubscriptionPlan.monthly),
                       );
                     },
                     child: Container(
                       width: double.infinity,
-                      padding: EdgeInsets.symmetric(vertical: 14.h),
+                      padding: EdgeInsets.symmetric(vertical: 16.h),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        gradient: AppColors.primaryGradient,
                         borderRadius: BorderRadius.circular(16.r),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
+                            color: AppColors.primary.withOpacity(0.35),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
                           ),
                         ],
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            '\u{2728}',
-                            style: TextStyle(fontSize: 18.sp),
+                          Icon(
+                            Icons.diamond_rounded,
+                            color: Colors.white,
+                            size: 20.sp,
                           ),
                           SizedBox(width: 8.w),
                           Text(
@@ -423,7 +450,7 @@ class ParentHomePage extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 16.sp,
                               fontWeight: FontWeight.w800,
-                              color: const Color(0xFFFF6B6B),
+                              color: Colors.white,
                               fontFamily: 'Nunito',
                             ),
                           ),
@@ -431,26 +458,37 @@ class ParentHomePage extends StatelessWidget {
                       ),
                     ),
                   ),
+                SizedBox(height: 8.h),
+                Text(
+                  '1 000 so\'m/oy (test)',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: AppColors.textSecondary,
+                    fontFamily: 'Nunito',
+                  ),
+                ),
               ],
+
               if (isPremium) ...[
                 Container(
                   width: double.infinity,
-                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                  padding: EdgeInsets.symmetric(vertical: 14.h),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.18),
+                    color: AppColors.success.withOpacity(0.08),
                     borderRadius: BorderRadius.circular(14.r),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.verified_rounded, color: Colors.white, size: 20.sp),
+                      Icon(Icons.check_circle_rounded,
+                          color: AppColors.success, size: 20.sp),
                       SizedBox(width: 8.w),
                       Text(
                         'Barcha funksiyalar ochiq',
                         style: TextStyle(
                           fontSize: 15.sp,
                           fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                          color: AppColors.success,
                           fontFamily: 'Nunito',
                         ),
                       ),
@@ -465,28 +503,44 @@ class ParentHomePage extends StatelessWidget {
     );
   }
 
-  Widget _featureRow(String emoji, String text, bool isActive) {
+  Widget _featureItem(IconData icon, String text, bool isActive) {
     return Row(
       children: [
-        Text(emoji, style: TextStyle(fontSize: 16.sp)),
-        SizedBox(width: 10.w),
+        Container(
+          width: 36.w,
+          height: 36.w,
+          decoration: BoxDecoration(
+            color: isActive
+                ? AppColors.primary.withOpacity(0.08)
+                : const Color(0xFFF5F7FA),
+            borderRadius: BorderRadius.circular(10.r),
+          ),
+          child: Center(
+            child: Icon(
+              icon,
+              size: 18.sp,
+              color: isActive ? AppColors.primary : AppColors.textDisabled,
+            ),
+          ),
+        ),
+        SizedBox(width: 12.w),
         Expanded(
           child: Text(
             text,
             style: TextStyle(
               fontSize: 14.sp,
               fontWeight: FontWeight.w600,
-              color: Colors.white.withOpacity(isActive ? 1.0 : 0.7),
+              color: isActive ? AppColors.textPrimary : AppColors.textDisabled,
               fontFamily: 'Nunito',
               decoration: isActive ? null : TextDecoration.lineThrough,
-              decorationColor: Colors.white.withOpacity(0.5),
+              decorationColor: AppColors.textDisabled.withOpacity(0.5),
             ),
           ),
         ),
         Icon(
-          isActive ? Icons.check_circle_rounded : Icons.radio_button_unchecked,
-          color: Colors.white.withOpacity(isActive ? 1.0 : 0.4),
-          size: 18.sp,
+          isActive ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+          color: isActive ? AppColors.success : AppColors.textDisabled.withOpacity(0.4),
+          size: 20.sp,
         ),
       ],
     );

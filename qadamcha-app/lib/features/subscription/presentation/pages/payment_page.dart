@@ -459,7 +459,7 @@ class _PaymentPageState extends State<PaymentPage>
             decoration: BoxDecoration(
               gradient: isActive
                   ? const LinearGradient(
-                      colors: [Color(0xFF00CCCC), Color(0xFF00A3A3)],
+                      colors: [Color(0xFF2D6A9F), Color(0xFF4A90D9)],
                     )
                   : null,
               color: isActive ? null : const Color(0xFFE5E7EB),
@@ -467,7 +467,7 @@ class _PaymentPageState extends State<PaymentPage>
               boxShadow: isCurrent
                   ? [
                       BoxShadow(
-                        color: const Color(0xFF00CCCC).withValues(alpha: 0.4),
+                        color: const Color(0xFF2D6A9F).withValues(alpha: 0.4),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -486,7 +486,7 @@ class _PaymentPageState extends State<PaymentPage>
             style: TextStyle(
               fontSize: 11,
               fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
-              color: isActive ? const Color(0xFF00CCCC) : AppColors.textSecondary,
+              color: isActive ? const Color(0xFF2D6A9F) : AppColors.textSecondary,
               fontFamily: 'Nunito',
             ),
           ),
@@ -503,7 +503,7 @@ class _PaymentPageState extends State<PaymentPage>
         height: 3,
         margin: const EdgeInsets.only(bottom: 20),
         decoration: BoxDecoration(
-          color: isActive ? const Color(0xFF00CCCC) : const Color(0xFFE5E7EB),
+          color: isActive ? const Color(0xFF2D6A9F) : const Color(0xFFE5E7EB),
           borderRadius: BorderRadius.circular(2),
         ),
       ),
@@ -824,7 +824,7 @@ class _PaymentPageState extends State<PaymentPage>
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFF00CCCC), width: 2),
+            borderSide: const BorderSide(color: Color(0xFF2D6A9F), width: 2),
           ),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 18,
@@ -835,13 +835,13 @@ class _PaymentPageState extends State<PaymentPage>
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: const Color(0xFF00CCCC).withValues(alpha: 0.1),
+              color: const Color(0xFF2D6A9F).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Icon(
               Icons.credit_card,
               size: 18,
-              color: Color(0xFF00CCCC),
+              color: Color(0xFF2D6A9F),
             ),
           ),
         ),
@@ -900,7 +900,7 @@ class _PaymentPageState extends State<PaymentPage>
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFF00CCCC), width: 2),
+            borderSide: const BorderSide(color: Color(0xFF2D6A9F), width: 2),
           ),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 18,
@@ -968,12 +968,12 @@ class _PaymentPageState extends State<PaymentPage>
             height: 80,
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF00CCCC), Color(0xFF00A3A3)],
+                colors: [Color(0xFF2D6A9F), Color(0xFF4A90D9)],
               ),
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF00CCCC).withValues(alpha: 0.3),
+                  color: const Color(0xFF2D6A9F).withValues(alpha: 0.3),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
@@ -1028,7 +1028,7 @@ class _PaymentPageState extends State<PaymentPage>
                   BoxShadow(
                     color: (_isCodeExpired
                         ? Colors.amber
-                        : const Color(0xFF00CCCC)).withValues(alpha: 0.08),
+                        : const Color(0xFF2D6A9F)).withValues(alpha: 0.08),
                     blurRadius: 16,
                     offset: const Offset(0, 6),
                   ),
@@ -1079,7 +1079,7 @@ class _PaymentPageState extends State<PaymentPage>
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: const BorderSide(
-                      color: Color(0xFF00CCCC),
+                      color: Color(0xFF2D6A9F),
                       width: 2,
                     ),
                   ),
@@ -1195,7 +1195,7 @@ class _PaymentPageState extends State<PaymentPage>
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF00CCCC),
+                  color: const Color(0xFF2D6A9F),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text(
@@ -1219,20 +1219,20 @@ class _PaymentPageState extends State<PaymentPage>
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: const Color(0xFF00CCCC).withValues(alpha: 0.06),
+          color: const Color(0xFF2D6A9F).withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.timer_outlined, size: 16, color: Color(0xFF00CCCC)),
+            const Icon(Icons.timer_outlined, size: 16, color: Color(0xFF2D6A9F)),
             const SizedBox(width: 6),
             Text(
               'Qayta yuborish: ${_countdownSeconds}s',
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF00CCCC),
+                color: Color(0xFF2D6A9F),
                 fontFamily: 'Nunito',
               ),
             ),
@@ -1254,7 +1254,7 @@ class _PaymentPageState extends State<PaymentPage>
         ),
       ),
       style: TextButton.styleFrom(
-        foregroundColor: const Color(0xFF00CCCC),
+        foregroundColor: const Color(0xFF2D6A9F),
       ),
     );
   }
@@ -1268,7 +1268,7 @@ class _PaymentPageState extends State<PaymentPage>
     
     final progress = _codeExpirySeconds / 60.0;
     final isLow = _codeExpirySeconds <= 15;
-    final color = isLow ? Colors.red : const Color(0xFF00CCCC);
+    final color = isLow ? Colors.red : const Color(0xFF2D6A9F);
     
     return Column(
       children: [
@@ -1435,12 +1435,12 @@ class _PaymentPageState extends State<PaymentPage>
             height: 80,
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF00CCCC), Color(0xFF00A3A3)],
+                colors: [Color(0xFF2D6A9F), Color(0xFF1A4A73)],
               ),
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF00CCCC).withValues(alpha: 0.3),
+                  color: const Color(0xFF2D6A9F).withValues(alpha: 0.3),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
@@ -1457,7 +1457,7 @@ class _PaymentPageState extends State<PaymentPage>
             height: 36,
             child: CircularProgressIndicator(
               strokeWidth: 3,
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF00CCCC)),
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2D6A9F)),
             ),
           ),
           const SizedBox(height: 20),
@@ -1506,7 +1506,7 @@ class _PaymentPageState extends State<PaymentPage>
         decoration: BoxDecoration(
           gradient: enabled
               ? const LinearGradient(
-                  colors: [Color(0xFF00CCCC), Color(0xFF009999)],
+                  colors: [Color(0xFF2D6A9F), Color(0xFF1A4A73)],
                 )
               : null,
           color: enabled ? null : const Color(0xFFE5E7EB),
@@ -1514,7 +1514,7 @@ class _PaymentPageState extends State<PaymentPage>
           boxShadow: enabled
               ? [
                   BoxShadow(
-                    color: const Color(0xFF00CCCC).withValues(alpha: 0.35),
+                    color: const Color(0xFF2D6A9F).withValues(alpha: 0.35),
                     blurRadius: 16,
                     offset: const Offset(0, 6),
                   ),
@@ -1593,7 +1593,7 @@ class _PaymentPageState extends State<PaymentPage>
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: const Color(0xFF00CCCC).withValues(alpha: 0.2),
+                  color: const Color(0xFF2D6A9F).withValues(alpha: 0.2),
                 ),
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -1601,7 +1601,7 @@ class _PaymentPageState extends State<PaymentPage>
                 'Payme ofertasi shartlari →',
                 style: TextStyle(
                   fontSize: 11,
-                  color: Color(0xFF00CCCC),
+                  color: Color(0xFF2D6A9F),
                   fontFamily: 'Nunito',
                   fontWeight: FontWeight.w600,
                 ),

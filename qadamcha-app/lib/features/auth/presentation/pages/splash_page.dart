@@ -5,9 +5,8 @@ import '../bloc/auth_bloc.dart';
 import 'role_selection_page.dart';
 import 'phone_page.dart';
 
-/// Splash Screen - matching full_architecture.html design
-/// Gradient: #2D6A9F → #7C4DFF → #FF4081
-/// Decorative circles, loading animation, emoji logo
+/// Splash Screen — Premium blue gradient design
+/// Material icons, clean professional look
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
@@ -113,6 +112,19 @@ class _SplashPageState extends State<SplashPage>
                   ),
                 ),
               ),
+              // Additional decorative circle
+              Positioned(
+                top: 120,
+                left: -40,
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.04),
+                  ),
+                ),
+              ),
               // Main content
               Center(
                 child: AnimatedBuilder(
@@ -125,13 +137,17 @@ class _SplashPageState extends State<SplashPage>
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            // Logo container with emoji
+                            // Logo container with Material icon
                             Container(
-                              width: 90,
-                              height: 90,
+                              width: 100,
+                              height: 100,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(26),
+                                color: Colors.white.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(28),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.2),
+                                  width: 1.5,
+                                ),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.15),
@@ -141,31 +157,34 @@ class _SplashPageState extends State<SplashPage>
                                 ],
                               ),
                               child: const Center(
-                                child: Text(
-                                  '👨‍👩‍👧‍👦',
-                                  style: TextStyle(fontSize: 44),
+                                child: Icon(
+                                  Icons.family_restroom_rounded,
+                                  size: 52,
+                                  color: Colors.white,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 14),
+                            const SizedBox(height: 20),
                             // App name
                             const Text(
-                              'Oilaviy',
+                              'Qadamcha',
                               style: TextStyle(
-                                fontSize: 30,
+                                fontSize: 32,
                                 fontWeight: FontWeight.w800,
                                 color: Colors.white,
                                 fontFamily: 'Nunito',
+                                letterSpacing: 1,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 8),
                             // Tagline
                             Text(
                               'Farzandingiz uchun eng yaxshi ilova',
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 15,
                                 color: Colors.white.withOpacity(0.8),
                                 fontFamily: 'Nunito',
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ],
@@ -177,25 +196,17 @@ class _SplashPageState extends State<SplashPage>
               ),
               // Loading indicator at bottom
               Positioned(
-                bottom: 50,
+                bottom: 60,
                 left: 0,
                 right: 0,
                 child: Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(2),
-                      child: LinearProgressIndicator(
-                        backgroundColor: Colors.transparent,
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                          Colors.white,
-                        ),
-                        value: null,
+                  child: SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Colors.white.withOpacity(0.7),
                       ),
                     ),
                   ),

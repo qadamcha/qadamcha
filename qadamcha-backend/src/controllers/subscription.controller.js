@@ -70,7 +70,12 @@ module.exports = {
 
         const planData = config.PLANS[plan];
         const endDate = new Date();
-        endDate.setDate(endDate.getDate() + planData.days);
+        // ⚡ TEST: testMinutes bo'lsa minutda hisoblaydi, aks holda kunlarda
+        if (planData.testMinutes) {
+            endDate.setMinutes(endDate.getMinutes() + planData.testMinutes);
+        } else {
+            endDate.setDate(endDate.getDate() + planData.days);
+        }
 
         // Pending obuna yaratish
         const subscription = await Subscription.create({
@@ -194,7 +199,12 @@ module.exports = {
 
             const planData = config.PLANS[subscription.plan];
             subscription.endDate = new Date();
-            subscription.endDate.setDate(subscription.endDate.getDate() + planData.days);
+            // ⚡ TEST: testMinutes bo'lsa minutda hisoblaydi
+            if (planData.testMinutes) {
+                subscription.endDate.setMinutes(subscription.endDate.getMinutes() + planData.testMinutes);
+            } else {
+                subscription.endDate.setDate(subscription.endDate.getDate() + planData.days);
+            }
 
             await subscription.save();
         } catch (err) {
@@ -287,7 +297,12 @@ module.exports = {
         // Yangi obuna yaratish (test rejim — to'lovsiz)
         const planData = config.PLANS['monthly'];
         const endDate = new Date();
-        endDate.setDate(endDate.getDate() + planData.days);
+        // ⚡ TEST: testMinutes bo'lsa minutda hisoblaydi
+        if (planData.testMinutes) {
+            endDate.setMinutes(endDate.getMinutes() + planData.testMinutes);
+        } else {
+            endDate.setDate(endDate.getDate() + planData.days);
+        }
 
         const subscription = await Subscription.create({
             userId,

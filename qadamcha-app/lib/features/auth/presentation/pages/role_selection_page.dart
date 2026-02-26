@@ -33,7 +33,7 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF0F4F8),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -41,6 +41,32 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Spacer(flex: 2),
+              // Header icon
+              Center(
+                child: Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    borderRadius: BorderRadius.circular(22),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.family_restroom_rounded,
+                      size: 36,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
               const Text(
                 'Kim foydalanmoqda?',
                 textAlign: TextAlign.center,
@@ -51,35 +77,39 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
                   fontFamily: 'Nunito',
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               const Text(
                 'Iltimos, o\'z profilingizni tanlang',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 15,
                   color: AppColors.textSecondary,
                   fontFamily: 'Nunito',
                 ),
               ),
-              const Spacer(flex: 3),
+              const Spacer(flex: 2),
               _buildRoleCard(
                 context,
                 title: 'Ota-ona',
                 subtitle: 'PIN kod orqali kirish',
-                icon: '👨‍👩‍👧',
-                color: AppColors.primary,
+                iconData: Icons.admin_panel_settings_rounded,
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF2D6A9F), Color(0xFF4A90D9)],
+                ),
                 onTap: () => _onParentSelected(context),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               _buildRoleCard(
                 context,
                 title: 'Bolajon',
                 subtitle: 'Bolalar rejimiga kirish',
-                icon: '👶',
-                color: AppColors.secondary,
+                iconData: Icons.child_care_rounded,
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF4A90D9), Color(0xFF6BB5F0)],
+                ),
                 onTap: () => _onChildSelected(context),
               ),
-              const Spacer(flex: 4),
+              const Spacer(flex: 3),
             ],
           ),
         ),
@@ -91,8 +121,8 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
     BuildContext context, {
     required String title,
     required String subtitle,
-    required String icon,
-    required Color color,
+    required IconData iconData,
+    required LinearGradient gradient,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
@@ -101,36 +131,36 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.15),
+              color: AppColors.primary.withOpacity(0.08),
               blurRadius: 20,
-              offset: const Offset(0, 10),
+              offset: const Offset(0, 8),
             ),
           ],
-          border: Border.all(
-            color: color.withOpacity(0.1),
-            width: 2,
-          ),
         ),
         child: Row(
           children: [
             Container(
-              width: 64,
-              height: 64,
+              width: 56,
+              height: 56,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(18),
+                gradient: gradient,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: gradient.colors.first.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Center(
-                child: Text(
-                  icon,
-                  style: const TextStyle(fontSize: 32),
-                ),
+                child: Icon(iconData, size: 28, color: Colors.white),
               ),
             ),
-            const SizedBox(width: 20),
+            const SizedBox(width: 18),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,8 +168,8 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
                   Text(
                     title,
                     style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 19,
+                      fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
                       fontFamily: 'Nunito',
                     ),
@@ -148,7 +178,7 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
                   Text(
                     subtitle,
                     style: const TextStyle(
-                      fontSize: 14,
+                      fontSize: 13,
                       color: AppColors.textSecondary,
                       fontFamily: 'Nunito',
                     ),
@@ -156,10 +186,18 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
                 ],
               ),
             ),
-            Icon(
-              Icons.arrow_forward_ios_rounded,
-              color: color,
-              size: 20,
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.08),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: AppColors.primary,
+                size: 16,
+              ),
             ),
           ],
         ),
@@ -246,10 +284,19 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
         context: context,
         builder: (ctx) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Row(
+          title: Row(
             children: [
-              Text('⚠️ ', style: TextStyle(fontSize: 24)),
-              Text('Diqqat', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold)),
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.warning_amber_rounded, size: 20, color: Colors.amber),
+              ),
+              const SizedBox(width: 10),
+              const Text('Diqqat', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold)),
             ],
           ),
           content: const Text(

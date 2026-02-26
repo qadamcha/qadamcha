@@ -62,7 +62,7 @@ class AppColors {
   
   // Splash Screen Gradient
   static const LinearGradient splashGradient = LinearGradient(
-    colors: [Color(0xFF2D6A9F), Color(0xFF7C4DFF), Color(0xFFFF4081)],
+    colors: [Color(0xFF1A4A73), Color(0xFF2D6A9F), Color(0xFF4A90D9)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     stops: [0.0, 0.5, 1.0],

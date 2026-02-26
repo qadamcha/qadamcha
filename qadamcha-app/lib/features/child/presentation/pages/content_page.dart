@@ -487,7 +487,7 @@ class _ContentPageState extends State<ContentPage> {
                         ),
                       if (_selectedAge != null)
                         _buildFilterChip(
-                          '👶 ${_ageGroups.firstWhere((g) => _parseAgeGroup(g) == _selectedAge, orElse: () => '')} yosh',
+                          '${_ageGroups.firstWhere((g) => _parseAgeGroup(g) == _selectedAge, orElse: () => '')} yosh',
                           () => setState(() => _selectedAge = null),
                         ),
                     ],
@@ -801,7 +801,7 @@ class _ContentPageState extends State<ContentPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('😔', style: TextStyle(fontSize: 48.sp)),
+            Icon(Icons.sentiment_dissatisfied_rounded, size: 48.sp, color: AppColors.error),
             SizedBox(height: 16.h),
             Text(
               'Xatolik yuz berdi',
