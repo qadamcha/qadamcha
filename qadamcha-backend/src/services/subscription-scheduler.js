@@ -6,6 +6,7 @@
  */
 
 const { Subscription } = require('../models');
+const { logger } = require('../config/logger');
 
 let intervalId = null;
 const CHECK_INTERVAL_MS = 60 * 60 * 1000; // 1 soat
@@ -26,10 +27,10 @@ async function expireSubscriptions() {
         );
 
         if (result.modifiedCount > 0) {
-            console.log(`📋 ${result.modifiedCount} ta obuna expired qilindi`);
+            logger.info(`📋 ${result.modifiedCount} ta obuna expired qilindi`);
         }
     } catch (err) {
-        console.error('❌ Subscription expiry check xatosi:', err.message);
+        logger.error('❌ Subscription expiry check xatosi:', err.message);
     }
 }
 
@@ -42,7 +43,7 @@ function start() {
 
     // Har soatda tekshirish
     intervalId = setInterval(expireSubscriptions, CHECK_INTERVAL_MS);
-    console.log('⏰ Subscription expiry scheduler ishga tushdi (har 1 soatda)');
+    logger.info('Subscription expiry scheduler started (every 1 hour)');
 }
 
 /**

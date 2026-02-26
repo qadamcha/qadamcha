@@ -1,5 +1,6 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const config = require('../config/env');
+const { logger } = require('../config/logger');
 
 class AiService {
     constructor() {
@@ -18,9 +19,9 @@ class AiService {
                     }
                 });
                 this.isConfigured = true;
-                console.log('✅ Gemini AI initialized (gemini-2.0-flash)');
+                logger.info('Gemini AI initialized (gemini-2.0-flash)');
             } catch (error) {
-                console.error('Gemini AI sozlashda xato:', error.message);
+                logger.error({ err: error }, 'Gemini AI init error');
             }
         }
 
@@ -95,16 +96,14 @@ Sening asosiy vazifang — O'zbek ota-onalariga farzand tarbiyasi, rivojlanishi 
             if (context.childGender) {
                 systemInstruction += `\nBola jinsi: ${context.childGender === 'male' ? 'O\'g\'il' : 'Qiz'}`;
             }
-            if (context.childName) {
-                systemInstruction += `\nBola ismi: ${context.childName}`;
-            }
+            // [FIX COPPA] childName Google AI ga yuborilmaydi — PII himoyasi
 
             // Gemini contents array yaratish — suhbat tarixi
             const contents = [];
 
             // Oldingi suhbat tarixini qo'shish
             if (history && history.length > 0) {
-                console.log(`📜 Suhbat tarixi (${history.length} xabar):`);
+                logger.debug({ historyLength: history.length }, 'Chat history loaded');
                 for (const msg of history) {
                     const role = msg.role === 'user' ? 'user' : 'model';
                     // Gemini talabi: birinchi xabar 'user' bo'lishi kerak
@@ -113,14 +112,14 @@ Sening asosiy vazifang — O'zbek ota-onalariga farzand tarbiyasi, rivojlanishi 
                     if (contents.length === 0 && role !== 'user') continue;
                     if (lastRole === role) continue;
 
-                    console.log(`  [${role}]: ${msg.text.substring(0, 50)}...`);
+                    // Log suppressed for PII
                     contents.push({
                         role,
                         parts: [{ text: msg.text }]
                     });
                 }
             } else {
-                console.log('📜 Yangi suhbat — tarix yo\'q');
+                logger.debug('New chat — no history');
             }
 
             // Yangi xabarni qo'shish
@@ -160,7 +159,7 @@ Sening asosiy vazifang — O'zbek ota-onalariga farzand tarbiyasi, rivojlanishi 
             };
 
         } catch (error) {
-            console.error('Gemini AI xatosi:', error.message);
+            logger.error({ err: error }, 'Gemini AI error');
 
             if (error.message === 'AI_TIMEOUT') {
                 return {

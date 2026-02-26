@@ -1,7 +1,8 @@
 const crypto = require('crypto');
-const fetch = require('node-fetch');
+const axios = require('axios');
 const FormData = require('form-data');
 const config = require('../config/env');
+const { logger } = require('../config/logger');
 const { REDIS_KEYS } = require('../config/constants');
 
 class SmsService {
@@ -36,7 +37,7 @@ class SmsService {
         const data = await response.json();
 
         if (data.data?.token) {
-            console.log('🔑 Eskiz: Yangi token olindi');
+            logger.info('🔑 Eskiz: Yangi token olindi');
             // 29 kun cache (token 30 kun amal qiladi)
             if (this.redis) {
                 await this.redis.setex(this.tokenKey, 29 * 24 * 60 * 60, data.data.token);
@@ -100,15 +101,15 @@ class SmsService {
         // [FIX SEC-3] OTP kodni HECH QACHON logga yozmaslik
         // [FIX SEC-10] Telefon raqam faqat maskirovka qilingan holda loglanadi
         if (config.NODE_ENV === 'development') {
-            console.log(`📱 OTP sent to ${this._maskPhone(phone)} | purpose: ${purpose}`);
+            logger.info(`📱 OTP sent to ${this._maskPhone(phone)} | purpose: ${purpose}`);
         } else {
             // Production: faqat maskirovka qilingan telefon raqam
-            console.log(`📱 OTP sent to ${this._maskPhone(phone)} | purpose: ${purpose}`);
+            logger.info(`📱 OTP sent to ${this._maskPhone(phone)} | purpose: ${purpose}`);
         }
 
         // Eskiz sozlanmagan bo'lsa — faqat logga chiqarish
         if (!eskizConfigured) {
-            console.warn('⚠️ Eskiz sozlanmagan — OTP faqat logda');
+            logger.warn('⚠️ Eskiz sozlanmagan — OTP faqat logda');
             return { success: true, messageId: 'no-eskiz' };
         }
 
@@ -124,48 +125,48 @@ class SmsService {
         try {
             token = await this.getToken();
         } catch (err) {
-            console.error('❌ Token olishda xato:', err.message);
+            logger.error('❌ Token olishda xato:', err.message);
             return { success: false, error: 'SMS xizmati vaqtincha ishlamayapti' };
         }
 
         // 2. SMS yuborish
         try {
-            console.log('📤 SMS yuborish:', this._maskPhone(phone));
+            logger.info('📤 SMS yuborish:', this._maskPhone(phone));
 
             let data = await this._sendSms(phone, message, token);
-            console.log('📨 Eskiz javob:', JSON.stringify(data));
+            logger.info('📨 Eskiz javob:', JSON.stringify(data));
 
             // ✅ Muvaffaqiyat
             if (data.status === 'waiting') {
-                console.log('✅ SMS yuborildi! ID:', data.id);
+                logger.info('✅ SMS yuborildi! ID:', data.id);
                 return { success: true, messageId: data.id };
             }
 
             // ❌ Xato — token eski bo'lishi mumkin, yangilab qayta urinish
             if (data.status === 'error') {
-                console.log('⚠️ Xato:', data.message, '— tokenni yangilab qayta urinish...');
+                logger.info('⚠️ Xato:', data.message, '— tokenni yangilab qayta urinish...');
 
                 // Tokenni yangilash
                 const newToken = await this._refreshToken();
 
                 // Qayta urinish
                 data = await this._sendSms(phone, message, newToken);
-                console.log('📨 Qayta urinish javob:', JSON.stringify(data));
+                logger.info('📨 Qayta urinish javob:', JSON.stringify(data));
 
                 if (data.status === 'waiting') {
-                    console.log('✅ SMS qayta urinishda yuborildi! ID:', data.id);
+                    logger.info('✅ SMS qayta urinishda yuborildi! ID:', data.id);
                     return { success: true, messageId: data.id };
                 }
 
-                console.error('❌ SMS yuborilmadi:', data.message);
+                logger.error('❌ SMS yuborilmadi:', data.message);
                 return { success: false, error: data.message || 'SMS yuborib bo\'lmadi' };
             }
 
             // Kutilmagan javob
-            console.error('❌ Kutilmagan javob:', JSON.stringify(data));
+            logger.error('❌ Kutilmagan javob:', JSON.stringify(data));
             return { success: false, error: 'SMS kutilmagan javob' };
         } catch (error) {
-            console.error('❌ SMS xatosi:', error.message);
+            logger.error('❌ SMS xatosi:', error.message);
             return { success: false, error: 'SMS xizmati vaqtincha ishlamayapti' };
         }
     }

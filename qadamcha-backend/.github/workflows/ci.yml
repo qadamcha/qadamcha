@@ -1,0 +1,54 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: qadamcha-backend/package.json
+
+      - name: Install dependencies
+        working-directory: qadamcha-backend
+        run: npm ci
+
+      - name: Syntax check
+        working-directory: qadamcha-backend
+        run: |
+          echo "🔍 Running syntax checks..."
+          find src -name "*.js" -exec node --check {} \;
+          echo "✅ All syntax checks passed"
+
+      - name: Run tests
+        working-directory: qadamcha-backend
+        run: npm test -- --ci --passWithNoTests
+        env:
+          NODE_ENV: test
+
+      - name: Run tests with coverage
+        working-directory: qadamcha-backend
+        run: npm run test:coverage -- --ci --passWithNoTests
+        env:
+          NODE_ENV: test
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: qadamcha-backend/coverage/
+          retention-days: 7

@@ -1,12 +1,7 @@
+const { loggerConfig } = require('./config/logger');
 const fastify = require('fastify')({
     trustProxy: true,
-    logger: {
-        level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-        transport: process.env.NODE_ENV !== 'production' ? {
-            target: 'pino-pretty',
-            options: { colorize: true }
-        } : undefined
-    }
+    logger: loggerConfig
 });
 
 const config = require('./config/env');
@@ -64,64 +59,12 @@ const registerPlugins = async () => {
 
 // Register Routes
 const registerRoutes = async () => {
-    // Enhanced Health Check
-    fastify.get('/health', async (request, reply) => {
-        const startTime = Date.now();
+    // Monitoring plugin — /health va /metrics endpointlar
+    await fastify.register(require('./plugins/monitoring'));
 
-        // Check MongoDB
-        let mongoStatus = 'unknown';
-        try {
-            const mongoose = require('mongoose');
-            if (mongoose.connection.readyState === 1) {
-                mongoStatus = 'connected';
-            } else {
-                mongoStatus = 'disconnected';
-            }
-        } catch (e) {
-            mongoStatus = 'error';
-        }
-
-        // Check Redis
-        let redisStatus = 'unknown';
-        try {
-            if (fastify.redis) {
-                await fastify.redis.ping();
-                redisStatus = 'connected';
-            }
-        } catch (e) {
-            redisStatus = 'mock'; // Using mock Redis
-        }
-
-        // AI Service status
-        let aiStatus = 'unknown';
-        try {
-            const aiService = require('./services/ai.service');
-            aiStatus = aiService.isConfigured ? 'configured' : 'not_configured';
-        } catch (e) {
-            aiStatus = 'error';
-        }
-
-        const responseTime = Date.now() - startTime;
-
-        return {
-            success: true,
-            status: 'ok',
-            timestamp: new Date().toISOString(),
-            version: require('../package.json').version,
-            environment: config.NODE_ENV,
-            uptime: process.uptime(),
-            responseTime: `${responseTime}ms`,
-            services: {
-                mongodb: mongoStatus,
-                redis: redisStatus,
-                ai: aiStatus
-            },
-            memory: {
-                used: `${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`,
-                total: `${Math.round(process.memoryUsage().heapTotal / 1024 / 1024)}MB`
-            }
-        };
-    });
+    // Force HTTPS redirect (production)
+    const { forceHttpsRedirect } = require('./config/tls');
+    forceHttpsRedirect(fastify);
 
     // API Routes
     fastify.register(require('./routes'), { prefix: API_PREFIX });
