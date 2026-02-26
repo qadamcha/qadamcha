@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment files — HECH QACHON git ga qo'shilmasin!
+.env
+.env.local
+.env.production
+.env.staging
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build
+dist/
+build/
+
+# Docker
+docker-compose.override.yml
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Miscellaneous
+*.pid
+*.seed
+*.pid.lock

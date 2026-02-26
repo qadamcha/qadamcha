@@ -17,13 +17,26 @@ const initSentry = () => {
             environment: config.NODE_ENV,
             tracesSampleRate: config.NODE_ENV === 'production' ? 0.1 : 1.0,
             beforeSend(event) {
-                // Sensitive data tozalash
+                // [FIX SEC-7] Sensitive data tozalash — PII himoyasi
                 if (event.request && event.request.data) {
                     const data = event.request.data;
                     if (typeof data === 'object') {
-                        for (const key of ['pin', 'password', 'token', 'refreshToken', 'code']) {
-                            if (data[key]) data[key] = '***';
+                        const sensitiveKeys = [
+                            'pin', 'password', 'token', 'refreshToken', 'code',
+                            'phone', 'cardNumber', 'name', 'email', 'fcmToken',
+                            'verifiedToken', 'newPin', 'familyCode'
+                        ];
+                        for (const key of sensitiveKeys) {
+                            if (data[key]) data[key] = '[FILTERED]';
                         }
+                    }
+                }
+                // IP va User-Agent dan foydalanuvchini aniqlash oldini olish
+                if (event.request) {
+                    delete event.request.cookies;
+                    if (event.request.headers) {
+                        delete event.request.headers['authorization'];
+                        delete event.request.headers['cookie'];
                     }
                 }
                 return event;

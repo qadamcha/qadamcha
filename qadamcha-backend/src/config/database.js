@@ -6,7 +6,7 @@ const connectDB = async () => {
         mongoose.set('strictQuery', false);
 
         await mongoose.connect(config.MONGODB_URI, {
-            maxPoolSize: config.NODE_ENV === 'production' ? 100 : 10,
+            maxPoolSize: config.NODE_ENV === 'production' ? 20 : 10, // [FIX MED-4] Atlas M0 = 500 conn limit
             minPoolSize: config.NODE_ENV === 'production' ? 10 : 2,
             serverSelectionTimeoutMS: 5000,
             socketTimeoutMS: 45000,

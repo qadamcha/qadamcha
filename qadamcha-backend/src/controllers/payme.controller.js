@@ -28,7 +28,12 @@ async function createCard(request, reply) {
             card: result.card,
         };
     } catch (err) {
-        request.log.error('Payme cards.create xatosi:', err);
+        // [FIX MED-6] PCI DSS — karta raqami logga yozilmasligi kerak
+        request.log.error('Payme cards.create xatosi:', {
+            message: err.message,
+            code: err.code,
+            // cardNumber va expire LOGGA YOZILMAYDI
+        });
         return reply.status(400).send({
             success: false,
             message: err.message || 'Karta tokenini yaratishda xatolik',
@@ -50,7 +55,7 @@ async function getVerifyCode(request, reply) {
     const { token } = request.body;
 
     // 1. Bloklangan foydalanuvchini tekshirish
-    const blockStatus = otpRateLimiter.isBlocked(userId);
+    const blockStatus = await otpRateLimiter.isBlocked(userId);
     if (blockStatus.blocked) {
         return reply.status(429).send({
             success: false,
@@ -61,7 +66,7 @@ async function getVerifyCode(request, reply) {
     }
 
     // 2. Qayta yuborish tezligini tekshirish
-    const resendStatus = otpRateLimiter.canResendCode(userId);
+    const resendStatus = await otpRateLimiter.canResendCode(userId);
     if (!resendStatus.canResend) {
         return reply.status(429).send({
             success: false,
@@ -75,7 +80,7 @@ async function getVerifyCode(request, reply) {
         const result = await paymeService.getVerifyCode(token);
 
         // 3. Kod sessiyasini qayd etish (60s muddat boshlanadi)
-        otpRateLimiter.recordCodeSent(userId, token);
+        await otpRateLimiter.recordCodeSent(userId, token);
 
         return {
             success: true,
@@ -83,7 +88,7 @@ async function getVerifyCode(request, reply) {
             phone: result.phone,
             wait: result.wait,
             codeExpiresIn: 60,
-            attemptsLeft: otpRateLimiter.getAttemptsLeft(userId),
+            attemptsLeft: await otpRateLimiter.getAttemptsLeft(userId),
         };
     } catch (err) {
         request.log.error('Payme cards.get_verify_code xatosi:', err);
@@ -109,7 +114,7 @@ async function verifyCard(request, reply) {
     const { token, code } = request.body;
 
     // 1. Bloklangan foydalanuvchini tekshirish
-    const blockStatus = otpRateLimiter.isBlocked(userId);
+    const blockStatus = await otpRateLimiter.isBlocked(userId);
     if (blockStatus.blocked) {
         return reply.status(429).send({
             success: false,
@@ -120,13 +125,13 @@ async function verifyCard(request, reply) {
     }
 
     // 2. Kod muddatini tekshirish
-    const expiryStatus = otpRateLimiter.isCodeExpired(userId);
+    const expiryStatus = await otpRateLimiter.isCodeExpired(userId);
     if (expiryStatus.expired) {
         return reply.status(400).send({
             success: false,
             errorCode: 'CODE_EXPIRED',
             message: 'Tasdiqlash kodi muddati tugagan. Iltimos, qayta yuborish tugmasini bosing',
-            attemptsLeft: otpRateLimiter.getAttemptsLeft(userId),
+            attemptsLeft: await otpRateLimiter.getAttemptsLeft(userId),
         });
     }
 
@@ -134,7 +139,7 @@ async function verifyCard(request, reply) {
         const result = await paymeService.verifyCard(token, code);
 
         // 3. Muvaffaqiyat — barcha counterlarni tozalash
-        otpRateLimiter.resetAttempts(userId);
+        await otpRateLimiter.resetAttempts(userId);
 
         return {
             success: true,
@@ -145,7 +150,7 @@ async function verifyCard(request, reply) {
         request.log.error('Payme cards.verify xatosi:', err);
 
         // 4. Noto'g'ri kod — urinishni qayd etish
-        const attemptResult = otpRateLimiter.recordFailedAttempt(userId);
+        const attemptResult = await otpRateLimiter.recordFailedAttempt(userId);
 
         if (attemptResult.blocked) {
             return reply.status(429).send({

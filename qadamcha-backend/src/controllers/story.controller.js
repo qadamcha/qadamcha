@@ -9,17 +9,24 @@ exports.getAll = async (request, reply) => {
         if (type) query.type = type;
         if (language) query.language = language;
         if (age) {
-            query['ageRange.min'] = { $lte: parseInt(age) };
-            query['ageRange.max'] = { $gte: parseInt(age) };
+            const parsedAge = parseInt(age);
+            if (isNaN(parsedAge) || parsedAge < 1 || parsedAge > 18) {
+                return reply.status(400).send({ success: false, message: 'Yosh 1-18 orasida bo\'lishi kerak' });
+            }
+            query['ageRange.min'] = { $lte: parsedAge };
+            query['ageRange.max'] = { $gte: parsedAge };
         }
 
-        const skip = (parseInt(page) - 1) * parseInt(limit);
+        // [FIX MED] Pagination validatsiyasi
+        const parsedPage = Math.max(1, parseInt(page) || 1);
+        const parsedLimit = Math.min(100, Math.max(1, parseInt(limit) || 50));
+        const skip = (parsedPage - 1) * parsedLimit;
 
         const [stories, total] = await Promise.all([
             Story.find(query)
                 .sort({ order: 1, createdAt: -1 })
                 .skip(skip)
-                .limit(parseInt(limit)),
+                .limit(parsedLimit),
             Story.countDocuments(query)
         ]);
 
@@ -28,12 +35,12 @@ exports.getAll = async (request, reply) => {
             stories,
             count: stories.length,
             total,
-            page: parseInt(page),
-            totalPages: Math.ceil(total / parseInt(limit))
+            page: parsedPage,
+            totalPages: Math.ceil(total / parsedLimit)
         };
     } catch (error) {
         reply.code(500);
-        return { success: false, message: error.message };
+        return { success: false, message: 'Ertaklarni olishda xatolik' };
     }
 };
 
@@ -47,27 +54,28 @@ exports.getFeatured = async (request, reply) => {
         return { success: true, stories, count: stories.length };
     } catch (error) {
         reply.code(500);
-        return { success: false, message: error.message };
+        return { success: false, message: 'Ertaklarni olishda xatolik' };
     }
 };
 
 // GET /stories/:id — Bitta ertakni olish
+// [FIX CRIT-6] isActive tekshiruvi + atomic $inc (race condition fix)
 exports.getOne = async (request, reply) => {
     try {
-        const story = await Story.findById(request.params.id);
+        const story = await Story.findOneAndUpdate(
+            { _id: request.params.id, isActive: true },
+            { $inc: { views: 1 } },
+            { new: true }
+        );
 
         if (!story) {
             reply.code(404);
             return { success: false, message: 'Ertak topilmadi' };
         }
 
-        // Ko'rishlar sonini oshirish
-        story.views += 1;
-        await story.save();
-
         return { success: true, story };
     } catch (error) {
         reply.code(500);
-        return { success: false, message: error.message };
+        return { success: false, message: 'Ertakni olishda xatolik' };
     }
 };

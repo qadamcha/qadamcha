@@ -97,13 +97,10 @@ class SmsService {
             && config.ESKIZ_EMAIL !== 'your_email@gmail.com'
             && config.ESKIZ_PASSWORD !== 'your_eskiz_api_password';
 
-        // OTP kodni FAQAT development rejimda logga chiqarish
-        if (config.NODE_ENV !== 'production') {
-            console.log('\n' + '='.repeat(50));
-            console.log('📱 OTP CODE FOR', phone);
-            console.log('🔐 CODE:', code);
-            console.log('📋 PURPOSE:', purpose);
-            console.log('='.repeat(50) + '\n');
+        // [FIX SEC-3] OTP kodni HECH QACHON logga yozmaslik
+        // [FIX SEC-10] Telefon raqam faqat maskirovka qilingan holda loglanadi
+        if (config.NODE_ENV === 'development') {
+            console.log(`📱 OTP sent to ${this._maskPhone(phone)} | purpose: ${purpose}`);
         } else {
             // Production: faqat maskirovka qilingan telefon raqam
             console.log(`📱 OTP sent to ${this._maskPhone(phone)} | purpose: ${purpose}`);
@@ -133,7 +130,7 @@ class SmsService {
 
         // 2. SMS yuborish
         try {
-            console.log('📤 SMS yuborish:', this.formatPhone(phone), '|', message.substring(0, 50) + '...');
+            console.log('📤 SMS yuborish:', this._maskPhone(phone));
 
             let data = await this._sendSms(phone, message, token);
             console.log('📨 Eskiz javob:', JSON.stringify(data));

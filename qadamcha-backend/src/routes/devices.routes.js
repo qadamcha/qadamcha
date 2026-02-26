@@ -30,8 +30,19 @@ module.exports = async function (fastify) {
     }, devicesController.generateFamilyCode);
 
     // POST /devices/link (autentifikatsiyasiz - bola qurilmasi uchun)
+    // [FIX CRIT-3] Kuchli rate limit — oila kodi brute-force himoyasi
     fastify.post('/link', {
-        schema: { body: LinkSchema }
+        schema: { body: LinkSchema },
+        config: {
+            rateLimit: {
+                max: 5,
+                timeWindow: '5 minutes',
+                errorResponseBuilder: () => ({
+                    success: false,
+                    message: 'Juda ko\'p urinish. 5 daqiqadan keyin qayta urinib ko\'ring.'
+                })
+            }
+        }
     }, devicesController.linkDevice);
 
     // PUT /devices/:id (autentifikatsiya bilan)

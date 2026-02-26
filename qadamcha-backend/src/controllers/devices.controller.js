@@ -202,8 +202,9 @@ module.exports = {
     },
 
     // PUT /devices/fcm-token - FCM tokenni saqlash
+    // [FIX HIGH-3] userId tekshiruvi qo'shildi
     async updateFcmToken(request, reply) {
-        const { deviceId } = request.user;
+        const { userId, deviceId } = request.user;
         const { fcmToken } = request.body;
 
         if (!fcmToken) {
@@ -214,7 +215,7 @@ module.exports = {
         }
 
         const result = await Device.updateOne(
-            { deviceId, isActive: true },
+            { deviceId, userId, isActive: true },
             { fcmToken }
         );
 
@@ -229,11 +230,12 @@ module.exports = {
     },
 
     // POST /devices/:id/heartbeat - Qurilma online statusini yangilash
+    // [FIX HIGH-4] userId tekshiruvi qo'shildi
     async heartbeat(request, reply) {
-        const { deviceId } = request.user;
+        const { userId, deviceId } = request.user;
 
         const result = await Device.updateOne(
-            { deviceId, isActive: true },
+            { deviceId, userId, isActive: true },
             { lastSeen: new Date() }
         );
 
@@ -318,10 +320,11 @@ module.exports = {
     },
 
     // GET /devices/my-status - Joriy qurilma statusini tekshirish
+    // [FIX HIGH-5] userId tekshiruvi qo'shildi
     async checkMyStatus(request, reply) {
-        const { deviceId } = request.user;
+        const { userId, deviceId } = request.user;
 
-        const device = await Device.findOne({ deviceId });
+        const device = await Device.findOne({ deviceId, userId });
 
         if (!device || !device.isActive) {
             return { success: true, status: 'removed' };

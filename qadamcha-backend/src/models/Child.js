@@ -34,11 +34,15 @@ const childSchema = new mongoose.Schema({
     },
     weekdayLimit: {
         type: Number,
-        default: 60
+        default: 60,
+        min: [5, 'weekdayLimit 5 dan katta bo\'lishi kerak'],
+        max: [480, 'weekdayLimit 480 dan kichik bo\'lishi kerak']
     },
     weekendLimit: {
         type: Number,
-        default: 120
+        default: 120,
+        min: [5, 'weekendLimit 5 dan katta bo\'lishi kerak'],
+        max: [480, 'weekendLimit 480 dan kichik bo\'lishi kerak']
     },
 
     // Joriy statistika

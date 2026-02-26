@@ -5,28 +5,45 @@ services:
     image: mongo:latest
     container_name: qadamcha_mongo
     restart: always
+    # [FIX SEC-4] Portni faqat ichki tarmoqda ochish
+    # Tashqi tarmoqdan to'g'ridan-to'g'ri ulanish bloklangan
     ports:
-      - "27017:27017"
+      - "127.0.0.1:27017:27017"
+    environment:
+      # [FIX SEC-4] MongoDB autentifikatsiya
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME:-qadamcha_admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?MONGO_PASSWORD env variable majburiy}
     volumes:
       - mongodb_data:/data/db
 
+  # [FIX SEC-4] Mongo Express faqat development da ishlatiladi
+  # Production da bu serviceni olib tashlang yoki o'chiring
   mongo-express:
     image: mongo-express
     container_name: qadamcha_mongo_express
     restart: always
     ports:
-      - "8081:8081"
+      - "127.0.0.1:8081:8081"
     environment:
       ME_CONFIG_MONGODB_SERVER: mongodb
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USERNAME:-qadamcha_admin}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASSWORD:?MONGO_PASSWORD env variable majburiy}
+      # Basic Auth himoyasi
+      ME_CONFIG_BASICAUTH_USERNAME: ${ME_ADMIN_USER:-admin}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${ME_ADMIN_PASS:?ME_ADMIN_PASS env variable majburiy}
     depends_on:
       - mongodb
+    profiles:
+      - development
 
   redis:
     image: redis:alpine
     container_name: qadamcha_redis
     restart: always
+    # [FIX SEC-4] Redis autentifikatsiya + faqat ichki port
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD env variable majburiy} --maxmemory 256mb --maxmemory-policy allkeys-lru
     volumes:
       - redis_data:/data
 
@@ -42,10 +59,9 @@ services:
       - mongodb
       - redis
     environment:
-      - MONGODB_URI=mongodb://mongodb:27017/qadamcha
-      - REDIS_URL=redis://redis:6379
+      - MONGODB_URI=mongodb://${MONGO_USERNAME:-qadamcha_admin}:${MONGO_PASSWORD}@mongodb:27017/qadamcha?authSource=admin
+      - REDIS_URL=redis://default:${REDIS_PASSWORD}@redis:6379
 
 volumes:
   mongodb_data:
   redis_data:
-

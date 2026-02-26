@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const crypto = require('crypto');
 const config = require('../config/env');
 
 class VideoService {
@@ -6,6 +7,7 @@ class VideoService {
         this.libraryId = config.BUNNY_LIBRARY_ID;
         this.apiKey = config.BUNNY_API_KEY;
         this.cdnHost = config.BUNNY_CDN_HOST;
+        this.cdnTokenKey = config.BUNNY_CDN_TOKEN_KEY || null; // [FIX SEC-11]
         this.baseUrl = `https://video.bunnycdn.com/library/${this.libraryId}`;
     }
 
@@ -66,24 +68,51 @@ class VideoService {
     }
 
     /**
-     * HLS streaming URL olish
+     * [FIX SEC-11] Bunny CDN Token Authentication
+     * Vaqt cheklangan signed URL yaratish — faqat autentifikatsiya qilingan
+     * foydalanuvchilar video ko'rishi mumkin
+     * @param {string} path - CDN path (e.g. /videoId/playlist.m3u8)
+     * @param {number} expiresInSeconds - URL amal qilish muddati (default 4 soat)
+     * @returns {string} Signed URL
+     */
+    _signUrl(path, expiresInSeconds = 14400) {
+        if (!this.cdnTokenKey) {
+            // Token key sozlanmagan — oddiy URL qaytarish (dev/test uchun)
+            return `https://${this.cdnHost}${path}`;
+        }
+
+        const expires = Math.floor(Date.now() / 1000) + expiresInSeconds;
+        const hashableBase = `${this.cdnTokenKey}${path}${expires}`;
+        const token = crypto
+            .createHash('sha256')
+            .update(hashableBase)
+            .digest('base64')
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=+$/, '');
+
+        return `https://${this.cdnHost}${path}?token=${token}&expires=${expires}`;
+    }
+
+    /**
+     * HLS streaming URL olish (signed)
      */
     getStreamUrl(videoId) {
-        return `https://${this.cdnHost}/${videoId}/playlist.m3u8`;
+        return this._signUrl(`/${videoId}/playlist.m3u8`);
     }
 
     /**
-     * Thumbnail URL olish
+     * Thumbnail URL olish (signed)
      */
     getThumbnailUrl(videoId) {
-        return `https://${this.cdnHost}/${videoId}/thumbnail.jpg`;
+        return this._signUrl(`/${videoId}/thumbnail.jpg`, 86400); // 24 soat
     }
 
     /**
-     * Preview animatsiya URL
+     * Preview animatsiya URL (signed)
      */
     getPreviewUrl(videoId) {
-        return `https://${this.cdnHost}/${videoId}/preview.webp`;
+        return this._signUrl(`/${videoId}/preview.webp`, 86400); // 24 soat
     }
 
     /**

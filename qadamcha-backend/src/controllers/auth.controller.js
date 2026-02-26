@@ -12,9 +12,10 @@ module.exports = {
         const { phone, purpose } = request.body;
         const redis = this.redis;
 
-        // Rate limit check (test phone faqat development da bypass)
+        // Rate limit check
+        // [FIX SEC-2] Test phone faqat STRICT development da bypass
         const attemptsKey = `${REDIS_KEYS.OTP_ATTEMPTS}${phone}`;
-        const isTestBypass = config.NODE_ENV !== 'production' && phone === config.TEST_PHONE;
+        const isTestBypass = config.NODE_ENV === 'development' && config.TEST_PHONE && phone === config.TEST_PHONE;
         if (!isTestBypass) {
             const attempts = await redis.get(attemptsKey);
 
@@ -58,13 +59,9 @@ module.exports = {
             });
         }
 
-        // Dev modeda OTP kodni ko'rsatish
-        const response = { success: true, message: SUCCESS.OTP_SENT };
-        if (config.NODE_ENV !== 'production') {
-            response.code = code;
-        }
-
-        return response;
+        // [FIX SEC-1] OTP kodi hech qachon API responseda qaytarilmaydi
+        // OTP faqat SMS orqali yuboriladi — bu backdoor edi
+        return { success: true, message: SUCCESS.OTP_SENT };
     },
 
     // POST /auth/verify-otp
@@ -103,12 +100,12 @@ module.exports = {
 
     // POST /auth/register
     async register(request, reply) {
-        const { phone, name, pin } = request.body;
+        const { phone, name, pin, verifiedToken } = request.body;
         const redis = this.redis;
 
-        // Check if verified
-        const verified = await redis.get(`${REDIS_KEYS.VERIFIED}${phone}`);
-        if (!verified) {
+        // [FIX CRIT-4] verifiedToken ni tekshirish — soxta ro'yxatdan o'tishning oldini oladi
+        const savedToken = await redis.get(`${REDIS_KEYS.VERIFIED}${phone}`);
+        if (!savedToken || savedToken !== verifiedToken) {
             return reply.status(400).send({
                 success: false,
                 message: 'Avval telefon raqamni tasdiqlang'
@@ -149,12 +146,12 @@ module.exports = {
 
     // POST /auth/reset-pin
     async resetPin(request, reply) {
-        const { phone, newPin } = request.body;
+        const { phone, newPin, verifiedToken } = request.body;
         const redis = this.redis;
 
-        // Check if phone is verified
-        const verified = await redis.get(`${REDIS_KEYS.VERIFIED}${phone}`);
-        if (!verified) {
+        // [FIX CRIT-4] verifiedToken ni tekshirish
+        const savedToken = await redis.get(`${REDIS_KEYS.VERIFIED}${phone}`);
+        if (!savedToken || savedToken !== verifiedToken) {
             return reply.status(400).send({
                 success: false,
                 message: 'Avval telefon raqamni tasdiqlang'
@@ -278,8 +275,9 @@ module.exports = {
             { expiresIn: config.JWT_REFRESH_EXPIRES }
         );
 
-        // Update device with token family
-        device.refreshToken = refreshToken;
+        // [FIX SEC-8] Refresh tokenni hash qilib saqlash — DB dump himoyasi
+        const refreshTokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
+        device.refreshToken = refreshTokenHash;
         device.tokenFamily = tokenFamily;
         device.refreshTokenVersion = 0;
         device.lastSeen = new Date();
@@ -313,9 +311,11 @@ module.exports = {
                 throw new Error('Invalid token type');
             }
 
+            // [FIX SEC-8] Refresh token hash bilan solishtirish
+            const incomingHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
             const device = await Device.findOne({
                 deviceId: decoded.deviceId,
-                refreshToken,
+                refreshToken: incomingHash,
                 isActive: true
             });
 
@@ -366,8 +366,9 @@ module.exports = {
                 { expiresIn: config.JWT_REFRESH_EXPIRES }
             );
 
-            // Device da yangi refresh token saqlash
-            device.refreshToken = newRefreshToken;
+            // [FIX SEC-8] Yangi refresh tokenni hash qilib saqlash
+            const newRefreshHash = crypto.createHash('sha256').update(newRefreshToken).digest('hex');
+            device.refreshToken = newRefreshHash;
             device.refreshTokenVersion = newVersion;
             device.lastSeen = new Date();
             await device.save();

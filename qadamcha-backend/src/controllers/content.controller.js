@@ -280,10 +280,23 @@ module.exports = {
                     });
                 }
 
+                // [FIX CRIT-5] todayUsage — nested object, $inc to'g'ri fieldlarga qaratildi
+                const durationMinutes = Math.round(duration / 60);
+                const usageInc = { 'todayUsage.minutesUsed': durationMinutes };
+
+                // Content turiga qarab tegishli counter ni oshirish
+                if (content.type === 'cartoon' || content.type === 'video') {
+                    usageInc['todayUsage.videosWatched'] = 1;
+                } else if (content.type === 'game') {
+                    usageInc['todayUsage.gamesPlayed'] = 1;
+                } else if (content.type === 'story') {
+                    usageInc['todayUsage.storiesRead'] = 1;
+                }
+
                 await Child.updateOne(
                     { _id: childId },
                     {
-                        $inc: { todayUsage: duration },
+                        $inc: usageInc,
                         $set: { lastActive: new Date(), lastUsageDate: today }
                     }
                 );
@@ -298,7 +311,7 @@ module.exports = {
                         if (percentUsed >= 80 && percentUsed < 100) {
                             notificationService.notifyTimeLimitApproaching(
                                 userId, updatedChild.name, percentUsed
-                            ).catch(() => {});
+                            ).catch(() => { });
                         }
                     }
                 } catch (_notifErr) {
@@ -317,6 +330,7 @@ module.exports = {
     },
 
     // POST /content/:id/like - Like/unlike toggle
+    // [FIX HIGH-1] Atomic operatsiyalar + manfiy likes oldini olish
     async like(request, reply) {
         const { id } = request.params;
         const { userId } = request.user;
@@ -329,15 +343,17 @@ module.exports = {
             });
         }
 
-        // Like mavjudligini tekshirish
-        const existingLike = await ContentLike.findOne({ userId, contentId: id });
+        // Atomic: findOneAndDelete — agar mavjud bo'lsa o'chiradi
+        const deletedLike = await ContentLike.findOneAndDelete({ userId, contentId: id });
 
-        if (existingLike) {
-            // Unlike — like ni olib tashlash
-            await ContentLike.deleteOne({ _id: existingLike._id });
-            await Content.updateOne({ _id: id }, { $inc: { likes: -1 } });
+        if (deletedLike) {
+            // Unlike — likes ni kamaytirish (manfiy bo'lmasligini ta'minlash)
+            await Content.updateOne(
+                { _id: id, likes: { $gt: 0 } },
+                { $inc: { likes: -1 } }
+            );
             const updated = await Content.findById(id);
-            return { success: true, liked: false, likes: updated.likes };
+            return { success: true, liked: false, likes: Math.max(0, updated.likes) };
         }
 
         // Like qo'shish

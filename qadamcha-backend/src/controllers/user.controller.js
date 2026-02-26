@@ -3,7 +3,7 @@
  * Foydalanuvchi profili boshqaruvi
  */
 
-const { User, Subscription, Child, Device } = require('../models');
+const { User, Child, Device, Subscription } = require('../models');
 const bcrypt = require('bcryptjs');
 
 module.exports = {
@@ -122,9 +122,30 @@ module.exports = {
         };
     },
 
-    // DELETE /user/account — Akkountni o'chirish
+    // DELETE /user/profile - Hisobni o'chirish
+    // [FIX MED-7] Aktiv obuna va pending to'lovlarni tekshirish
     async deleteAccount(request, reply) {
         const { userId } = request.user;
+
+        // Aktiv obunani tekshirish
+        const activeSubscription = await Subscription.getActive(userId);
+        if (activeSubscription) {
+            return reply.status(400).send({
+                success: false,
+                message: 'Aktiv obunangiz bor. Avval obunani bekor qiling'
+            });
+        }
+
+        // Pending to'lovni tekshirish
+        const pendingSubscription = await Subscription.findOne({
+            userId, status: { $in: ['pending', 'processing'] }
+        });
+        if (pendingSubscription) {
+            return reply.status(400).send({
+                success: false,
+                message: 'Kutilayotgan to\'lov mavjud. Avval to\'lovni yakunlang yoki bekor qiling'
+            });
+        }
 
         const user = await User.findById(userId);
         if (!user) {

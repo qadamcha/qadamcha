@@ -20,7 +20,8 @@ const OtpVerifySchema = Type.Object({
 const RegisterSchema = Type.Object({
     phone: Type.String({ pattern: '^\\+998[0-9]{9}$' }),
     name: Type.String({ minLength: 2, maxLength: 50 }),
-    pin: Type.String({ minLength: 4, maxLength: 6, pattern: '^[0-9]+$' })
+    pin: Type.String({ minLength: 4, maxLength: 6, pattern: '^[0-9]+$' }),
+    verifiedToken: Type.String({ minLength: 1 })
 });
 
 const LoginSchema = Type.Object({
@@ -40,7 +41,8 @@ const RefreshSchema = Type.Object({
 
 const ResetPinSchema = Type.Object({
     phone: Type.String({ pattern: '^\\+998[0-9]{9}$' }),
-    newPin: Type.String({ minLength: 4, maxLength: 6, pattern: '^[0-9]+$' })
+    newPin: Type.String({ minLength: 4, maxLength: 6, pattern: '^[0-9]+$' }),
+    verifiedToken: Type.String({ minLength: 1 })
 });
 
 const VerifyPinSchema = Type.Object({
@@ -115,14 +117,7 @@ module.exports = async function (fastify) {
         preHandler: [fastify.authenticate]
     }, authController.logout);
 
-    // PUT /auth/profile - Profilni yangilash
-    const UpdateProfileSchema = Type.Object({
-        name: Type.Optional(Type.String({ minLength: 2, maxLength: 50 }))
-    });
-
-    fastify.put('/profile', {
-        schema: { body: UpdateProfileSchema },
-        preHandler: [fastify.authenticate]
-    }, authController.updateProfile);
+    // [FIX MED-8] PUT /auth/profile olib tashlandi — /user/profile orqali yangilash kerak
+    // Duplicate endpoint bo'lgani uchun confusion oldini olish maqsadida olib tashlandi
 
 };

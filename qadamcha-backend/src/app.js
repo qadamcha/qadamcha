@@ -24,7 +24,7 @@ const registerPlugins = async () => {
     const corsOrigin = (() => {
         if (config.NODE_ENV !== 'production') return true;
         const origins = config.ALLOWED_ORIGINS;
-        if (!origins || origins === '*') return false; // Production da * rad etiladi
+        if (!origins || origins === '*') return true;  // [FIX MED-2] * = barcha originlarga ruxsat
         return origins.split(',').map(o => o.trim());
     })();
 
@@ -32,6 +32,10 @@ const registerPlugins = async () => {
         origin: corsOrigin,
         credentials: true
     });
+
+    // [FIX MED-1] Global sanitizeBody middleware — XSS oldini olish
+    const { sanitizeBody } = require('./middlewares/validator.middleware');
+    fastify.addHook('preHandler', sanitizeBody);
 
     // Security Headers
     await fastify.register(require('@fastify/helmet'), {
@@ -56,9 +60,7 @@ const registerPlugins = async () => {
     });
 };
 
-// Authentication Middleware — alohida fayldan
-const { registerAuth } = require('./middlewares/auth.middleware');
-registerAuth(fastify);
+// Authentication Middleware — plugins dan keyin register qilinadi (MED-3)
 
 // Register Routes
 const registerRoutes = async () => {
@@ -147,7 +149,8 @@ fastify.setErrorHandler((error, request, reply) => {
     reply.status(statusCode).send({
         success: false,
         message,
-        ...(config.NODE_ENV !== 'production' && { stack: error.stack })
+        // [FIX SEC-9] Stack trace faqat STRICT development da qaytariladi
+        ...(config.NODE_ENV === 'development' && { stack: error.stack })
     });
 });
 
@@ -177,12 +180,20 @@ const start = async () => {
         const cacheService = require('./services/cache.service');
         cacheService.setRedis(redis);
 
+        // [FIX HIGH-6] OTP Rate Limiter ni Redis bilan ulash
+        const otpRateLimiter = require('./services/otp-rate-limiter');
+        otpRateLimiter.setRedis(redis);
+
         // Initialize notification service
         const notificationService = require('./services/notification.service');
         notificationService.init();
 
         // Register plugins and routes
         await registerPlugins();
+
+        // [FIX MED-3] Auth middleware — JWT plugin dan keyin register qilish
+        const { registerAuth } = require('./middlewares/auth.middleware');
+        registerAuth(fastify);
 
         // Register Logger Middleware
         const { registerLogger } = require('./middlewares');
@@ -197,6 +208,10 @@ const start = async () => {
         }
 
         await registerRoutes();
+
+        // [FIX HIGH-7] Subscription expiry scheduler
+        const subscriptionScheduler = require('./services/subscription-scheduler');
+        subscriptionScheduler.start();
 
         // Start listening
         await fastify.listen({
@@ -223,6 +238,11 @@ const gracefulShutdown = async (signal) => {
     try {
         await fastify.close();
         await disconnectRedis();
+        // Scheduler ni to'xtatish
+        try {
+            const subscriptionScheduler = require('./services/subscription-scheduler');
+            subscriptionScheduler.stop();
+        } catch { }
         console.log('✅ Server closed');
         process.exit(0);
     } catch (err) {

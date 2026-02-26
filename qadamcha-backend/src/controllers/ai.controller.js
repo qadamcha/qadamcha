@@ -8,13 +8,26 @@ module.exports = {
     // POST /ai/chat - AI bilan suhbat (tarix bilan)
     async chat(request, reply) {
         const { userId } = request.user;
-        const { message, childId, history } = request.body;
+        let { message, childId, history } = request.body;
 
         if (!message || message.trim().length < 3) {
             return reply.status(400).send({
                 success: false,
-                message: 'Savol juda qisqa'
+                message: 'Xabar kamida 3 ta belgi bo\'lishi kerak'
             });
+        }
+
+        // [FIX MED-5] Xabar uzunligini cheklash — API xarajatlarini nazorat qilish
+        if (message.length > 2000) {
+            return reply.status(400).send({
+                success: false,
+                message: 'Xabar 2000 ta belgidan oshmasligi kerak'
+            });
+        }
+
+        // [FIX MED-5] Tarix massivi uzunligini cheklash
+        if (history && Array.isArray(history) && history.length > 20) {
+            history = history.slice(-20);
         }
 
         // Bola konteksti

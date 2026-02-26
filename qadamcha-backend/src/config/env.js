@@ -74,6 +74,7 @@ module.exports = {
     BUNNY_LIBRARY_ID: process.env.BUNNY_STREAM_LIBRARY_ID,
     BUNNY_API_KEY: process.env.BUNNY_STREAM_API_KEY,
     BUNNY_CDN_HOST: process.env.BUNNY_CDN_HOSTNAME,
+    BUNNY_CDN_TOKEN_KEY: process.env.BUNNY_CDN_TOKEN_KEY || null, // [FIX SEC-11] Signed URL uchun
 
     // Payme
     PAYME_MERCHANT_ID: process.env.PAYME_MERCHANT_ID,

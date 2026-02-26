@@ -1,4 +1,4 @@
-const { Subscription, User } = require('../models');
+const { Subscription, User, PaymeTransaction } = require('../models');
 const config = require('../config/env');
 const { ERRORS, SUCCESS } = require('../config/constants');
 
@@ -158,6 +158,21 @@ module.exports = {
             };
         }
 
+        // [FIX CRIT-2] PaymeTransaction jadvaldan to'lov muvaffaqiyatini tekshirish
+        // Fake transactionId bilan obuna faollashtirishning oldini oladi
+        const verifiedTx = await PaymeTransaction.findOne({
+            _id: transactionId,
+            orderId,
+            userId,
+            state: 4,  // faqat to'langan
+        });
+        if (!verifiedTx) {
+            return reply.status(400).send({
+                success: false,
+                message: 'To\'lov tasdiqlanmagan yoki tranzaksiya topilmadi'
+            });
+        }
+
         // transactionId takroriy ishlatilmaganini tekshirish
         const existingTx = await Subscription.findOne({
             transactionId,
@@ -239,6 +254,14 @@ module.exports = {
 
     // POST /subscription/activate-test - Test rejimida obunani faollashtirish
     async activateTest(request, reply) {
+        // [FIX CRIT-1] Production da test obunani bloklash
+        if (config.NODE_ENV === 'production') {
+            return reply.status(403).send({
+                success: false,
+                message: 'Test rejim faqat development muhitida ishlaydi'
+            });
+        }
+
         const { userId } = request.user;
 
         // Mavjud faol obunani tekshirish

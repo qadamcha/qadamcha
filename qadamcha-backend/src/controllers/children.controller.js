@@ -179,18 +179,36 @@ module.exports = {
     },
 
     // POST|PATCH /children/:id/limit(s) - Vaqt limitini o'zgartirish
+    // [FIX HIGH-2] runValidators qo'shildi + limit qiymatlari validatsiyasi
     async setLimit(request, reply) {
         const { userId } = request.user;
         const { id } = request.params;
         const { dailyLimit, weekdayLimit, weekendLimit, weekdayMinutes, weekendMinutes } = request.body;
 
         const update = {};
-        if (dailyLimit !== undefined) update.dailyLimit = dailyLimit;
+        if (dailyLimit !== undefined) {
+            if (typeof dailyLimit !== 'number' || dailyLimit < 5 || dailyLimit > 480) {
+                return reply.status(400).send({ success: false, message: 'dailyLimit 5-480 daqiqa orasida bo\'lishi kerak' });
+            }
+            update.dailyLimit = dailyLimit;
+        }
+
         // Flutter weekdayMinutes/weekendMinutes yuboradi, backend weekdayLimit/weekendLimit saqlaydi
-        if (weekdayMinutes !== undefined) update.weekdayLimit = weekdayMinutes;
-        if (weekdayLimit !== undefined) update.weekdayLimit = weekdayLimit;
-        if (weekendMinutes !== undefined) update.weekendLimit = weekendMinutes;
-        if (weekendLimit !== undefined) update.weekendLimit = weekendLimit;
+        const wdVal = weekdayMinutes !== undefined ? weekdayMinutes : weekdayLimit;
+        const weVal = weekendMinutes !== undefined ? weekendMinutes : weekendLimit;
+
+        if (wdVal !== undefined) {
+            if (typeof wdVal !== 'number' || wdVal < 5 || wdVal > 480) {
+                return reply.status(400).send({ success: false, message: 'weekdayLimit 5-480 daqiqa orasida bo\'lishi kerak' });
+            }
+            update.weekdayLimit = wdVal;
+        }
+        if (weVal !== undefined) {
+            if (typeof weVal !== 'number' || weVal < 5 || weVal > 480) {
+                return reply.status(400).send({ success: false, message: 'weekendLimit 5-480 daqiqa orasida bo\'lishi kerak' });
+            }
+            update.weekendLimit = weVal;
+        }
 
         if (Object.keys(update).length === 0) {
             return reply.status(400).send({
@@ -202,7 +220,7 @@ module.exports = {
         const child = await Child.findOneAndUpdate(
             { _id: id, parentId: userId, isActive: true },
             { $set: update },
-            { new: true }
+            { new: true, runValidators: true }
         );
 
         if (!child) {

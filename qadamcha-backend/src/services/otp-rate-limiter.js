@@ -6,75 +6,84 @@
  * - Kod muddati = 60 soniya
  * - Qayta yuborish orasidagi minimal vaqt = Payme wait qiymati
  * 
- * In-memory store (Redis kerak emas).
- * Production uchun Redis ga o'tkazish mumkin.
+ * [FIX HIGH-6] Redis-based store — horizontal scaling da ham ishlaydi.
+ * In-memory fallback agar Redis mavjud bo'lmasa.
  */
 
 // ============= KONSTANTALAR =============
 
 const MAX_VERIFY_ATTEMPTS = 3;          // Maksimal noto'g'ri urinishlar
 const BLOCK_DURATION_MS = 5 * 60 * 1000; // 5 daqiqa bloklash
+const BLOCK_DURATION_SEC = 5 * 60;       // 5 daqiqa (Redis TTL uchun sekundlarda)
 const CODE_EXPIRY_MS = 60 * 1000;        // 1 daqiqa kod muddati
+const CODE_EXPIRY_SEC = 60;              // 1 daqiqa (Redis TTL)
 const MIN_RESEND_GAP_MS = 60 * 1000;     // Minimal qayta yuborish intervali
-const CLEANUP_INTERVAL_MS = 10 * 60 * 1000; // 10 daqiqada tozalash
 
-// ============= IN-MEMORY STORE =============
+// ============= REDIS KEYLAR =============
+
+const KEYS = {
+    BLOCK: 'otp_rl:block:',
+    ATTEMPTS: 'otp_rl:attempts:',
+    SESSION: 'otp_rl:session:',
+};
+
+let redis = null;
 
 /**
- * Store tuzilmasi:
- * verifyAttempts: Map<userId, { count, lastAttemptAt }>
- * blocks: Map<userId, { blockedUntil }>
- * codeSessions: Map<userId, { sentAt, token, expiresAt }>
+ * Redis ni sozlash
  */
-const verifyAttempts = new Map();
-const blocks = new Map();
-const codeSessions = new Map();
+function setRedis(redisClient) {
+    redis = redisClient;
+}
 
-// Eskirgan yozuvlarni tozalash (memory leak oldini olish)
-setInterval(() => {
-    const now = Date.now();
+// ============= YORDAMCHI FUNKSIYALAR =============
 
-    // Eskirgan bloklarni o'chirish
-    for (const [userId, data] of blocks.entries()) {
-        if (now > data.blockedUntil) {
-            blocks.delete(userId);
-        }
+async function _getJson(key) {
+    if (!redis) return null;
+    try {
+        const data = await redis.get(key);
+        return data ? JSON.parse(data) : null;
+    } catch {
+        return null;
     }
+}
 
-    // 30 daqiqadan eski urinishlarni o'chirish
-    const staleThreshold = now - 30 * 60 * 1000;
-    for (const [userId, data] of verifyAttempts.entries()) {
-        if (data.lastAttemptAt < staleThreshold) {
-            verifyAttempts.delete(userId);
-        }
+async function _setJson(key, value, ttlSec) {
+    if (!redis) return;
+    try {
+        await redis.setex(key, ttlSec, JSON.stringify(value));
+    } catch {
+        // Redis xatosi — davom etamiz
     }
+}
 
-    // Eskirgan kod sessionlarni o'chirish
-    for (const [userId, data] of codeSessions.entries()) {
-        if (now > data.expiresAt + 5 * 60 * 1000) {
-            codeSessions.delete(userId);
-        }
+async function _del(key) {
+    if (!redis) return;
+    try {
+        await redis.del(key);
+    } catch {
+        // Redis xatosi — davom etamiz
     }
-}, CLEANUP_INTERVAL_MS);
+}
 
 // ============= BLOKLASH =============
 
 /**
  * Foydalanuvchi bloklangan yoki yo'qligini tekshirish
  * @param {string} userId
- * @returns {{ blocked: boolean, remainingSeconds?: number }}
+ * @returns {Promise<{ blocked: boolean, remainingSeconds?: number }>}
  */
-function isBlocked(userId) {
-    const block = blocks.get(userId);
+async function isBlocked(userId) {
+    const block = await _getJson(`${KEYS.BLOCK}${userId}`);
     if (!block) {
         return { blocked: false };
     }
 
     const now = Date.now();
     if (now >= block.blockedUntil) {
-        // Blok muddati tugagan — tozalash
-        blocks.delete(userId);
-        verifyAttempts.delete(userId);
+        // Blok muddati tugagan
+        await _del(`${KEYS.BLOCK}${userId}`);
+        await _del(`${KEYS.ATTEMPTS}${userId}`);
         return { blocked: false };
     }
 
@@ -89,10 +98,10 @@ function isBlocked(userId) {
  * Foydalanuvchini bloklash
  * @param {string} userId
  */
-function blockUser(userId) {
-    blocks.set(userId, {
+async function blockUser(userId) {
+    await _setJson(`${KEYS.BLOCK}${userId}`, {
         blockedUntil: Date.now() + BLOCK_DURATION_MS,
-    });
+    }, BLOCK_DURATION_SEC + 10);
 }
 
 // ============= VERIFY URINISHLARI =============
@@ -100,21 +109,22 @@ function blockUser(userId) {
 /**
  * Noto'g'ri verify urinishini qayd etish
  * @param {string} userId
- * @returns {{ attemptsLeft: number, blocked: boolean, remainingSeconds?: number }}
+ * @returns {Promise<{ attemptsLeft: number, blocked: boolean, remainingSeconds?: number }>}
  */
-function recordFailedAttempt(userId) {
-    const existing = verifyAttempts.get(userId) || { count: 0 };
+async function recordFailedAttempt(userId) {
+    const key = `${KEYS.ATTEMPTS}${userId}`;
+    const existing = (await _getJson(key)) || { count: 0 };
 
     existing.count += 1;
     existing.lastAttemptAt = Date.now();
-    verifyAttempts.set(userId, existing);
+    await _setJson(key, existing, 30 * 60); // 30 daqiqa saqlash
 
     if (existing.count >= MAX_VERIFY_ATTEMPTS) {
         // Limitga yetdi — bloklash
-        blockUser(userId);
-        verifyAttempts.delete(userId);
+        await blockUser(userId);
+        await _del(key);
 
-        const blockInfo = isBlocked(userId);
+        const blockInfo = await isBlocked(userId);
         return {
             attemptsLeft: 0,
             blocked: true,
@@ -132,19 +142,19 @@ function recordFailedAttempt(userId) {
  * Muvaffaqiyatli verify'dan keyin counterni tozalash
  * @param {string} userId
  */
-function resetAttempts(userId) {
-    verifyAttempts.delete(userId);
-    blocks.delete(userId);
-    codeSessions.delete(userId);
+async function resetAttempts(userId) {
+    await _del(`${KEYS.ATTEMPTS}${userId}`);
+    await _del(`${KEYS.BLOCK}${userId}`);
+    await _del(`${KEYS.SESSION}${userId}`);
 }
 
 /**
  * Qolgan urinishlar sonini olish
  * @param {string} userId
- * @returns {number}
+ * @returns {Promise<number>}
  */
-function getAttemptsLeft(userId) {
-    const existing = verifyAttempts.get(userId);
+async function getAttemptsLeft(userId) {
+    const existing = await _getJson(`${KEYS.ATTEMPTS}${userId}`);
     if (!existing) return MAX_VERIFY_ATTEMPTS;
     return Math.max(0, MAX_VERIFY_ATTEMPTS - existing.count);
 }
@@ -156,21 +166,22 @@ function getAttemptsLeft(userId) {
  * @param {string} userId
  * @param {string} token - karta tokeni
  */
-function recordCodeSent(userId, token) {
-    codeSessions.set(userId, {
-        sentAt: Date.now(),
+async function recordCodeSent(userId, token) {
+    const now = Date.now();
+    await _setJson(`${KEYS.SESSION}${userId}`, {
+        sentAt: now,
         token,
-        expiresAt: Date.now() + CODE_EXPIRY_MS,
-    });
+        expiresAt: now + CODE_EXPIRY_MS,
+    }, CODE_EXPIRY_SEC + 5 * 60); // 6 daqiqa Redis TTL (kod muddati + buffer)
 }
 
 /**
  * Kod muddati o'tganmi tekshirish
  * @param {string} userId
- * @returns {{ expired: boolean, remainingSeconds?: number }}
+ * @returns {Promise<{ expired: boolean, remainingSeconds?: number }>}
  */
-function isCodeExpired(userId) {
-    const session = codeSessions.get(userId);
+async function isCodeExpired(userId) {
+    const session = await _getJson(`${KEYS.SESSION}${userId}`);
     if (!session) {
         return { expired: true, remainingSeconds: 0 };
     }
@@ -189,10 +200,10 @@ function isCodeExpired(userId) {
 /**
  * Qayta kod yuborish mumkinmi tekshirish
  * @param {string} userId
- * @returns {{ canResend: boolean, waitSeconds?: number }}
+ * @returns {Promise<{ canResend: boolean, waitSeconds?: number }>}
  */
-function canResendCode(userId) {
-    const session = codeSessions.get(userId);
+async function canResendCode(userId) {
+    const session = await _getJson(`${KEYS.SESSION}${userId}`);
     if (!session) {
         return { canResend: true };
     }
@@ -213,13 +224,13 @@ function canResendCode(userId) {
  */
 function getStats() {
     return {
-        activeBlocks: blocks.size,
-        activeSessions: codeSessions.size,
-        trackingAttempts: verifyAttempts.size,
+        storage: redis ? 'redis' : 'unavailable',
     };
 }
 
 module.exports = {
+    setRedis,
+
     // Bloklash
     isBlocked,
 
