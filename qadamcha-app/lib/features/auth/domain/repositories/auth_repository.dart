@@ -14,6 +14,7 @@ abstract class AuthRepository {
     required String phone,
     required String name,
     required String pin,
+    required String verifiedToken,
   });
   
   /// Tizimga kirish
@@ -35,6 +36,7 @@ abstract class AuthRepository {
   Future<Either<Failure, String>> resetPin({
     required String phone,
     required String newPin,
+    required String verifiedToken,
   });
   
   /// Foydalanuvchi ma'lumotlarini olish (cache dan)

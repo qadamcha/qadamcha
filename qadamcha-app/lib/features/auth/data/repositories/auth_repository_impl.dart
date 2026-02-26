@@ -49,9 +49,10 @@ class AuthRepositoryImpl implements AuthRepository {
     required String phone,
     required String name,
     required String pin,
+    required String verifiedToken,
   }) async {
     try {
-      final user = await remoteDataSource.register(phone, name, pin);
+      final user = await remoteDataSource.register(phone, name, pin, verifiedToken: verifiedToken);
 
       // Ro'yxatdan keyin avtomatik login — tokenlarni olish
       try {
@@ -174,9 +175,10 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, String>> resetPin({
     required String phone,
     required String newPin,
+    required String verifiedToken,
   }) async {
     try {
-      final message = await remoteDataSource.resetPin(phone, newPin);
+      final message = await remoteDataSource.resetPin(phone, newPin, verifiedToken: verifiedToken);
       // Yangi PIN hash'ni lokal saqlash
       await localDataSource.cachePinHash(newPin);
       return Right(message);

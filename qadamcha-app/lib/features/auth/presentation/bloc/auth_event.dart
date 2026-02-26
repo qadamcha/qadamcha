@@ -33,6 +33,7 @@ class RegisterEvent extends AuthEvent {
   final String phone;
   final String name;
   final String pin;
+  final String verifiedToken;
   final String? childName;
   final int? childAge;
   final String? childGender;
@@ -41,13 +42,14 @@ class RegisterEvent extends AuthEvent {
     required this.phone,
     required this.name,
     required this.pin,
+    required this.verifiedToken,
     this.childName,
     this.childAge,
     this.childGender,
   });
   
   @override
-  List<Object?> get props => [phone, name, pin, childName, childAge, childGender];
+  List<Object?> get props => [phone, name, pin, verifiedToken, childName, childAge, childGender];
 }
 
 class LoginEvent extends AuthEvent {
@@ -76,11 +78,12 @@ class ResetAuthEvent extends AuthEvent {}
 class ResetPinEvent extends AuthEvent {
   final String phone;
   final String newPin;
+  final String verifiedToken;
   
-  const ResetPinEvent({required this.phone, required this.newPin});
+  const ResetPinEvent({required this.phone, required this.newPin, required this.verifiedToken});
   
   @override
-  List<Object?> get props => [phone, newPin];
+  List<Object?> get props => [phone, newPin, verifiedToken];
 }
 
 class AuthVerifyPinEvent extends AuthEvent {

@@ -4,7 +4,7 @@ import '../models/auth_models.dart';
 abstract class AuthRemoteDataSource {
   Future<String> sendOtp(String phone, {String? purpose});
   Future<OtpResultModel> verifyOtp(String phone, String code);
-  Future<UserModel> register(String phone, String name, String pin);
+  Future<UserModel> register(String phone, String name, String pin, {required String verifiedToken});
   Future<(UserModel, AuthTokensModel, String)> login({
     required String phone,
     required String pin,
@@ -14,7 +14,7 @@ abstract class AuthRemoteDataSource {
   });
   Future<String> refreshToken(String refreshToken);
   Future<void> logout();
-  Future<String> resetPin(String phone, String newPin);
+  Future<String> resetPin(String phone, String newPin, {required String verifiedToken});
   Future<void> verifyPin(String pin);
   Future<String> changePin(String currentPin, String newPin);
   Future<UserModel> updateProfile({required String name});
@@ -45,11 +45,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
   
   @override
-  Future<UserModel> register(String phone, String name, String pin) async {
+  Future<UserModel> register(String phone, String name, String pin, {required String verifiedToken}) async {
     final response = await _client.post('/auth/register', data: {
       'phone': phone,
       'name': name,
       'pin': pin,
+      'verifiedToken': verifiedToken,
     });
     return UserModel.fromJson(response.data['user'] ?? response.data);
   }
@@ -91,10 +92,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
   
   @override
-  Future<String> resetPin(String phone, String newPin) async {
+  Future<String> resetPin(String phone, String newPin, {required String verifiedToken}) async {
     final response = await _client.post('/auth/reset-pin', data: {
       'phone': phone,
       'newPin': newPin,
+      'verifiedToken': verifiedToken,
     });
     return response.data['message'] ?? 'PIN yangilandi';
   }

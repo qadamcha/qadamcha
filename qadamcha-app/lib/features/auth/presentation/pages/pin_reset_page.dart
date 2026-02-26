@@ -131,7 +131,11 @@ class _PinResetPageState extends State<PinResetPage> {
     }
     setState(() => _isLoading = true);
     context.read<AuthBloc>().add(
-        ResetPinEvent(phone: '+998${_phoneController.text.trim()}', newPin: _newPin));
+        ResetPinEvent(
+          phone: '+998${_phoneController.text.trim()}',
+          newPin: _newPin,
+          verifiedToken: context.read<AuthBloc>().state.verifiedToken ?? '',
+        ));
   }
 
   @override

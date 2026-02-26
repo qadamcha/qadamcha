@@ -97,6 +97,7 @@ class _PinCreatePageState extends State<PinCreatePage> {
             phone: widget.phone,
             name: widget.name,
             pin: _pin,
+            verifiedToken: context.read<AuthBloc>().state.verifiedToken ?? '',
             childName: widget.childName,
             childAge: widget.childAge,
             childGender: widget.childGender,

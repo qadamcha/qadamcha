@@ -133,6 +133,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       phone: event.phone,
       name: event.name,
       pin: event.pin,
+      verifiedToken: event.verifiedToken,
     );
     
     result.fold(
@@ -204,6 +205,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final result = await repository.resetPin(
       phone: event.phone,
       newPin: event.newPin,
+      verifiedToken: event.verifiedToken,
     );
     
     result.fold(
