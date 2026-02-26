@@ -30,7 +30,7 @@ async function expireSubscriptions() {
             logger.info(`📋 ${result.modifiedCount} ta obuna expired qilindi`);
         }
     } catch (err) {
-        logger.error('❌ Subscription expiry check xatosi:', err.message);
+        logger.error({ err }, '❌ Subscription expiry check xatosi');
     }
 }
 

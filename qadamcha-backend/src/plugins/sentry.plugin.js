@@ -1,4 +1,5 @@
 const config = require('../config/env');
+const { logger } = require('../config/logger');
 
 let Sentry = null;
 
@@ -7,7 +8,7 @@ let Sentry = null;
  */
 const initSentry = () => {
     if (!config.SENTRY_DSN) {
-        console.warn('⚠️ SENTRY_DSN not set — error monitoring disabled');
+        logger.warn('SENTRY_DSN not set — error monitoring disabled');
         return;
     }
     try {
@@ -42,9 +43,9 @@ const initSentry = () => {
                 return event;
             },
         });
-        console.log('✅ Sentry initialized');
+        logger.info('Sentry initialized');
     } catch (err) {
-        console.warn('⚠️ Sentry init failed:', err.message);
+        logger.warn({ err }, 'Sentry init failed');
     }
 };
 

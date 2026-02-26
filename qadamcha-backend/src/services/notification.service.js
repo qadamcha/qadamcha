@@ -1,5 +1,6 @@
 const config = require('../config/env');
 const { Device } = require('../models');
+const { logger } = require('../config/logger');
 
 let admin = null;
 let initialized = false;
@@ -10,7 +11,7 @@ let initialized = false;
 const init = () => {
     if (initialized) return;
     if (!config.FIREBASE_SERVICE_ACCOUNT) {
-        console.warn('⚠️ FIREBASE_SERVICE_ACCOUNT not set — push notifications disabled');
+        logger.warn('FIREBASE_SERVICE_ACCOUNT not set — push notifications disabled');
         return;
     }
     try {
@@ -23,9 +24,9 @@ const init = () => {
         });
         admin = firebaseAdmin;
         initialized = true;
-        console.log('✅ Firebase Admin initialized');
+        logger.info('Firebase Admin initialized');
     } catch (err) {
-        console.warn('⚠️ Firebase init failed:', err.message);
+        logger.warn({ err }, 'Firebase init failed');
     }
 };
 

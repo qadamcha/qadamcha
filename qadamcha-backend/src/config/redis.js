@@ -1,5 +1,6 @@
 const Redis = require('ioredis');
 const config = require('./env');
+const { logger } = require('./logger');
 
 let redis = null;
 let isMocked = false;
@@ -9,10 +10,10 @@ const fallbackToMock = (reason) => {
 
     // Production da mock bilan davom etish (crash qilmaslik — healthcheck ishlashi kerak)
     if (config.NODE_ENV === 'production') {
-        console.error(`❌ CRITICAL: ${reason}. Redis ishlamayapti, mock ishlatilmoqda!`);
+        logger.error(`CRITICAL: ${reason}. Redis ishlamayapti, mock ishlatilmoqda!`);
     }
 
-    console.warn(`⚠️ ${reason}. Mock Redis ishga tushmoqda...`);
+    logger.warn(`${reason}. Mock Redis ishga tushmoqda...`);
     try {
         const RedisMock = require('ioredis-mock');
         redis = new RedisMock();
@@ -31,7 +32,7 @@ const fallbackToMock = (reason) => {
 
 const connectRedis = async () => {
     try {
-        console.log('🔄 Connecting to Redis...');
+        logger.info('Connecting to Redis...');
         redis = new Redis(config.REDIS_URL, {
             maxRetriesPerRequest: 3,
             lazyConnect: true,
@@ -46,7 +47,7 @@ const connectRedis = async () => {
         });
 
         redis.on('error', (err) => {
-            console.warn('⚠️ Redis error:', err.message);
+            logger.warn(`Redis error: ${err.message}`);
             if (err.message.includes('ECONNREFUSED') || err.message.includes('ENOTFOUND')) {
                 fallbackToMock('Redis local topilmadi');
             }
@@ -55,14 +56,14 @@ const connectRedis = async () => {
         // Ulanishni kutish (race condition oldini olish)
         try {
             await redis.connect();
-            console.log('✅ Redis connected successfully');
+            logger.info('Redis connected successfully');
         } catch (err) {
             fallbackToMock('Redis connect() muvaffaqiyatsiz');
         }
 
         return redis;
     } catch (error) {
-        console.warn('⚠️ Redis connection failed, using Mock:', error.message);
+        logger.warn(`Redis connection failed, using Mock: ${error.message}`);
         fallbackToMock('Redis yaratishda xato');
         return redis;
     }
@@ -76,7 +77,7 @@ const disconnectRedis = async () => {
     if (redis && !isMocked) {
         try {
             await redis.quit();
-            console.log('✅ Redis disconnected');
+            logger.info('Redis disconnected');
         } catch {
             // Ignore disconnect errors
         }

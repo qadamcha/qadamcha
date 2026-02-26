@@ -125,48 +125,48 @@ class SmsService {
         try {
             token = await this.getToken();
         } catch (err) {
-            logger.error('❌ Token olishda xato:', err.message);
+            logger.error({ err }, '❌ Token olishda xato');
             return { success: false, error: 'SMS xizmati vaqtincha ishlamayapti' };
         }
 
         // 2. SMS yuborish
         try {
-            logger.info('📤 SMS yuborish:', this._maskPhone(phone));
+            logger.info(`📤 SMS yuborish: ${this._maskPhone(phone)}`);
 
             let data = await this._sendSms(phone, message, token);
-            logger.info('📨 Eskiz javob:', JSON.stringify(data));
+            logger.info({ response: data }, '📨 Eskiz javob');
 
             // ✅ Muvaffaqiyat
             if (data.status === 'waiting') {
-                logger.info('✅ SMS yuborildi! ID:', data.id);
+                logger.info(`✅ SMS yuborildi! ID: ${data.id}`);
                 return { success: true, messageId: data.id };
             }
 
             // ❌ Xato — token eski bo'lishi mumkin, yangilab qayta urinish
             if (data.status === 'error') {
-                logger.info('⚠️ Xato:', data.message, '— tokenni yangilab qayta urinish...');
+                logger.info(`⚠️ Xato: ${data.message} — tokenni yangilab qayta urinish...`);
 
                 // Tokenni yangilash
                 const newToken = await this._refreshToken();
 
                 // Qayta urinish
                 data = await this._sendSms(phone, message, newToken);
-                logger.info('📨 Qayta urinish javob:', JSON.stringify(data));
+                logger.info({ response: data }, '📨 Qayta urinish javob');
 
                 if (data.status === 'waiting') {
-                    logger.info('✅ SMS qayta urinishda yuborildi! ID:', data.id);
+                    logger.info(`✅ SMS qayta urinishda yuborildi! ID: ${data.id}`);
                     return { success: true, messageId: data.id };
                 }
 
-                logger.error('❌ SMS yuborilmadi:', data.message);
+                logger.error(`❌ SMS yuborilmadi: ${data.message}`);
                 return { success: false, error: data.message || 'SMS yuborib bo\'lmadi' };
             }
 
             // Kutilmagan javob
-            logger.error('❌ Kutilmagan javob:', JSON.stringify(data));
+            logger.error({ response: data }, '❌ Kutilmagan javob');
             return { success: false, error: 'SMS kutilmagan javob' };
         } catch (error) {
-            logger.error('❌ SMS xatosi:', error.message);
+            logger.error({ err: error }, '❌ SMS xatosi');
             return { success: false, error: 'SMS xizmati vaqtincha ishlamayapti' };
         }
     }

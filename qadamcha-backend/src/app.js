@@ -163,10 +163,10 @@ const start = async () => {
         });
 
         const publicUrl = config.PUBLIC_URL;
-        console.log(`\n🚀 Qadamcha Backend running on port ${config.PORT}`);
-        console.log(`📝 Environment: ${config.NODE_ENV}`);
-        console.log(`🔗 Health Check: ${publicUrl}/health`);
-        console.log(`📚 API Docs: ${publicUrl}/docs\n`);
+        fastify.log.info(`Qadamcha Backend running on port ${config.PORT}`);
+        fastify.log.info(`Environment: ${config.NODE_ENV}`);
+        fastify.log.info(`Health Check: ${publicUrl}/health`);
+        fastify.log.info(`API Docs: ${publicUrl}/docs`);
 
     } catch (err) {
         fastify.log.error(err);
@@ -176,7 +176,7 @@ const start = async () => {
 
 // Graceful Shutdown
 const gracefulShutdown = async (signal) => {
-    console.log(`\n${signal} signal received. Shutting down gracefully...`);
+    fastify.log.info(`${signal} signal received. Shutting down gracefully...`);
 
     try {
         await fastify.close();
@@ -186,10 +186,10 @@ const gracefulShutdown = async (signal) => {
             const subscriptionScheduler = require('./services/subscription-scheduler');
             subscriptionScheduler.stop();
         } catch { }
-        console.log('✅ Server closed');
+        fastify.log.info('Server closed');
         process.exit(0);
     } catch (err) {
-        console.error('❌ Error during shutdown:', err);
+        fastify.log.error({ err }, 'Error during shutdown');
         process.exit(1);
     }
 };

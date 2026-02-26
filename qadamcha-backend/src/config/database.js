@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const config = require('./env');
+const { logger } = require('./logger');
 
 const connectDB = async () => {
     try {
@@ -12,19 +13,19 @@ const connectDB = async () => {
             socketTimeoutMS: 45000,
         });
 
-        console.log('✅ MongoDB connected successfully');
+        logger.info('MongoDB connected successfully');
 
         // Connection events
         mongoose.connection.on('error', (err) => {
-            console.error('❌ MongoDB connection error:', err);
+            logger.error({ err }, 'MongoDB connection error');
         });
 
         mongoose.connection.on('disconnected', () => {
-            console.warn('⚠️ MongoDB disconnected');
+            logger.warn('MongoDB disconnected');
         });
 
     } catch (error) {
-        console.error('❌ MongoDB connection failed:', error.message);
+        logger.error({ err: error }, 'MongoDB connection failed');
         process.exit(1);
     }
 };
