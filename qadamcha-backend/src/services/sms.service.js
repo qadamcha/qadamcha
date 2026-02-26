@@ -115,8 +115,8 @@ class SmsService {
 
         // SMS matni (moderatsiyadan o'tgan shablonlar)
         const smsMessages = {
-            'register': `Kodni hech kimga bermang! QADAMCHA ilovasiga ro'yxatdan o'tish uchun tasdiqlash kodi: ${code}`,
-            'reset-pin': `Kodni hech kimga bermang! QADAMCHA ilovasida parolni qayta tiklash uchun tasdiqlash kodi: ${code}`,
+            'register': `Qadamcha: Tasdiqlash kodingiz — ${code}. Kodni hech kimga bermang!`,
+            'reset-pin': `Qadamcha: PIN tiklash kodingiz — ${code}. Kodni hech kimga bermang!`,
         };
         const message = smsMessages[purpose] || smsMessages['register'];
 
