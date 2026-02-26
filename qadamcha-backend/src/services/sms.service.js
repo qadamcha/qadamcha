@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const axios = require('axios');
+const fetch = require('node-fetch');
 const FormData = require('form-data');
 const config = require('../config/env');
 const { logger } = require('../config/logger');
