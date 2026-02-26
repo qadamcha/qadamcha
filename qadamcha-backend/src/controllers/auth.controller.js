@@ -200,12 +200,12 @@ module.exports = {
             });
         }
 
-        // Device check — faqat shu user ga tegishli qurilmani qidirish
-        let device = await Device.findOne({ deviceId, userId: user._id });
+        // Device check — avval deviceId bo'yicha qidirish
+        let device = await Device.findOne({ deviceId });
         let deviceMode = 'parent';
 
         if (!device) {
-            // Check device limit
+            // Yangi qurilma — yaratish
             const existingDevices = await Device.countDocuments({
                 userId: user._id,
                 isActive: true
@@ -218,8 +218,6 @@ module.exports = {
                 });
             }
 
-            // Agar shu user allaqachon boshqa qurilmada ro'yxatdan o'tgan bo'lsa
-            // → bu yangi qurilma = child qurilma (avtomatik)
             if (existingDevices > 0) {
                 deviceMode = 'child';
             }
@@ -231,19 +229,33 @@ module.exports = {
                 deviceType: deviceType || 'android',
                 mode: deviceMode
             });
+        } else if (device.userId.toString() !== user._id.toString()) {
+            // Qurilma boshqa userga tegishli — yangi userga o'tkazish (re-register)
+            const existingDevices = await Device.countDocuments({
+                userId: user._id,
+                isActive: true
+            });
+
+            if (existingDevices > 0) {
+                deviceMode = 'child';
+            }
+
+            device.userId = user._id;
+            device.mode = deviceMode;
+            device.isActive = true;
+            device.status = 'active';
+            if (deviceName) device.deviceName = deviceName;
+            if (deviceType) device.deviceType = deviceType;
         } else {
-            // Mavjud qurilma — uning mode'ini olish
+            // Mavjud qurilma — shu userga tegishli
             deviceMode = device.mode;
 
-            // Agar qurilma nomi hali 'Unknown Device' bo'lsa, yangilash
             if (deviceName && device.deviceName === 'Unknown Device') {
                 device.deviceName = deviceName;
             }
-            // deviceType yangilash agar mavjud bo'lsa
             if (deviceType && device.deviceType !== deviceType) {
                 device.deviceType = deviceType;
             }
-            // Agar qurilma o'chirilgan bo'lsa, qayta faollashtirish
             if (!device.isActive) {
                 device.isActive = true;
                 device.status = 'active';
