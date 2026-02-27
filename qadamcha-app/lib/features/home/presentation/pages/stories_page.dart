@@ -244,23 +244,6 @@ class _StoriesPageState extends State<StoriesPage> {
                       fontFamily: 'Nunito',
                     ),
                   ),
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: _loadStories,
-                    child: Container(
-                      width: 40.w,
-                      height: 40.w,
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceVariant,
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: Icon(
-                        Icons.refresh_rounded,
-                        size: 22.sp,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),

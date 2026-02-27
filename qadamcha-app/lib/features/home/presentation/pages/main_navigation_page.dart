@@ -26,6 +26,7 @@ class MainNavigationPage extends StatefulWidget {
 class _MainNavigationPageState extends State<MainNavigationPage> {
   int _currentIndex = 0;
   late final AiChatBloc _aiChatBloc;
+  late final PageController _pageController;
 
   late final List<Widget> _pages;
 
@@ -33,6 +34,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
   void initState() {
     super.initState();
     _aiChatBloc = sl<AiChatBloc>();
+    _pageController = PageController(initialPage: 0);
     _pages = [
       const ParentHomePage(),
       const GuidesPage(),
@@ -87,6 +89,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
 
   @override
   void dispose() {
+    _pageController.dispose();
     _aiChatBloc.close();
     super.dispose();
   }
@@ -136,8 +139,11 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
         ),
       ],
       child: Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() => _currentIndex = index);
+        },
         children: _pages,
       ),
       bottomNavigationBar: Container(
@@ -161,31 +167,31 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                   icon: Icons.home_rounded,
                   label: 'Bosh sahifa',
                   isSelected: _currentIndex == 0,
-                  onTap: () => setState(() => _currentIndex = 0),
+                  onTap: () { _pageController.animateToPage(0, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut); },
                 ),
                 _NavItem(
                   icon: Icons.menu_book_rounded,
                   label: 'Qo\'llanma',
                   isSelected: _currentIndex == 1,
-                  onTap: () => setState(() => _currentIndex = 1),
+                  onTap: () { _pageController.animateToPage(1, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut); },
                 ),
                 _NavItem(
                   icon: Icons.psychology_rounded,
                   label: 'AI',
                   isSelected: _currentIndex == 2,
-                  onTap: () => setState(() => _currentIndex = 2),
+                  onTap: () { _pageController.animateToPage(2, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut); },
                 ),
                 _NavItem(
                   icon: Icons.auto_stories_rounded,
                   label: 'Ertaklar',
                   isSelected: _currentIndex == 3,
-                  onTap: () => setState(() => _currentIndex = 3),
+                  onTap: () { _pageController.animateToPage(3, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut); },
                 ),
                 _NavItem(
                   icon: Icons.bar_chart_rounded,
                   label: 'Nazorat',
                   isSelected: _currentIndex == 4,
-                  onTap: () => setState(() => _currentIndex = 4),
+                  onTap: () { _pageController.animateToPage(4, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut); },
                 ),
               ],
             ),

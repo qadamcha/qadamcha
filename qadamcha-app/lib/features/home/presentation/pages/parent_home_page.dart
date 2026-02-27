@@ -31,26 +31,35 @@ class ParentHomePage extends StatelessWidget {
           ),
         ),
         child: SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // === HEADER (gradient ustida) ===
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-                  child: _buildHeader(context),
-                ),
+          child: RefreshIndicator(
+            onRefresh: () async {
+              // Obuna holatini MongoDB dan qayta tekshirish
+              context.read<SubscriptionBloc>().add(LoadSubscriptionEvent());
+              await Future.delayed(const Duration(milliseconds: 800));
+            },
+            color: const Color(0xFF2D6A9F),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // === HEADER (gradient ustida) ===
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+                    child: _buildHeader(context),
+                  ),
 
-                SizedBox(height: 16.h),
+                  SizedBox(height: 16.h),
 
-                // === CONTENT (oq fonda) ===
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  child: _buildSubscriptionCard(context),
-                ),
+                  // === CONTENT (oq fonda) ===
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20.w),
+                    child: _buildSubscriptionCard(context),
+                  ),
 
-                SizedBox(height: 24.h),
-              ],
+                  SizedBox(height: 24.h),
+                ],
+              ),
             ),
           ),
         ),

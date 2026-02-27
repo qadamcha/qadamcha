@@ -78,40 +78,6 @@ class _MonitoringPageState extends State<MonitoringPage> {
                       fontFamily: 'Nunito',
                     ),
                   ),
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: () {
-                      context.read<ChildBloc>().add(const LoadChildrenEvent());
-                      _loadMonitoringData();
-                    },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 12.w,
-                        vertical: 6.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(20.r),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.refresh_rounded,
-                              size: 14.sp, color: AppColors.primary),
-                          SizedBox(width: 4.w),
-                          Text(
-                            'Yangilash',
-                            style: TextStyle(
-                              fontSize: 13.sp,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
-                              fontFamily: 'Nunito',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
