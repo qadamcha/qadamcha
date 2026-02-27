@@ -327,9 +327,14 @@ class LocalMonitoringService {
     saveToLocal();
     _isDirty = false;
 
-    // ❌ recordActivityToBackend OLIB TASHLANDI
-    // Vaqt faqat syncToBackend orqali (child_home chiqqanda) yuboriladi
-    // Bu double-counting muammosini to'liq hal qiladi
+    // ✅ Activity ni backend ga yozish (faqat tur va title)
+    // Vaqt syncToBackend orqali boshqariladi (child_home chiqqanda)
+    // Bu yerda faqat Activity collection ga log yoziladi
+    recordActivityToBackend(
+      activityType: activityType,
+      durationMinutes: durationMinutes > 0 ? durationMinutes : 1,
+      contentTitle: contentTitle,
+    );
   }
 
   /// Local activity loglarni olish

@@ -82,6 +82,7 @@ dev_dependencies:
   json_serializable: 6.8.0
   retrofit_generator: 8.2.1
   hive_generator: 2.0.1
+  flutter_launcher_icons: ^0.14.3
 
 flutter:
   uses-material-design: true
@@ -91,4 +92,9 @@ flutter:
     - assets/icons/
     - assets/animations/
   
-
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/icon.png"
+  adaptive_icon_background: "#2D6A9F"
+  adaptive_icon_foreground: "assets/icon/icon.png"

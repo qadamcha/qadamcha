@@ -429,6 +429,8 @@ class _OtpPageState extends State<OtpPage> with SingleTickerProviderStateMixin {
                                                 counterText: '',
                                                 border: InputBorder.none,
                                                 contentPadding: EdgeInsets.zero,
+                                                filled: true,
+                                                fillColor: Colors.transparent,
                                               ),
                                               inputFormatters: [
                                                 FilteringTextInputFormatter

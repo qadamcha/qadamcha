@@ -126,13 +126,14 @@ class AuthRepositoryImpl implements AuthRepository {
         return const Left(TokenExpiredFailure());
       }
       
-      final newToken = await remoteDataSource.refreshToken(tokens.refreshToken);
+      final (newAccessToken, newRefreshToken) = await remoteDataSource.refreshToken(tokens.refreshToken);
+      // Token rotation: yangi refresh token ni ham saqlash
       await localDataSource.cacheTokens(AuthTokensModel(
-        accessToken: newToken,
-        refreshToken: tokens.refreshToken,
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
       ));
       
-      return Right(newToken);
+      return Right(newAccessToken);
     } on UnauthorizedException {
       await localDataSource.clearCache();
       return const Left(TokenExpiredFailure());

@@ -12,7 +12,7 @@ abstract class AuthRemoteDataSource {
     String? deviceName,
     String? deviceType,
   });
-  Future<String> refreshToken(String refreshToken);
+  Future<(String, String)> refreshToken(String refreshToken);
   Future<void> logout();
   Future<String> resetPin(String phone, String newPin, {required String verifiedToken});
   Future<void> verifyPin(String pin);
@@ -79,11 +79,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
   
   @override
-  Future<String> refreshToken(String refreshToken) async {
+  Future<(String, String)> refreshToken(String refreshToken) async {
     final response = await _client.post('/auth/refresh', data: {
       'refreshToken': refreshToken,
     });
-    return response.data['accessToken'];
+    final newAccessToken = response.data['accessToken'] as String;
+    // Backend token rotation — yangi refresh token ham qaytaradi
+    final newRefreshToken = (response.data['refreshToken'] as String?) ?? refreshToken;
+    return (newAccessToken, newRefreshToken);
   }
   
   @override
