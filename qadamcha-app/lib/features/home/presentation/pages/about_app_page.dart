@@ -154,10 +154,13 @@ class _AboutAppPageState extends State<AboutAppPage> {
                 ),
               ],
             ),
-            child: Center(
-              child: Text(
-                '👣',
-                style: TextStyle(fontSize: 40.sp),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16.r),
+              child: Image.asset(
+                'assets/icon/icon.png',
+                width: 56.w,
+                height: 56.w,
+                fit: BoxFit.cover,
               ),
             ),
           ),
