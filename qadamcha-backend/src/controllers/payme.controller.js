@@ -295,7 +295,12 @@ async function pay(request, reply) {
         order.transactionId = transaction._id.toString();
         order.startDate = new Date();
         order.endDate = new Date();
-        order.endDate.setDate(order.endDate.getDate() + planData.days);
+        // testMinutes bo'lsa minutda hisoblaydi, aks holda kunlarda
+        if (planData.testMinutes) {
+            order.endDate.setMinutes(order.endDate.getMinutes() + planData.testMinutes);
+        } else {
+            order.endDate.setDate(order.endDate.getDate() + planData.days);
+        }
         await order.save();
 
         return {
