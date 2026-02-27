@@ -216,7 +216,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
 
     result.fold(
       (failure) {
-        // Backend xato — offline fallback (faqat local)
+        // Backend xato — offline fallback (faqat local, 5 daqiqalik test)
         final now = DateTime.now();
         final subscription = Subscription(
           id: 'local_${now.millisecondsSinceEpoch}',
@@ -224,7 +224,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
           plan: SubscriptionPlan.monthly,
           status: SubscriptionStatus.active,
           startDate: now,
-          endDate: now.add(const Duration(days: 30)),
+          endDate: now.add(const Duration(minutes: 5)), // ⚡ TEST: 5 daqiqa
           createdAt: now,
         );
         _saveSubscriptionLocally(subscription);

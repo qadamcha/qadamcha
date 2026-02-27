@@ -1,0 +1,13 @@
+﻿qadamcha-app/android/.gradle/file-system.probe
+qadamcha-app/lib/core/services/local_monitoring_service.dart
+qadamcha-app/lib/core/services/session_tracker.dart
+qadamcha-app/lib/features/auth/data/datasources/auth_remote_datasource.dart
+qadamcha-app/lib/features/auth/data/repositories/auth_repository_impl.dart
+qadamcha-app/lib/features/auth/domain/repositories/auth_repository.dart
+qadamcha-app/lib/features/auth/presentation/bloc/auth_bloc.dart
+qadamcha-app/lib/features/child/presentation/pages/content_page.dart
+qadamcha-app/lib/features/content/presentation/pages/video_player_page.dart
+qadamcha-app/lib/features/device/data/repositories/device_repository_impl.dart
+qadamcha-app/lib/features/device/presentation/bloc/device_bloc.dart
+qadamcha-app/lib/features/device/presentation/pages/device_linking_page.dart
+qadamcha-app/lib/features/home/presentation/pages/child_home_page.dart
