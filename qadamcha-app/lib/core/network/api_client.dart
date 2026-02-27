@@ -120,10 +120,14 @@ class ApiClient {
   }
 }
 
-// Auth Interceptor - Token management
+// Auth Interceptor - Token management with refresh lock
 class _AuthInterceptor extends Interceptor {
   final FlutterSecureStorage _storage;
   final Dio _dio;
+  
+  // Concurrent refresh ni oldini olish uchun lock
+  bool _isRefreshing = false;
+  final List<_QueuedRequest> _requestQueue = [];
   
   _AuthInterceptor(this._storage, this._dio);
   
@@ -161,7 +165,22 @@ class _AuthInterceptor extends Interceptor {
     }
 
     if (err.response?.statusCode == 401) {
-      // Token yangilashga urinish
+      // Agar allaqachon refresh qilinayotgan bo'lsa — navbatga qo'shamiz
+      if (_isRefreshing) {
+        try {
+          final newToken = await _waitForRefresh();
+          if (newToken != null) {
+            err.requestOptions.headers['Authorization'] = 'Bearer $newToken';
+            final cloneRequest = await _dio.fetch(err.requestOptions);
+            return handler.resolve(cloneRequest);
+          }
+        } catch (_) {}
+        return handler.next(err);
+      }
+
+      // Birinchi 401 — biz refresh qilamiz
+      _isRefreshing = true;
+      
       try {
         final refreshToken = await _storage.read(key: StorageKeys.refreshToken);
         if (refreshToken != null) {
@@ -180,18 +199,54 @@ class _AuthInterceptor extends Interceptor {
               await _storage.write(key: StorageKeys.refreshToken, value: newRefreshToken);
             }
             
+            // Navbatdagi barcha so'rovlarga yangi tokenni berish
+            _resolveQueue(newAccessToken);
+            
             // Asl so'rovni qaytadan yuborish
             err.requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
             final cloneRequest = await _dio.fetch(err.requestOptions);
             return handler.resolve(cloneRequest);
           }
         }
+        // Refresh ishlamadi — navbatni reject qilish
+        _rejectQueue();
       } catch (_) {
-        // Refresh ham ishlamadi - logout qilish kerak
+        // Refresh ham ishlamadi
+        _rejectQueue();
+      } finally {
+        _isRefreshing = false;
       }
     }
     handler.next(err);
   }
+
+  /// Refresh tugashini kutish (navbatdagi so'rovlar uchun)
+  Future<String?> _waitForRefresh() {
+    final completer = Completer<String?>();
+    _requestQueue.add(_QueuedRequest(completer));
+    return completer.future;
+  }
+
+  /// Navbatdagi barcha so'rovlarga yangi tokenni berish
+  void _resolveQueue(String token) {
+    for (final req in _requestQueue) {
+      req.completer.complete(token);
+    }
+    _requestQueue.clear();
+  }
+
+  /// Navbatdagi barcha so'rovlarni reject qilish
+  void _rejectQueue() {
+    for (final req in _requestQueue) {
+      req.completer.complete(null);
+    }
+    _requestQueue.clear();
+  }
+}
+
+class _QueuedRequest {
+  final Completer<String?> completer;
+  _QueuedRequest(this.completer);
 }
 
 // Logging Interceptor
