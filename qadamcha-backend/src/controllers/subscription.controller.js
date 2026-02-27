@@ -264,19 +264,17 @@ module.exports = {
 
     // POST /subscription/activate-test - Test rejimida obunani faollashtirish
     async activateTest(request, reply) {
-        // [FIX CRIT-1] Production da test obunani bloklash
-        if (config.NODE_ENV === 'production') {
-            return reply.status(403).send({
-                success: false,
-                message: 'Test rejim faqat development muhitida ishlaydi'
-            });
-        }
-
         const { userId } = request.user;
 
         // Mavjud faol obunani tekshirish
-        const existing = await Subscription.getActive(userId);
+        const existing = await Subscription.findOne({
+            userId,
+            status: 'active',
+            endDate: { $gt: new Date() }
+        });
+
         if (existing) {
+            // Muddati hali tugamagan — qaytarish
             return {
                 success: true,
                 message: 'Obuna allaqachon faol',
@@ -294,10 +292,16 @@ module.exports = {
             };
         }
 
-        // Yangi obuna yaratish (test rejim — to'lovsiz)
+        // Eski expired obunalarni tozalash (qayta test uchun)
+        await Subscription.updateMany(
+            { userId, status: 'active' },
+            { $set: { status: 'expired' } }
+        );
+
+        // Yangi obuna yaratish (test rejim — 5 daqiqa)
         const planData = config.PLANS['monthly'];
         const endDate = new Date();
-        // ⚡ TEST: testMinutes bo'lsa minutda hisoblaydi
+        // testMinutes bo'lsa minutda, aks holda kunlarda
         if (planData.testMinutes) {
             endDate.setMinutes(endDate.getMinutes() + planData.testMinutes);
         } else {
@@ -311,7 +315,7 @@ module.exports = {
             price: planData.price,
             startDate: new Date(),
             endDate,
-            paymentMethod: 'trial',
+            paymentMethod: 'test',
             createdBy: userId
         });
 
@@ -321,9 +325,11 @@ module.exports = {
             subscriptionPlan: 'monthly'
         });
 
+        request.log.info(`⚡ Test obuna: ${userId} — ${planData.testMinutes || planData.days} ${planData.testMinutes ? 'daqiqa' : 'kun'}`);
+
         return {
             success: true,
-            message: 'Obuna muvaffaqiyatli faollashtirildi (test rejim)',
+            message: `Obuna ${planData.testMinutes || planData.days} ${planData.testMinutes ? 'daqiqaga' : 'kunga'} faollashtirildi`,
             subscription: {
                 _id: subscription._id,
                 userId: subscription.userId,
