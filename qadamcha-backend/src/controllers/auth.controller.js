@@ -323,26 +323,41 @@ module.exports = {
                 throw new Error('Invalid token type');
             }
 
-            // [FIX SEC-8] Refresh token hash bilan solishtirish
-            const incomingHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
+            // Qurilmani topish (tokenFamily va deviceId bo'yicha)
             const device = await Device.findOne({
                 deviceId: decoded.deviceId,
-                refreshToken: incomingHash,
+                tokenFamily: decoded.tokenFamily,
                 isActive: true
             });
 
             if (!device) {
-                // Reuse detection — eski token ishlatilgan, sessiyani bekor qilish
-                if (decoded.tokenFamily) {
-                    await Device.updateOne(
-                        { tokenFamily: decoded.tokenFamily },
-                        { refreshToken: null, isActive: false }
-                    );
-                }
                 return reply.status(401).send({
                     success: false,
                     message: ERRORS.TOKEN_INVALID
                 });
+            }
+
+            // Hash tekshirish
+            const incomingHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
+
+            // Version grace: hozirgi hash YOKI oldingi versiyaga ruxsat
+            // (race condition: Flutter parallel so'rov eski tokenni ishlatishi mumkin)
+            const isCurrentToken = device.refreshToken === incomingHash;
+            const isRecentVersion = decoded.version >= (device.refreshTokenVersion || 0) - 1;
+
+            if (!isCurrentToken && !isRecentVersion) {
+                // Juda eski token — LEKIN device ni o'chirmaymiz (xavfsiz reject)
+                request.log.warn(`⚠️ Stale refresh token: user=${decoded.userId}, version=${decoded.version}, expected=${device.refreshTokenVersion}`);
+                return reply.status(401).send({
+                    success: false,
+                    message: ERRORS.TOKEN_INVALID
+                });
+            }
+
+            // Agar hash mos kelmasa LEKIN version yaqin bo'lsa — yaroqli deb qabul qilish
+            // (parallel so'rovlar uchun grace period)
+            if (!isCurrentToken && isRecentVersion) {
+                request.log.info(`🔄 Grace refresh: version=${decoded.version}, current=${device.refreshTokenVersion}`);
             }
 
             const user = await User.findById(decoded.userId);
@@ -366,7 +381,7 @@ module.exports = {
             );
 
             // Yangi refresh token (rotation)
-            const newVersion = (decoded.version || 0) + 1;
+            const newVersion = (device.refreshTokenVersion || 0) + 1;
             const newRefreshToken = await reply.jwtSign(
                 {
                     userId: user._id.toString(),
@@ -378,7 +393,7 @@ module.exports = {
                 { expiresIn: config.JWT_REFRESH_EXPIRES }
             );
 
-            // [FIX SEC-8] Yangi refresh tokenni hash qilib saqlash
+            // Yangi refresh tokenni hash qilib saqlash
             const newRefreshHash = crypto.createHash('sha256').update(newRefreshToken).digest('hex');
             device.refreshToken = newRefreshHash;
             device.refreshTokenVersion = newVersion;
