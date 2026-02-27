@@ -50,6 +50,18 @@ class LocalMonitoringService {
   static const _keyWeeklyMinutes = '${_keyPrefix}weeklyMinutes';
   static const _keyLastWatched = '${_keyPrefix}lastWatched';
   static const _keySubscription = '${_keyPrefix}subscription';
+  static const _keyWeekNumber = '${_keyPrefix}weekNumber';
+
+  /// O'zbekiston vaqti (UTC+5) — barcha sana hisob-kitoblari shu bilan
+  static DateTime get _nowUzbekistan => DateTime.now().toUtc().add(const Duration(hours: 5));
+  static String get _todayUzbekistan => _nowUzbekistan.toIso8601String().split('T')[0];
+  /// ISO hafta raqami (yil + hafta)
+  static String get _currentWeekNumber {
+    final now = _nowUzbekistan;
+    final firstDayOfYear = DateTime(now.year, 1, 1);
+    final weekNumber = ((now.difference(firstDayOfYear).inDays + firstDayOfYear.weekday) / 7).ceil();
+    return '${now.year}-W$weekNumber';
+  }
 
   /// Service'ni boshlash (app startup da chaqiriladi)
   Future<void> initialize() async {
@@ -62,20 +74,35 @@ class LocalMonitoringService {
   void _loadFromLocal() {
     if (_prefs == null) return;
     
+    // Haftalik reset tekshirish — yangi hafta boshida barcha kunlar 0 ga
+    _checkWeeklyReset();
+    
     // Bugungi sana tekshirish — agar kechagi bo'lsa, reset
+    _checkDailyReset();
+    
+    _childId = _prefs!.getString(_keyChildId);
+    _loadActivityLogs();
+  }
+
+  /// Kunlik reset tekshirish — yangi kunda barcha counterlar 0 ga
+  void _checkDailyReset() {
+    if (_prefs == null) return;
     final savedDate = _prefs!.getString(_keyDate);
-    final today = DateTime.now().toIso8601String().split('T')[0];
+    final today = _todayUzbekistan;
     
     if (savedDate != today) {
+      if (kDebugMode) print('🔄 [LocalMonitoring] Yangi kun: $savedDate → $today — reset');
       // Yangi kun — kunlik counters'ni reset
       _secondsUsed = 0;
       _videosWatched = 0;
       _gamesPlayed = 0;
       _storiesRead = 0;
+      _activityLogs = []; // Kunlik loglarni ham tozalash
+      _saveActivityLogs();
       
-      // Haftalik stats'ni yangilash — bugungi kunni reset
+      // Haftalik stats'da bugungi kunni reset
       _loadWeeklyMinutes();
-      final todayIndex = DateTime.now().weekday - 1;
+      final todayIndex = _nowUzbekistan.weekday - 1;
       if (todayIndex >= 0 && todayIndex < 7) {
         _weeklyMinutes[todayIndex] = 0;
       }
@@ -90,14 +117,31 @@ class LocalMonitoringService {
       _storiesRead = _prefs!.getInt(_keyStories) ?? 0;
       _loadWeeklyMinutes();
     }
-    _childId = _prefs!.getString(_keyChildId);
-    _loadActivityLogs();
+  }
+
+  /// Haftalik reset — yangi hafta boshida barcha kunlar 0 ga qaytadi
+  void _checkWeeklyReset() {
+    if (_prefs == null) return;
+    final savedWeek = _prefs!.getString(_keyWeekNumber);
+    final currentWeek = _currentWeekNumber;
+    
+    if (savedWeek != null && savedWeek != currentWeek) {
+      if (kDebugMode) print('🔄 [LocalMonitoring] Yangi hafta: $savedWeek → $currentWeek — to\'liq reset');
+      _weeklyMinutes = [0, 0, 0, 0, 0, 0, 0];
+      _saveWeeklyMinutes();
+    }
+    _prefs!.setString(_keyWeekNumber, currentWeek);
   }
 
   /// Auto-save timer boshlash (har 10 soniyada, faqat dirty bo'lganda)
+  /// Har auto-save da kun chegarasini ham tekshiradi
   void _startAutoSave() {
     _autoSaveTimer?.cancel();
     _autoSaveTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      // Kun chegarasini tekshirish (yarim tunda reset bo'lishi uchun)
+      _checkWeeklyReset();
+      _checkDailyReset();
+      
       if (_isDirty) {
         saveToLocal();
         _isDirty = false;
@@ -155,10 +199,11 @@ class LocalMonitoringService {
     if (_childId != null) {
       _prefs!.setString(_keyChildId, _childId!);
     }
-    _prefs!.setString(_keyDate, DateTime.now().toIso8601String().split('T')[0]);
+    _prefs!.setString(_keyDate, _todayUzbekistan);
+    _prefs!.setString(_keyWeekNumber, _currentWeekNumber);
     
     // Haftalik stats'da bugungi kunni yangilash (daqiqalarda)
-    final todayIndex = DateTime.now().weekday - 1;
+    final todayIndex = _nowUzbekistan.weekday - 1;
     if (todayIndex >= 0 && todayIndex < 7) {
       _weeklyMinutes[todayIndex] = _secondsUsed ~/ 60;
       _saveWeeklyMinutes();

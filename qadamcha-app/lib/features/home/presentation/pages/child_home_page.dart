@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -25,6 +26,7 @@ class _ChildHomePageState extends State<ChildHomePage> {
   int _currentIndex = 0;
   late final ChildBloc _childBloc;
   bool _childCreating = false;
+  Timer? _subscriptionCheckTimer;
 
   late final List<Widget> _pages;
 
@@ -59,6 +61,13 @@ class _ChildHomePageState extends State<ChildHomePage> {
 
     // Backend'dan sync qilish (kirganda)
     _syncFromBackend();
+
+    // Obuna muddatini har 60 soniyada tekshirish (5 daqiqalik test uchun muhim)
+    _subscriptionCheckTimer = Timer.periodic(const Duration(seconds: 60), (_) {
+      if (mounted) {
+        context.read<SubscriptionBloc>().add(LoadSubscriptionEvent());
+      }
+    });
   }
 
   /// Bola menuga kirganda backend'dan ma'lumot sync qilish
@@ -82,6 +91,7 @@ class _ChildHomePageState extends State<ChildHomePage> {
 
   @override
   void dispose() {
+    _subscriptionCheckTimer?.cancel();
     // Sessiya timer to'xtatish va backend'ga sync (SessionTracker ichida)
     SessionTracker.instance.endSession('child_home');
     super.dispose();
