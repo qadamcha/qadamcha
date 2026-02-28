@@ -515,7 +515,7 @@ class _ParentHomePageState extends State<ParentHomePage> {
                 height: 40.w,
                 decoration: BoxDecoration(
                   color: _timeLimitEnabled
-                      ? const Color(0xFFF59E0B).withOpacity(0.12)
+                      ? AppColors.primary.withOpacity(0.1)
                       : const Color(0xFFF0F4F8),
                   borderRadius: BorderRadius.circular(12.r),
                 ),
@@ -523,7 +523,7 @@ class _ParentHomePageState extends State<ParentHomePage> {
                   Icons.timer_rounded,
                   size: 22.sp,
                   color: _timeLimitEnabled
-                      ? const Color(0xFFF59E0B)
+                      ? AppColors.primary
                       : AppColors.textDisabled,
                 ),
               ),
@@ -560,7 +560,7 @@ class _ParentHomePageState extends State<ParentHomePage> {
                   setState(() => _timeLimitEnabled = value);
                   _saveTimeLimitSettings();
                 },
-                activeColor: const Color(0xFFF59E0B),
+                activeColor: AppColors.primary,
               ),
             ],
           ),
@@ -571,7 +571,7 @@ class _ParentHomePageState extends State<ParentHomePage> {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
               decoration: BoxDecoration(
-                color: const Color(0xFFF59E0B).withOpacity(0.06),
+                color: AppColors.primary.withOpacity(0.04),
                 borderRadius: BorderRadius.circular(14.r),
               ),
               child: Column(
@@ -592,7 +592,7 @@ class _ParentHomePageState extends State<ParentHomePage> {
                         padding: EdgeInsets.symmetric(
                             horizontal: 12.w, vertical: 4.h),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF59E0B).withOpacity(0.15),
+                          color: AppColors.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                         child: Text(
@@ -600,7 +600,7 @@ class _ParentHomePageState extends State<ParentHomePage> {
                           style: TextStyle(
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w800,
-                            color: const Color(0xFFD97706),
+                            color: const Color(0xFF2D6A9F),
                             fontFamily: 'Nunito',
                           ),
                         ),
@@ -610,12 +610,12 @@ class _ParentHomePageState extends State<ParentHomePage> {
                   SizedBox(height: 4.h),
                   SliderTheme(
                     data: SliderThemeData(
-                      activeTrackColor: const Color(0xFFF59E0B),
+                      activeTrackColor: const Color(0xFF2D6A9F),
                       inactiveTrackColor:
-                          const Color(0xFFF59E0B).withOpacity(0.15),
-                      thumbColor: const Color(0xFFF59E0B),
+                          const Color(0xFF2D6A9F).withOpacity(0.15),
+                      thumbColor: const Color(0xFF2D6A9F),
                       overlayColor:
-                          const Color(0xFFF59E0B).withOpacity(0.12),
+                          const Color(0xFF2D6A9F).withOpacity(0.12),
                       trackHeight: 5,
                       thumbShape: RoundSliderThumbShape(
                           enabledThumbRadius: 10.r),
@@ -623,8 +623,8 @@ class _ParentHomePageState extends State<ParentHomePage> {
                     child: Slider(
                       value: _timeLimitMinutes.toDouble(),
                       min: 1,
-                      max: 10,
-                      divisions: 9,
+                      max: 20,
+                      divisions: 19,
                       onChanged: (value) {
                         setState(() => _timeLimitMinutes = value.round());
                       },
@@ -641,7 +641,7 @@ class _ParentHomePageState extends State<ParentHomePage> {
                         color: AppColors.textDisabled,
                         fontFamily: 'Nunito',
                       )),
-                      Text('10 daq', style: TextStyle(
+                      Text('20 daq', style: TextStyle(
                         fontSize: 10.sp,
                         color: AppColors.textDisabled,
                         fontFamily: 'Nunito',
