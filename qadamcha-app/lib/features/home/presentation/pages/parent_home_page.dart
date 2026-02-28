@@ -384,8 +384,6 @@ class _ParentHomePageState extends State<ParentHomePage> {
               _featureItem(Icons.analytics_rounded, 'Monitoring', isPremium),
               SizedBox(height: 10.h),
               _featureItem(Icons.psychology_rounded, 'AI maslahatlar', isPremium),
-              SizedBox(height: 10.h),
-              _featureItem(Icons.family_restroom_rounded, '5 ta bola profili', isPremium),
 
               SizedBox(height: 20.h),
 

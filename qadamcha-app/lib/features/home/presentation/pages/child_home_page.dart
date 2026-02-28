@@ -29,9 +29,6 @@ class _ChildHomePageState extends State<ChildHomePage> {
   late final ChildBloc _childBloc;
   bool _childCreating = false;
   Timer? _subscriptionCheckTimer;
-  Timer? _timeLimitTimer;
-  bool _timeLimitEnabled = false;
-  int _timeLimitMinutes = 60;
 
   late final List<Widget> _pages;
 
@@ -67,19 +64,14 @@ class _ChildHomePageState extends State<ChildHomePage> {
     // Backend'dan sync qilish (kirganda)
     _syncFromBackend();
 
-    // Vaqt limiti sozlamalarini yuklash va darhol tekshirish
-    _loadTimeLimitSettings();
+    // Vaqt limiti sozlamalarini yuklash va LocalMonitoringService ga o'rnatish
+    _setupTimeLimit();
 
     // Obuna muddatini har 60 soniyada tekshirish
     _subscriptionCheckTimer = Timer.periodic(const Duration(seconds: 60), (_) {
       if (mounted) {
         context.read<SubscriptionBloc>().add(LoadSubscriptionEvent());
       }
-    });
-
-    // Vaqt limitini har 5 soniyada tekshirish
-    _timeLimitTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      _checkTimeLimit();
     });
   }
 
@@ -102,49 +94,42 @@ class _ChildHomePageState extends State<ChildHomePage> {
     }
   }
 
-  /// Vaqt limiti sozlamalarini yuklash
-  Future<void> _loadTimeLimitSettings() async {
+  /// Vaqt limiti — LocalMonitoringService ning secondTimer ichida tekshiriladi
+  Future<void> _setupTimeLimit() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      _timeLimitEnabled = prefs.getBool('time_limit_enabled') ?? false;
-      _timeLimitMinutes = prefs.getInt('time_limit_minutes') ?? 60;
-      if (kDebugMode) print('⏰ [ChildHome] Vaqt limiti yuklandi: enabled=$_timeLimitEnabled, limit=$_timeLimitMinutes daq');
-      // Darhol tekshirish
-      _checkTimeLimit();
-    } catch (e) {
-      if (kDebugMode) print('⚠️ [ChildHome] Time limit load xato: $e');
-    }
-  }
+      final enabled = prefs.getBool('time_limit_enabled') ?? false;
+      final minutes = prefs.getInt('time_limit_minutes') ?? 60;
+      if (kDebugMode) print('⏰ [ChildHome] Time limit setup: enabled=$enabled, minutes=$minutes');
 
-  /// Vaqt limitini tekshirish
-  void _checkTimeLimit() {
-    if (!mounted) return;
-    if (!_timeLimitEnabled) return;
-
-    final usedSeconds = LocalMonitoringService.instance.secondsUsed;
-    final limitSeconds = _timeLimitMinutes * 60;
-
-    if (kDebugMode) print('⏰ [ChildHome] Vaqt tekshiruv: used=${usedSeconds}s / limit=${limitSeconds}s ($_timeLimitMinutes daq)');
-
-    if (usedSeconds >= limitSeconds) {
-      if (kDebugMode) print('🚫 [ChildHome] VAQT LIMITI TUGADI!');
-      // Sessiyani to'xtatish
-      SessionTracker.instance.endSession('child_home');
-      _timeLimitTimer?.cancel();
-      _subscriptionCheckTimer?.cancel();
-      // Vaqt limiti sahifasiga o'tish
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const TimeLimitPage()),
-        (route) => false,
+      // LocalMonitoringService ga callback o'rnatish
+      // Bu secondTimer ichida har 1 soniyada tekshiriladi
+      LocalMonitoringService.instance.setTimeLimit(
+        enabled: enabled,
+        minutes: minutes,
+        onExceeded: () {
+          if (!mounted) return;
+          if (kDebugMode) print('🚫 [ChildHome] CALLBACK: Vaqt limiti tugadi!');
+          // Sessiyani to'xtatish
+          SessionTracker.instance.endSession('child_home');
+          _subscriptionCheckTimer?.cancel();
+          // Vaqt limiti sahifasiga o'tish
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const TimeLimitPage()),
+            (route) => false,
+          );
+        },
       );
+    } catch (e) {
+      if (kDebugMode) print('⚠️ [ChildHome] Time limit setup xato: $e');
     }
   }
 
   @override
   void dispose() {
     _subscriptionCheckTimer?.cancel();
-    _timeLimitTimer?.cancel();
+    LocalMonitoringService.instance.clearTimeLimitCallback();
     // Sessiya timer to'xtatish va backend'ga sync (SessionTracker ichida)
     SessionTracker.instance.endSession('child_home');
     super.dispose();

@@ -31,6 +31,12 @@ class LocalMonitoringService {
   
   // Dirty flag — faqat o'zgarganda saqlash
   bool _isDirty = false;
+
+  // ─── Time Limit ─────────────────────────────────────────────────────
+  bool _timeLimitEnabled = false;
+  int _timeLimitMinutes = 60;
+  VoidCallback? _onTimeLimitExceeded;
+  bool _timeLimitTriggered = false; // Faqat 1 marta trigger bo'lsin
   
   // Activity logs (local)
   List<Map<String, dynamic>> _activityLogs = [];
@@ -171,9 +177,12 @@ class LocalMonitoringService {
   /// Har soniyada counter oshiruvchi timerni boshlash
   void startSecondTimer() {
     _secondTimer?.cancel();
+    _timeLimitTriggered = false; // Yangi sessiyada reset
     _secondTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       _secondsUsed++;
       _isDirty = true;
+      // Vaqt limitini tekshirish (har soniyada)
+      _checkTimeLimitInternal();
     });
     if (kDebugMode) print('⏱️ [LocalMonitoring] Soniya timer boshlandi');
   }
@@ -188,6 +197,34 @@ class LocalMonitoringService {
 
   /// Soniya timer ishlayaptimi
   bool get isSecondTimerActive => _secondTimer != null;
+
+  // ─── Time Limit Methods ────────────────────────────────────────────
+
+  /// Vaqt limiti sozlamalarini o'rnatish
+  void setTimeLimit({required bool enabled, required int minutes, VoidCallback? onExceeded}) {
+    _timeLimitEnabled = enabled;
+    _timeLimitMinutes = minutes;
+    _onTimeLimitExceeded = onExceeded;
+    _timeLimitTriggered = false;
+    if (kDebugMode) print('⏰ [LocalMonitoring] Time limit: enabled=$enabled, minutes=$minutes');
+  }
+
+  /// Vaqt limiti callbackni tozalash
+  void clearTimeLimitCallback() {
+    _onTimeLimitExceeded = null;
+    _timeLimitTriggered = false;
+  }
+
+  /// Ichki tekshirish — secondTimer ichida har soniyada chaqiriladi
+  void _checkTimeLimitInternal() {
+    if (!_timeLimitEnabled || _timeLimitTriggered || _onTimeLimitExceeded == null) return;
+    final limitSeconds = _timeLimitMinutes * 60;
+    if (_secondsUsed >= limitSeconds) {
+      _timeLimitTriggered = true;
+      if (kDebugMode) print('🚫 [LocalMonitoring] VAQT LIMITI TUGADI! used=${_secondsUsed}s, limit=${limitSeconds}s');
+      _onTimeLimitExceeded!();
+    }
+  }
 
   /// Local'ga saqlash (public — SessionTracker ham chaqiradi)
   void saveToLocal() {

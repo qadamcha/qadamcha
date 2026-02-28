@@ -302,8 +302,6 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
               'AI Yordamchi'),
           _buildBenefitRow(Icons.bar_chart_rounded, const Color(0xFFF59E0B),
               'To\'liq monitoring'),
-          _buildBenefitRow(Icons.family_restroom_rounded,
-              const Color(0xFF4A90D9), 'Cheksiz bolalar profili'),
         ],
       ),
     );
