@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/subscription_entity.dart';
 import '../../domain/repositories/subscription_repository.dart';
+import '../../../../core/errors/failures.dart';
 import '../../../../core/services/local_monitoring_service.dart';
 
 part 'subscription_event.dart';
@@ -216,23 +217,31 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
 
     result.fold(
       (failure) {
-        // Backend xato — offline fallback (faqat local, 5 daqiqalik test)
-        final now = DateTime.now();
-        final subscription = Subscription(
-          id: 'local_${now.millisecondsSinceEpoch}',
-          userId: 'local_user',
-          plan: SubscriptionPlan.monthly,
-          status: SubscriptionStatus.active,
-          startDate: now,
-          endDate: now.add(const Duration(minutes: 5)), // ⚡ TEST: 5 daqiqa
-          createdAt: now,
-        );
-        _saveSubscriptionLocally(subscription);
-        emit(state.copyWith(
-          status: SubscriptionLoadStatus.loaded,
-          paymentStatus: PaymentStatus.success,
-          currentSubscription: subscription,
-        ));
+        if (failure is AuthFailure) {
+          // Auth xato (401) — foydalanuvchiga tizimga qayta kirish kerakligini aytish
+          emit(state.copyWith(
+            paymentStatus: PaymentStatus.failed,
+            errorMessage: 'Sessiya tugadi. Iltimos, tizimga qayta kiring.',
+          ));
+        } else {
+          // Network/Server xato — offline fallback (faqat local, 5 daqiqalik test)
+          final now = DateTime.now();
+          final subscription = Subscription(
+            id: 'local_${now.millisecondsSinceEpoch}',
+            userId: 'local_user',
+            plan: SubscriptionPlan.monthly,
+            status: SubscriptionStatus.active,
+            startDate: now,
+            endDate: now.add(const Duration(minutes: 5)), // ⚡ TEST: 5 daqiqa
+            createdAt: now,
+          );
+          _saveSubscriptionLocally(subscription);
+          emit(state.copyWith(
+            status: SubscriptionLoadStatus.loaded,
+            paymentStatus: PaymentStatus.success,
+            currentSubscription: subscription,
+          ));
+        }
       },
       (subscription) {
         // Backend muvaffaqiyatli — saqlash

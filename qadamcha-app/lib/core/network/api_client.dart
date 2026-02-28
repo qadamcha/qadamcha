@@ -174,29 +174,36 @@ class _AuthInterceptor extends Interceptor {
             final cloneRequest = await _dio.fetch(err.requestOptions);
             return handler.resolve(cloneRequest);
           }
-        } catch (_) {}
+        } catch (e) {
+          print('⚠️ Queued request retry failed: $e');
+        }
         return handler.next(err);
       }
 
       // Birinchi 401 — biz refresh qilamiz
       _isRefreshing = true;
+      print('🔄 Token refresh boshlandi...');
       
       try {
         final refreshToken = await _storage.read(key: StorageKeys.refreshToken);
+        if (refreshToken == null) {
+          print('⚠️ Refresh token topilmadi! Storage da yo\'q.');
+        }
         if (refreshToken != null) {
           final response = await _dio.post(
             '/auth/refresh',
             data: {'refreshToken': refreshToken},
           );
           
-          if (response.statusCode == 200) {
-            final newAccessToken = response.data['accessToken'];
+          if (response.statusCode == 200 && response.data['accessToken'] != null) {
+            print('✅ Token refresh muvaffaqiyatli!');
+            final newAccessToken = response.data['accessToken'] as String;
             await _storage.write(key: StorageKeys.accessToken, value: newAccessToken);
             
             // Token rotation: yangi refresh token ni ham saqlash
             final newRefreshToken = response.data['refreshToken'];
             if (newRefreshToken != null) {
-              await _storage.write(key: StorageKeys.refreshToken, value: newRefreshToken);
+              await _storage.write(key: StorageKeys.refreshToken, value: newRefreshToken as String);
             }
             
             // Navbatdagi barcha so'rovlarga yangi tokenni berish
@@ -206,12 +213,15 @@ class _AuthInterceptor extends Interceptor {
             err.requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
             final cloneRequest = await _dio.fetch(err.requestOptions);
             return handler.resolve(cloneRequest);
+          } else {
+            print('⚠️ Token refresh javobi noto\'g\'ri: statusCode=${response.statusCode}, data=${response.data}');
           }
         }
         // Refresh ishlamadi — navbatni reject qilish
+        print('⚠️ Token refresh muvaffaqiyatsiz.');
         _rejectQueue();
-      } catch (_) {
-        // Refresh ham ishlamadi
+      } catch (e) {
+        print('⚠️ Token refresh xatosi: $e');
         _rejectQueue();
       } finally {
         _isRefreshing = false;

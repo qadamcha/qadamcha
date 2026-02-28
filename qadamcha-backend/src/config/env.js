@@ -31,7 +31,7 @@ module.exports = {
 
     // JWT
     JWT_SECRET: process.env.JWT_SECRET || 'dev-only-secret-do-not-use-in-production',
-    JWT_ACCESS_EXPIRES: '15m',
+    JWT_ACCESS_EXPIRES: '5m',
     JWT_REFRESH_EXPIRES: '100y', // muddatsiz (amalda 100 yil)
 
     // Security: Validate all critical configs in production
