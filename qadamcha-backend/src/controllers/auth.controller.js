@@ -314,10 +314,9 @@ module.exports = {
         const { refreshToken } = request.body;
 
         try {
-            const decoded = await request.jwtVerify({
-                onlyCookie: false,
-                token: refreshToken
-            });
+            // @fastify/jwt v9: request.jwtVerify() faqat Authorization headerdan token oladi
+            // Body dagi tokenni verify qilish uchun this.jwt.verify() ishlatamiz
+            const decoded = this.jwt.verify(refreshToken);
 
             if (decoded.type !== 'refresh') {
                 throw new Error('Invalid token type');
