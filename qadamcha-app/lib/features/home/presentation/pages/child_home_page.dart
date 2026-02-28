@@ -13,7 +13,6 @@ import '../../../child/presentation/pages/games_page.dart';
 import '../../../auth/presentation/pages/role_selection_page.dart';
 import '../../../subscription/presentation/bloc/subscription_bloc.dart';
 import 'time_limit_page.dart';
-import '../../../../main.dart' show navigatorKey;
 
 /// Child Home Page — pastki navigatsiya paneli bilan
 /// 2 ta tab: Multfilmlar va O'yinlar
@@ -95,7 +94,7 @@ class _ChildHomePageState extends State<ChildHomePage> {
     }
   }
 
-  /// Vaqt limiti — LocalMonitoringService ning secondTimer ichida tekshiriladi
+  /// Vaqt limiti — LocalMonitoringService o'zi navigatsiya qiladi
   Future<void> _setupTimeLimit() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -103,22 +102,11 @@ class _ChildHomePageState extends State<ChildHomePage> {
       final minutes = prefs.getInt('time_limit_minutes') ?? 60;
       if (kDebugMode) print('⏰ [ChildHome] Time limit setup: enabled=$enabled, minutes=$minutes');
 
-      // LocalMonitoringService ga callback o'rnatish
-      // Bu secondTimer ichida har 1 soniyada tekshiriladi
+      // LocalMonitoringService o'zi tekshiradi va navigatsiya qiladi
+      // Callback kerak emas — navigatorKey orqali ishlaydi
       LocalMonitoringService.instance.setTimeLimit(
         enabled: enabled,
         minutes: minutes,
-        onExceeded: () {
-          if (kDebugMode) print('🚫 [ChildHome] CALLBACK: Vaqt limiti tugadi!');
-          // Sessiyani to'xtatish
-          SessionTracker.instance.endSession('child_home');
-          _subscriptionCheckTimer?.cancel();
-          // Global navigatorKey orqali — qaysi sahifada bo'lmasin ishlaydi
-          navigatorKey.currentState?.pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const TimeLimitPage()),
-            (route) => false,
-          );
-        },
       );
     } catch (e) {
       if (kDebugMode) print('⚠️ [ChildHome] Time limit setup xato: $e');
@@ -128,7 +116,7 @@ class _ChildHomePageState extends State<ChildHomePage> {
   @override
   void dispose() {
     _subscriptionCheckTimer?.cancel();
-    LocalMonitoringService.instance.clearTimeLimitCallback();
+    LocalMonitoringService.instance.clearTimeLimit();
     // Sessiya timer to'xtatish va backend'ga sync (SessionTracker ichida)
     SessionTracker.instance.endSession('child_home');
     super.dispose();

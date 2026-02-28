@@ -2,9 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get_it/get_it.dart';
 import '../network/api_client.dart';
+import '../../../main.dart' show navigatorKey;
+import '../../../features/home/presentation/pages/time_limit_page.dart';
 
 /// LocalMonitoringService — Monitoring ma'lumotlarini local + backend saqlash
 /// 
@@ -35,7 +38,6 @@ class LocalMonitoringService {
   // ─── Time Limit ─────────────────────────────────────────────────────
   bool _timeLimitEnabled = false;
   int _timeLimitMinutes = 60;
-  VoidCallback? _onTimeLimitExceeded;
   bool _timeLimitTriggered = false; // Faqat 1 marta trigger bo'lsin
   
   // Activity logs (local)
@@ -201,28 +203,48 @@ class LocalMonitoringService {
   // ─── Time Limit Methods ────────────────────────────────────────────
 
   /// Vaqt limiti sozlamalarini o'rnatish
-  void setTimeLimit({required bool enabled, required int minutes, VoidCallback? onExceeded}) {
+  void setTimeLimit({required bool enabled, required int minutes}) {
     _timeLimitEnabled = enabled;
     _timeLimitMinutes = minutes;
-    _onTimeLimitExceeded = onExceeded;
     _timeLimitTriggered = false;
-    if (kDebugMode) print('⏰ [LocalMonitoring] Time limit: enabled=$enabled, minutes=$minutes');
+    if (kDebugMode) print('⏰ [LocalMonitoring] Time limit: enabled=$enabled, minutes=$minutes, currentUsed=${_secondsUsed}s');
   }
 
-  /// Vaqt limiti callbackni tozalash
-  void clearTimeLimitCallback() {
-    _onTimeLimitExceeded = null;
+  /// Vaqt limiti tozalash
+  void clearTimeLimit() {
+    _timeLimitEnabled = false;
     _timeLimitTriggered = false;
   }
 
   /// Ichki tekshirish — secondTimer ichida har soniyada chaqiriladi
   void _checkTimeLimitInternal() {
-    if (!_timeLimitEnabled || _timeLimitTriggered || _onTimeLimitExceeded == null) return;
+    if (!_timeLimitEnabled || _timeLimitTriggered) return;
     final limitSeconds = _timeLimitMinutes * 60;
+    
+    // Har 5 soniyada log chiqarish
+    if (_secondsUsed % 5 == 0 && kDebugMode) {
+      print('⏰ [TimeLimit] ${_secondsUsed}s / ${limitSeconds}s (${_secondsUsed * 100 ~/ limitSeconds}%)');
+    }
+    
     if (_secondsUsed >= limitSeconds) {
       _timeLimitTriggered = true;
-      if (kDebugMode) print('🚫 [LocalMonitoring] VAQT LIMITI TUGADI! used=${_secondsUsed}s, limit=${limitSeconds}s');
-      _onTimeLimitExceeded!();
+      if (kDebugMode) print('🚫🚫🚫 VAQT LIMITI TUGADI! used=${_secondsUsed}s, limit=${limitSeconds}s');
+      
+      // Sessiyani to'xtatish
+      stopSecondTimer();
+      pauseAutoSave();
+      syncToBackend();
+      
+      // Global navigator orqali — qaysi sahifada bo'lmasin ishlaydi
+      final nav = navigatorKey.currentState;
+      if (nav != null) {
+        nav.pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const TimeLimitPage()),
+          (route) => false,
+        );
+      } else {
+        if (kDebugMode) print('⚠️ [TimeLimit] navigatorKey.currentState null!');
+      }
     }
   }
 
