@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/services/session_tracker.dart';
 import '../../../../core/services/local_monitoring_service.dart';
@@ -11,6 +12,7 @@ import '../../../child/presentation/pages/content_page.dart';
 import '../../../child/presentation/pages/games_page.dart';
 import '../../../auth/presentation/pages/role_selection_page.dart';
 import '../../../subscription/presentation/bloc/subscription_bloc.dart';
+import 'time_limit_page.dart';
 
 /// Child Home Page — pastki navigatsiya paneli bilan
 /// 2 ta tab: Multfilmlar va O'yinlar
@@ -27,6 +29,7 @@ class _ChildHomePageState extends State<ChildHomePage> {
   late final ChildBloc _childBloc;
   bool _childCreating = false;
   Timer? _subscriptionCheckTimer;
+  Timer? _timeLimitTimer;
 
   late final List<Widget> _pages;
 
@@ -68,6 +71,11 @@ class _ChildHomePageState extends State<ChildHomePage> {
         context.read<SubscriptionBloc>().add(LoadSubscriptionEvent());
       }
     });
+
+    // Vaqt limitini har 10 soniyada tekshirish
+    _timeLimitTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      _checkTimeLimit();
+    });
   }
 
   /// Bola menuga kirganda backend'dan ma'lumot sync qilish
@@ -89,9 +97,40 @@ class _ChildHomePageState extends State<ChildHomePage> {
     }
   }
 
+  /// Vaqt limitini tekshirish
+  Future<void> _checkTimeLimit() async {
+    if (!mounted) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final isEnabled = prefs.getBool('time_limit_enabled') ?? false;
+      if (!isEnabled) return;
+
+      final limitMinutes = prefs.getInt('time_limit_minutes') ?? 60;
+      final usedSeconds = LocalMonitoringService.instance.secondsUsed;
+      final limitSeconds = limitMinutes * 60;
+
+      if (usedSeconds >= limitSeconds && mounted) {
+        if (kDebugMode) print('⏰ [ChildHome] Vaqt limiti tugadi! used=${usedSeconds}s, limit=${limitSeconds}s');
+        // Sessiyani to'xtatish
+        SessionTracker.instance.endSession('child_home');
+        _timeLimitTimer?.cancel();
+        _subscriptionCheckTimer?.cancel();
+        // Vaqt limiti sahifasiga o'tish
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const TimeLimitPage()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) print('⚠️ [ChildHome] Time limit check xato: $e');
+    }
+  }
+
   @override
   void dispose() {
     _subscriptionCheckTimer?.cancel();
+    _timeLimitTimer?.cancel();
     // Sessiya timer to'xtatish va backend'ga sync (SessionTracker ichida)
     SessionTracker.instance.endSession('child_home');
     super.dispose();

@@ -5,7 +5,7 @@ import '../../../../core/widgets/gradient_button.dart';
 import '../../domain/entities/subscription_entity.dart';
 import '../../../home/presentation/pages/main_navigation_page.dart';
 
-/// Payment Success Page — Premium celebration with confetti
+/// Payment Success Page — Optimized confetti animation
 class PaymentSuccessPage extends StatefulWidget {
   final SubscriptionPlan plan;
 
@@ -16,53 +16,72 @@ class PaymentSuccessPage extends StatefulWidget {
 }
 
 class _PaymentSuccessPageState extends State<PaymentSuccessPage>
-    with TickerProviderStateMixin {
-  late AnimationController _mainController;
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
-  late AnimationController _confettiController;
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
+  late Animation<double> _confettiAnimation;
+
+  // Confetti ma'lumotlari initState da bir marta hisoblanadi
+  late final List<_ConfettiData> _confettiItems;
 
   @override
   void initState() {
     super.initState();
 
-    _mainController = AnimationController(
-      duration: const Duration(milliseconds: 800),
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 2500),
       vsync: this,
     );
+
     _scaleAnimation = Tween<double>(begin: 0.3, end: 1.0).animate(
-      CurvedAnimation(parent: _mainController, curve: Curves.elasticOut),
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.4, curve: Curves.elasticOut),
+      ),
     );
+
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _mainController, curve: Curves.easeIn),
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.3, curve: Curves.easeIn),
+      ),
     );
 
-    _confettiController = AnimationController(
-      duration: const Duration(milliseconds: 3000),
-      vsync: this,
+    _confettiAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.1, 1.0, curve: Curves.linear),
+      ),
     );
 
-    _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    )..repeat(reverse: true);
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.08).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-
-    _mainController.forward();
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) _confettiController.forward();
+    // Confetti ma'lumotlarini oldindan hisoblash (build da emas)
+    final random = math.Random(42);
+    final colors = [
+      const Color(0xFF2D6A9F),
+      const Color(0xFF22C55E),
+      const Color(0xFFF59E0B),
+      const Color(0xFF4A90D9),
+      const Color(0xFF6BB5F0),
+      const Color(0xFF1A4A73),
+    ];
+    _confettiItems = List.generate(15, (i) {
+      return _ConfettiData(
+        leftFraction: random.nextDouble(),
+        delay: random.nextDouble() * 0.3,
+        size: 6.0 + random.nextDouble() * 6,
+        color: colors[random.nextInt(colors.length)],
+        isCircle: random.nextBool(),
+        index: i,
+      );
     });
+
+    _controller.forward();
   }
 
   @override
   void dispose() {
-    _mainController.dispose();
-    _confettiController.dispose();
-    _pulseController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -73,8 +92,51 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
       body: SafeArea(
         child: Stack(
           children: [
-            // Confetti overlay
-            ..._buildConfetti(),
+            // Confetti — faqat 1 ta AnimatedBuilder, 15 ta Positioned
+            AnimatedBuilder(
+              animation: _confettiAnimation,
+              builder: (context, _) {
+                final t = _confettiAnimation.value;
+                if (t <= 0) return const SizedBox.shrink();
+                final screenWidth = MediaQuery.of(context).size.width;
+                final screenHeight = MediaQuery.of(context).size.height;
+
+                return Stack(
+                  children: _confettiItems.map((item) {
+                    final itemT = (t - item.delay).clamp(0.0, 1.0);
+                    if (itemT <= 0) return const SizedBox.shrink();
+
+                    final y = -20 + itemT * (screenHeight + 40);
+                    final x = item.leftFraction * screenWidth +
+                        math.sin(itemT * math.pi * 3 + item.index) * 25;
+                    final opacity =
+                        itemT < 0.7 ? 1.0 : (1.0 - (itemT - 0.7) / 0.3);
+
+                    return Positioned(
+                      left: x,
+                      top: y,
+                      child: Opacity(
+                        opacity: opacity.clamp(0.0, 1.0),
+                        child: Transform.rotate(
+                          angle: itemT * math.pi * 3,
+                          child: Container(
+                            width: item.size,
+                            height:
+                                item.isCircle ? item.size : item.size * 0.4,
+                            decoration: BoxDecoration(
+                              color: item.color,
+                              borderRadius: BorderRadius.circular(
+                                  item.isCircle ? item.size : 2),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                );
+              },
+            ),
+
             // Main content
             Padding(
               padding: const EdgeInsets.all(24),
@@ -83,47 +145,39 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
                   const Spacer(flex: 1),
                   // Success icon
                   AnimatedBuilder(
-                    animation: _mainController,
+                    animation: _controller,
                     builder: (context, child) {
                       return Transform.scale(
                         scale: _scaleAnimation.value,
                         child: Opacity(
                           opacity: _fadeAnimation.value,
-                          child: AnimatedBuilder(
-                            animation: _pulseAnimation,
-                            builder: (context, child) {
-                              return Transform.scale(
-                                scale: _pulseAnimation.value,
-                                child: Container(
-                                  width: 120,
-                                  height: 120,
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        Color(0xFF22C55E),
-                                        Color(0xFF16A34A),
-                                      ],
-                                    ),
-                                    borderRadius: BorderRadius.circular(36),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: const Color(0xFF22C55E)
-                                            .withValues(alpha: 0.4),
-                                        blurRadius: 36,
-                                        offset: const Offset(0, 14),
-                                      ),
-                                    ],
-                                  ),
-                                  child: const Center(
-                                    child: Icon(
-                                      Icons.check_rounded,
-                                      size: 56,
-                                      color: Colors.white,
-                                    ),
-                                  ),
+                          child: Container(
+                            width: 120,
+                            height: 120,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFF22C55E),
+                                  Color(0xFF16A34A),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(36),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF22C55E)
+                                      .withValues(alpha: 0.4),
+                                  blurRadius: 36,
+                                  offset: const Offset(0, 14),
                                 ),
-                              );
-                            },
+                              ],
+                            ),
+                            child: const Center(
+                              child: Icon(
+                                Icons.check_rounded,
+                                size: 56,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
                         ),
                       );
@@ -244,7 +298,8 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: AppColors.success.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
@@ -252,7 +307,8 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.check_circle, size: 14, color: AppColors.success),
+                    Icon(Icons.check_circle,
+                        size: 14, color: AppColors.success),
                     SizedBox(width: 4),
                     Text(
                       'Muvaffaqiyat',
@@ -339,11 +395,16 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
             ),
           ),
           const SizedBox(height: 12),
-          _buildBenefitRow(Icons.live_tv_rounded, const Color(0xFF2D6A9F), 'Cheksiz multfilmlar'),
-          _buildBenefitRow(Icons.sports_esports_rounded, const Color(0xFF22C55E), 'Barcha o\'yinlar'),
-          _buildBenefitRow(Icons.smart_toy_rounded, const Color(0xFF7C4DFF), 'AI Yordamchi'),
-          _buildBenefitRow(Icons.bar_chart_rounded, const Color(0xFFF59E0B), 'To\'liq monitoring'),
-          _buildBenefitRow(Icons.family_restroom_rounded, const Color(0xFF4A90D9), 'Cheksiz bolalar profili'),
+          _buildBenefitRow(Icons.live_tv_rounded, const Color(0xFF2D6A9F),
+              'Cheksiz multfilmlar'),
+          _buildBenefitRow(Icons.sports_esports_rounded,
+              const Color(0xFF22C55E), 'Barcha o\'yinlar'),
+          _buildBenefitRow(Icons.smart_toy_rounded, const Color(0xFF7C4DFF),
+              'AI Yordamchi'),
+          _buildBenefitRow(Icons.bar_chart_rounded, const Color(0xFFF59E0B),
+              'To\'liq monitoring'),
+          _buildBenefitRow(Icons.family_restroom_rounded,
+              const Color(0xFF4A90D9), 'Cheksiz bolalar profili'),
         ],
       ),
     );
@@ -380,58 +441,23 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
       ),
     );
   }
+}
 
-  // ============= CONFETTI =============
+/// Confetti data — oldindan hisoblanadi, har frame da qayta hisoblanmaydi
+class _ConfettiData {
+  final double leftFraction;
+  final double delay;
+  final double size;
+  final Color color;
+  final bool isCircle;
+  final int index;
 
-  List<Widget> _buildConfetti() {
-    final random = math.Random(42);
-    final colors = [
-      const Color(0xFF2D6A9F),
-      const Color(0xFF22C55E),
-      const Color(0xFFF59E0B),
-      const Color(0xFF4A90D9),
-      const Color(0xFF6BB5F0),
-      const Color(0xFF1A4A73),
-    ];
-
-    return List.generate(30, (i) {
-      final left = random.nextDouble() * MediaQuery.of(context).size.width;
-      final delay = random.nextDouble() * 0.5;
-      final size = 6.0 + random.nextDouble() * 8;
-      final color = colors[random.nextInt(colors.length)];
-      final isCircle = random.nextBool();
-
-      return AnimatedBuilder(
-        animation: _confettiController,
-        builder: (context, child) {
-          final t = (_confettiController.value - delay).clamp(0.0, 1.0);
-          if (t <= 0) return const SizedBox.shrink();
-
-          final y = -20 + t * (MediaQuery.of(context).size.height + 40);
-          final x = left + math.sin(t * math.pi * 3 + i) * 30;
-          final opacity = t < 0.8 ? 1.0 : (1.0 - (t - 0.8) / 0.2);
-          final rotation = t * math.pi * 4;
-
-          return Positioned(
-            left: x,
-            top: y,
-            child: Opacity(
-              opacity: opacity.clamp(0.0, 1.0),
-              child: Transform.rotate(
-                angle: rotation,
-                child: Container(
-                  width: size,
-                  height: isCircle ? size : size * 0.4,
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(isCircle ? size : 2),
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      );
-    });
-  }
+  const _ConfettiData({
+    required this.leftFraction,
+    required this.delay,
+    required this.size,
+    required this.color,
+    required this.isCircle,
+    required this.index,
+  });
 }

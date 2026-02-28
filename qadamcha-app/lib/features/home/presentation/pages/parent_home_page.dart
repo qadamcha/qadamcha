@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../subscription/presentation/bloc/subscription_bloc.dart';
 import '../../../subscription/presentation/pages/payment_page.dart';
@@ -10,8 +11,38 @@ import 'settings_page.dart';
 import '../../../auth/presentation/pages/role_selection_page.dart';
 
 /// Parent Home Page — Ko'k-oq premium dizayn
-class ParentHomePage extends StatelessWidget {
+class ParentHomePage extends StatefulWidget {
   const ParentHomePage({super.key});
+
+  @override
+  State<ParentHomePage> createState() => _ParentHomePageState();
+}
+
+class _ParentHomePageState extends State<ParentHomePage> {
+  bool _timeLimitEnabled = false;
+  int _timeLimitMinutes = 5;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTimeLimitSettings();
+  }
+
+  Future<void> _loadTimeLimitSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _timeLimitEnabled = prefs.getBool('time_limit_enabled') ?? false;
+        _timeLimitMinutes = prefs.getInt('time_limit_minutes') ?? 5;
+      });
+    }
+  }
+
+  Future<void> _saveTimeLimitSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('time_limit_enabled', _timeLimitEnabled);
+    await prefs.setInt('time_limit_minutes', _timeLimitMinutes);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +86,14 @@ class ParentHomePage extends StatelessWidget {
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 20.w),
                     child: _buildSubscriptionCard(context),
+                  ),
+
+                  SizedBox(height: 16.h),
+
+                  // === VAQT LIMITI ===
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20.w),
+                    child: _buildTimeLimitCard(),
                   ),
 
                   SizedBox(height: 24.h),
@@ -448,6 +487,173 @@ class ParentHomePage extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildTimeLimitCard() {
+    return Container(
+      padding: EdgeInsets.all(20.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20.r),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title + Toggle
+          Row(
+            children: [
+              Container(
+                width: 40.w,
+                height: 40.w,
+                decoration: BoxDecoration(
+                  color: _timeLimitEnabled
+                      ? const Color(0xFFF59E0B).withOpacity(0.12)
+                      : const Color(0xFFF0F4F8),
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Icon(
+                  Icons.timer_rounded,
+                  size: 22.sp,
+                  color: _timeLimitEnabled
+                      ? const Color(0xFFF59E0B)
+                      : AppColors.textDisabled,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Vaqt nazorati',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                        fontFamily: 'Nunito',
+                      ),
+                    ),
+                    Text(
+                      _timeLimitEnabled
+                          ? '$_timeLimitMinutes daqiqa/kun'
+                          : 'O\'chirilgan',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: AppColors.textSecondary,
+                        fontFamily: 'Nunito',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch.adaptive(
+                value: _timeLimitEnabled,
+                onChanged: (value) {
+                  setState(() => _timeLimitEnabled = value);
+                  _saveTimeLimitSettings();
+                },
+                activeColor: const Color(0xFFF59E0B),
+              ),
+            ],
+          ),
+
+          // Slider (faqat yoqilgan bo'lsa)
+          if (_timeLimitEnabled) ...[
+            SizedBox(height: 16.h),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF59E0B).withOpacity(0.06),
+                borderRadius: BorderRadius.circular(14.r),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Kunlik limit:',
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                          fontFamily: 'Nunito',
+                        ),
+                      ),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 12.w, vertical: 4.h),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF59E0B).withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        child: Text(
+                          '$_timeLimitMinutes daqiqa',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFFD97706),
+                            fontFamily: 'Nunito',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 4.h),
+                  SliderTheme(
+                    data: SliderThemeData(
+                      activeTrackColor: const Color(0xFFF59E0B),
+                      inactiveTrackColor:
+                          const Color(0xFFF59E0B).withOpacity(0.15),
+                      thumbColor: const Color(0xFFF59E0B),
+                      overlayColor:
+                          const Color(0xFFF59E0B).withOpacity(0.12),
+                      trackHeight: 5,
+                      thumbShape: RoundSliderThumbShape(
+                          enabledThumbRadius: 10.r),
+                    ),
+                    child: Slider(
+                      value: _timeLimitMinutes.toDouble(),
+                      min: 1,
+                      max: 10,
+                      divisions: 9,
+                      onChanged: (value) {
+                        setState(() => _timeLimitMinutes = value.round());
+                      },
+                      onChangeEnd: (value) {
+                        _saveTimeLimitSettings();
+                      },
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('1 daq', style: TextStyle(
+                        fontSize: 10.sp,
+                        color: AppColors.textDisabled,
+                        fontFamily: 'Nunito',
+                      )),
+                      Text('10 daq', style: TextStyle(
+                        fontSize: 10.sp,
+                        color: AppColors.textDisabled,
+                        fontFamily: 'Nunito',
+                      )),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
