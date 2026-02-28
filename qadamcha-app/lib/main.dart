@@ -16,6 +16,9 @@ import 'features/subscription/presentation/bloc/subscription_bloc.dart';
 // Pages
 import 'features/auth/presentation/pages/splash_page.dart';
 
+/// Global navigator key — istalgan joydan navigatsiya qilish uchun
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
@@ -71,6 +74,7 @@ class QadamchaApp extends StatelessWidget {
             ),
           ],
           child: MaterialApp(
+            navigatorKey: navigatorKey,
             title: 'Qadamcha',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,

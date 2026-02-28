@@ -13,6 +13,7 @@ import '../../../child/presentation/pages/games_page.dart';
 import '../../../auth/presentation/pages/role_selection_page.dart';
 import '../../../subscription/presentation/bloc/subscription_bloc.dart';
 import 'time_limit_page.dart';
+import '../../../../main.dart' show navigatorKey;
 
 /// Child Home Page — pastki navigatsiya paneli bilan
 /// 2 ta tab: Multfilmlar va O'yinlar
@@ -108,14 +109,12 @@ class _ChildHomePageState extends State<ChildHomePage> {
         enabled: enabled,
         minutes: minutes,
         onExceeded: () {
-          if (!mounted) return;
           if (kDebugMode) print('🚫 [ChildHome] CALLBACK: Vaqt limiti tugadi!');
           // Sessiyani to'xtatish
           SessionTracker.instance.endSession('child_home');
           _subscriptionCheckTimer?.cancel();
-          // Vaqt limiti sahifasiga o'tish
-          Navigator.pushAndRemoveUntil(
-            context,
+          // Global navigatorKey orqali — qaysi sahifada bo'lmasin ishlaydi
+          navigatorKey.currentState?.pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => const TimeLimitPage()),
             (route) => false,
           );

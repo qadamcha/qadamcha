@@ -621,8 +621,8 @@ class _ParentHomePageState extends State<ParentHomePage> {
                     child: Slider(
                       value: _timeLimitMinutes.toDouble(),
                       min: 1,
-                      max: 20,
-                      divisions: 19,
+                      max: 30,
+                      divisions: 29,
                       onChanged: (value) {
                         setState(() => _timeLimitMinutes = value.round());
                       },
@@ -639,7 +639,7 @@ class _ParentHomePageState extends State<ParentHomePage> {
                         color: AppColors.textDisabled,
                         fontFamily: 'Nunito',
                       )),
-                      Text('20 daq', style: TextStyle(
+                      Text('30 daq', style: TextStyle(
                         fontSize: 10.sp,
                         color: AppColors.textDisabled,
                         fontFamily: 'Nunito',
