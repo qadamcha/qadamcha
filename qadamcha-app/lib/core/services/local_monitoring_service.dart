@@ -85,14 +85,16 @@ class LocalMonitoringService {
     // Haftalik reset tekshirish — yangi hafta boshida barcha kunlar 0 ga
     _checkWeeklyReset();
     
-    // Bugungi sana tekshirish — agar kechagi bo'lsa, reset
-    _checkDailyReset();
+    // Counterlarni yuklash (yangi kun bo'lsa reset qiladi)
+    _loadCountersFromPrefs();
     
     _childId = _prefs!.getString(_keyChildId);
     _loadActivityLogs();
   }
 
-  /// Kunlik reset tekshirish — yangi kunda barcha counterlar 0 ga
+  /// Kunlik reset tekshirish — FAQAT yangi kunda reset qiladi
+  /// ⚠️ Auto-save timer ichida har 10s chaqiriladi
+  /// In-memory counterlarni QAYTA YUKLAMASLIK kerak — faqat reset!
   void _checkDailyReset() {
     if (_prefs == null) return;
     final savedDate = _prefs!.getString(_keyDate);
@@ -116,14 +118,33 @@ class LocalMonitoringService {
       }
       _saveWeeklyMinutes();
       
+      // Time limit reset
+      _timeLimitTriggered = false;
+      
       saveToLocal();
       _prefs!.setString(_keyDate, today);
-    } else {
+    }
+    // ⚠️ else branch OLIB TASHLANDI!
+    // In-memory _secondsUsed ni SharedPreferences bilan qayta yozish MUMKIN EMAS
+    // chunki secondTimer har soniya _secondsUsed++ qilyapti
+  }
+
+  /// Faqat birinchi marta yuklash uchun (initialize da)
+  void _loadCountersFromPrefs() {
+    if (_prefs == null) return;
+    final savedDate = _prefs!.getString(_keyDate);
+    final today = _todayUzbekistan;
+    
+    if (savedDate == today) {
       _secondsUsed = _prefs!.getInt(_keySeconds) ?? 0;
       _videosWatched = _prefs!.getInt(_keyVideos) ?? 0;
       _gamesPlayed = _prefs!.getInt(_keyGames) ?? 0;
       _storiesRead = _prefs!.getInt(_keyStories) ?? 0;
       _loadWeeklyMinutes();
+      if (kDebugMode) print('📦 [LocalMonitoring] Counterlar yuklandi: ${_secondsUsed}s = ${_secondsUsed ~/ 60}m');
+    } else {
+      // Yangi kun — reset qilinadi
+      _checkDailyReset();
     }
   }
 
