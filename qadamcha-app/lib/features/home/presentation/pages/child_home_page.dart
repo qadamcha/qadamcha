@@ -30,6 +30,8 @@ class _ChildHomePageState extends State<ChildHomePage> {
   bool _childCreating = false;
   Timer? _subscriptionCheckTimer;
   Timer? _timeLimitTimer;
+  bool _timeLimitEnabled = false;
+  int _timeLimitMinutes = 60;
 
   late final List<Widget> _pages;
 
@@ -65,15 +67,18 @@ class _ChildHomePageState extends State<ChildHomePage> {
     // Backend'dan sync qilish (kirganda)
     _syncFromBackend();
 
-    // Obuna muddatini har 60 soniyada tekshirish (5 daqiqalik test uchun muhim)
+    // Vaqt limiti sozlamalarini yuklash va darhol tekshirish
+    _loadTimeLimitSettings();
+
+    // Obuna muddatini har 60 soniyada tekshirish
     _subscriptionCheckTimer = Timer.periodic(const Duration(seconds: 60), (_) {
       if (mounted) {
         context.read<SubscriptionBloc>().add(LoadSubscriptionEvent());
       }
     });
 
-    // Vaqt limitini har 10 soniyada tekshirish
-    _timeLimitTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+    // Vaqt limitini har 5 soniyada tekshirish
+    _timeLimitTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       _checkTimeLimit();
     });
   }
@@ -97,33 +102,42 @@ class _ChildHomePageState extends State<ChildHomePage> {
     }
   }
 
-  /// Vaqt limitini tekshirish
-  Future<void> _checkTimeLimit() async {
-    if (!mounted) return;
+  /// Vaqt limiti sozlamalarini yuklash
+  Future<void> _loadTimeLimitSettings() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final isEnabled = prefs.getBool('time_limit_enabled') ?? false;
-      if (!isEnabled) return;
-
-      final limitMinutes = prefs.getInt('time_limit_minutes') ?? 60;
-      final usedSeconds = LocalMonitoringService.instance.secondsUsed;
-      final limitSeconds = limitMinutes * 60;
-
-      if (usedSeconds >= limitSeconds && mounted) {
-        if (kDebugMode) print('⏰ [ChildHome] Vaqt limiti tugadi! used=${usedSeconds}s, limit=${limitSeconds}s');
-        // Sessiyani to'xtatish
-        SessionTracker.instance.endSession('child_home');
-        _timeLimitTimer?.cancel();
-        _subscriptionCheckTimer?.cancel();
-        // Vaqt limiti sahifasiga o'tish
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const TimeLimitPage()),
-          (route) => false,
-        );
-      }
+      _timeLimitEnabled = prefs.getBool('time_limit_enabled') ?? false;
+      _timeLimitMinutes = prefs.getInt('time_limit_minutes') ?? 60;
+      if (kDebugMode) print('⏰ [ChildHome] Vaqt limiti yuklandi: enabled=$_timeLimitEnabled, limit=$_timeLimitMinutes daq');
+      // Darhol tekshirish
+      _checkTimeLimit();
     } catch (e) {
-      if (kDebugMode) print('⚠️ [ChildHome] Time limit check xato: $e');
+      if (kDebugMode) print('⚠️ [ChildHome] Time limit load xato: $e');
+    }
+  }
+
+  /// Vaqt limitini tekshirish
+  void _checkTimeLimit() {
+    if (!mounted) return;
+    if (!_timeLimitEnabled) return;
+
+    final usedSeconds = LocalMonitoringService.instance.secondsUsed;
+    final limitSeconds = _timeLimitMinutes * 60;
+
+    if (kDebugMode) print('⏰ [ChildHome] Vaqt tekshiruv: used=${usedSeconds}s / limit=${limitSeconds}s ($_timeLimitMinutes daq)');
+
+    if (usedSeconds >= limitSeconds) {
+      if (kDebugMode) print('🚫 [ChildHome] VAQT LIMITI TUGADI!');
+      // Sessiyani to'xtatish
+      SessionTracker.instance.endSession('child_home');
+      _timeLimitTimer?.cancel();
+      _subscriptionCheckTimer?.cancel();
+      // Vaqt limiti sahifasiga o'tish
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const TimeLimitPage()),
+        (route) => false,
+      );
     }
   }
 

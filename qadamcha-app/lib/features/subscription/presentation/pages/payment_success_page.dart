@@ -54,16 +54,16 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, _) {
-              return Opacity(
-                opacity: _fadeAnimation.value,
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, _) {
+            return Opacity(
+              opacity: _fadeAnimation.value,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
                 child: Column(
                   children: [
-                    const Spacer(flex: 1),
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.04),
                     // Success icon
                     Transform.scale(
                       scale: _scaleAnimation.value,
@@ -124,7 +124,7 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
                     // Benefits card
                     _buildBenefitsCard(),
 
-                    const Spacer(flex: 2),
+                    const SizedBox(height: 32),
 
                     // Continue button
                     GradientButton(
@@ -141,9 +141,9 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage>
                     const SizedBox(height: 16),
                   ],
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
       ),
     );
