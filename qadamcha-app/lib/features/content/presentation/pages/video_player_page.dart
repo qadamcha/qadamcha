@@ -5,7 +5,7 @@ import 'package:chewie/chewie.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:qadamcha_app/features/content/domain/entities/content_entity.dart';
-// SessionTracker import olib tashlandi — vaqt global timer bilan hisoblanadi
+import '../../../../core/services/local_monitoring_service.dart';
 
 /// Bunny.net HLS video player — sifat tanlash + vaqt ko'rsatish
 /// ✅ Video ko'rish tracking: har bir video ochilganda session boshlanadi,
@@ -33,10 +33,12 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   _QualityOption? _currentQuality;
   bool _isLoading = true;
   bool _hasError = false;
+  late final DateTime _sessionStart;
 
   @override
   void initState() {
     super.initState();
+    _sessionStart = DateTime.now();
     _loadQualities();
   }
 
@@ -440,6 +442,16 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   @override
   void dispose() {
+    // Video yopilganda activity qayd qilish
+    final duration = DateTime.now().difference(_sessionStart);
+    final minutes = duration.inMinutes < 1 ? 1 : duration.inMinutes;
+    LocalMonitoringService.instance.batchUpdate(
+      seconds: duration.inSeconds,
+      activityType: 'video_watch',
+      contentTitle: widget.content.title,
+      durationMinutes: minutes,
+    );
+
     _videoPlayerController?.dispose();
     _chewieController?.dispose();
     super.dispose();

@@ -406,7 +406,8 @@ class _MonitoringPageState extends State<MonitoringPage> {
       final type = log.activityType.toLowerCase();
       return type == 'video' || type == 'video_watch' ||
              type == 'game' || type == 'game_play' ||
-             type == 'cartoon' || type == 'app_usage';
+             type == 'cartoon' || type == 'app_usage' ||
+             type == 'story_read' || type == 'story';
     }).take(5).toList();
 
     return Container(
