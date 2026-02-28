@@ -25,6 +25,8 @@ class SessionTracker {
       // Global soniya timer boshlash
       LocalMonitoringService.instance.startSecondTimer();
       LocalMonitoringService.instance.resumeAutoSave();
+      // Backend'ga periodic sync (har 2 daqiqa)
+      LocalMonitoringService.instance.startSyncTimer();
     }
   }
 

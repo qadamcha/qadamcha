@@ -210,9 +210,16 @@ class LocalMonitoringService {
     }
   }
 
-  /// Backend sync timer — endi kerak emas, batchUpdate har sessiya oxirida sync qiladi
+  /// Backend sync timer — har 2 daqiqada backend'ga sync qilish
+  /// Monitoring ma'lumotlarini faqat chiqqanda emas, muntazam saqlash
   void startSyncTimer() {
-    // NO-OP: backward compatibility
+    _syncTimer?.cancel();
+    _syncTimer = Timer.periodic(const Duration(minutes: 2), (_) {
+      if (_childId != null && _childId!.isNotEmpty && _isDirty) {
+        syncToBackend();
+      }
+    });
+    if (kDebugMode) print('🔄 [LocalMonitoring] Sync timer boshlandi (har 2 daqiqa)');
   }
 
   /// Backend'ga to'g'ridan-to'g'ri sync qilish (Dio orqali)
