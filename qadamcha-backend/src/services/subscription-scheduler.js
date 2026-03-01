@@ -9,7 +9,7 @@ const { Subscription } = require('../models');
 const { logger } = require('../config/logger');
 
 let intervalId = null;
-const CHECK_INTERVAL_MS = 1 * 60 * 1000; // ⚡ TEST: 1 minut (production da 60 * 60 * 1000 = 1 soat)
+const CHECK_INTERVAL_MS = 60 * 60 * 1000; // 1 soat
 
 /**
  * Eskirgan obunalarni expired ga o'tkazish

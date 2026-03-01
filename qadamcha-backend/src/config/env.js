@@ -92,7 +92,7 @@ module.exports = {
     // Subscription Plans (so'mda — Payme uchun controller da × 100 = tiyin)
     // ⚡ TEST MODE: monthly = 5 minut (testMinutes bor bo'lsa minutda hisoblaydi)
     PLANS: {
-        monthly: { price: 1000, days: 30, testMinutes: 5, name: 'Oylik' },      // TEST: 5 minut
+        monthly: { price: 1000, days: 30, name: 'Oylik' },
         yearly: { price: 399000, days: 365, name: 'Yillik' },   // 399,000 so'm
         lifetime: { price: 990000, days: 36500, name: 'Umrbod' } // 990,000 so'm
     }
