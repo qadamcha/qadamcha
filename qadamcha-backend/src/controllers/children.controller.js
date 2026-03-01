@@ -312,7 +312,8 @@ module.exports = {
         const items = (activity.contentIds || []).map((cid, i) => ({
             contentId: cid,
             title: (activity.contentTitles || [])[i] || 'Noma\'lum',
-            duration: (activity.durations || [])[i] || 0
+            duration: (activity.durations || [])[i] || 0,
+            timestamp: (activity.timestamps || [])[i] || activity.createdAt
         }));
 
         return {
@@ -423,7 +424,7 @@ module.exports = {
             await Activity.updateOne(
                 { childId: child._id },
                 {
-                    $pop: { contentIds: -1, contentTitles: -1, durations: -1 },
+                    $pop: { contentIds: -1, contentTitles: -1, durations: -1, timestamps: -1 },
                     $inc: { totalDuration: -removedDuration }
                 }
             );
@@ -436,7 +437,8 @@ module.exports = {
                 $push: {
                     contentIds: resolvedContentId,
                     contentTitles: resolvedTitle,
-                    durations: durationSeconds
+                    durations: durationSeconds,
+                    timestamps: new Date()
                 },
                 $inc: { totalDuration: durationSeconds },
                 $setOnInsert: { childId: child._id }

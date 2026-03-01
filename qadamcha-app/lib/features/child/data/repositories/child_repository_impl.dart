@@ -158,14 +158,18 @@ class ChildRepositoryImpl implements ChildRepository {
       final List<ActivityLog> logs = [];
       for (final activityDoc in data) {
         final List<dynamic> items = activityDoc['items'] ?? [];
-        final createdAt = activityDoc['createdAt'] != null 
-            ? DateTime.parse(activityDoc['createdAt']) 
-            : DateTime.now();
         
         for (int i = 0; i < items.length; i++) {
           final item = items[i];
           final durationSec = item['duration'] ?? 0;
           final durationMin = (durationSec / 60).round();
+          
+          // Har bir item o'zining timestamp'i bor
+          final itemTime = item['timestamp'] != null 
+              ? DateTime.parse(item['timestamp'])
+              : (activityDoc['createdAt'] != null 
+                  ? DateTime.parse(activityDoc['createdAt']) 
+                  : DateTime.now());
           
           logs.add(ActivityLog(
             id: '${activityDoc['_id']}_$i',
@@ -174,7 +178,7 @@ class ChildRepositoryImpl implements ChildRepository {
             contentTitle: item['title'] ?? '',
             activityType: 'video_watch',
             durationMinutes: durationMin > 0 ? durationMin : 1,
-            startedAt: createdAt,
+            startedAt: itemTime,
           ));
         }
       }

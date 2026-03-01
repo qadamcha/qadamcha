@@ -21,6 +21,10 @@ const activitySchema = new mongoose.Schema({
         type: [Number],   // Soniyalarda (contentIds bilan index mos)
         default: []
     },
+    timestamps: {
+        type: [Date],     // Har bir activity qachon ko'rilgani (index mos)
+        default: []
+    },
 
     // Jami davomiylik (stats uchun)
     totalDuration: {
