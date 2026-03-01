@@ -569,7 +569,7 @@ class _ContentPageState extends State<ContentPage> {
       padding: EdgeInsets.only(bottom: 16.h),
       child: VideoCard(
         content: content,
-        onTap: () => _navigateToPlayer(context, content),
+        onTap: () => _navigateToPlayer(context, content, allContents: filtered, currentIndex: index),
       ),
     );
   }
@@ -617,7 +617,7 @@ class _ContentPageState extends State<ContentPage> {
 
   Widget _buildLastWatchedCard(ContentEntity content) {
     return GestureDetector(
-      onTap: () => _navigateToPlayer(context, content),
+      onTap: () => _navigateToPlayer(context, content, allContents: [], currentIndex: 0),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -914,7 +914,7 @@ class _ContentPageState extends State<ContentPage> {
   }
 
   // ===== NAVIGATION =====
-  void _navigateToPlayer(BuildContext context, ContentEntity content) {
+  void _navigateToPlayer(BuildContext context, ContentEntity content, {List<ContentEntity>? allContents, int? currentIndex}) {
     setState(() {
       _lastWatched = content;
     });
@@ -948,6 +948,8 @@ class _ContentPageState extends State<ContentPage> {
         builder: (_) => VideoPlayerPage(
           content: content,
           streamUrl: streamUrl,
+          allContents: allContents,
+          currentIndex: currentIndex,
         ),
       ),
     );

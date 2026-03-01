@@ -44,6 +44,7 @@
         "smart_auth",
         "url_launcher",
         "video_player",
+        "wakelock_plus",
         "webview_flutter"
       ],
       "devDependencies": [
@@ -57,6 +58,19 @@
         "json_serializable",
         "mocktail",
         "retrofit_generator"
+      ]
+    },
+    {
+      "name": "flutter_launcher_icons",
+      "version": "0.14.4",
+      "dependencies": [
+        "args",
+        "checked_yaml",
+        "cli_util",
+        "image",
+        "json_annotation",
+        "path",
+        "yaml"
       ]
     },
     {
@@ -204,6 +218,20 @@
         "stream_channel",
         "test_api",
         "vector_math"
+      ]
+    },
+    {
+      "name": "wakelock_plus",
+      "version": "1.3.3",
+      "dependencies": [
+        "dbus",
+        "flutter",
+        "flutter_web_plugins",
+        "meta",
+        "package_info_plus",
+        "wakelock_plus_platform_interface",
+        "web",
+        "win32"
       ]
     },
     {
@@ -608,6 +636,51 @@
       ]
     },
     {
+      "name": "yaml",
+      "version": "3.1.3",
+      "dependencies": [
+        "collection",
+        "source_span",
+        "string_scanner"
+      ]
+    },
+    {
+      "name": "path",
+      "version": "1.9.1",
+      "dependencies": []
+    },
+    {
+      "name": "image",
+      "version": "4.7.2",
+      "dependencies": [
+        "archive",
+        "meta",
+        "xml"
+      ]
+    },
+    {
+      "name": "cli_util",
+      "version": "0.4.2",
+      "dependencies": [
+        "meta",
+        "path"
+      ]
+    },
+    {
+      "name": "checked_yaml",
+      "version": "2.0.4",
+      "dependencies": [
+        "json_annotation",
+        "source_span",
+        "yaml"
+      ]
+    },
+    {
+      "name": "args",
+      "version": "2.7.0",
+      "dependencies": []
+    },
+    {
       "name": "source_helper",
       "version": "1.3.5",
       "dependencies": [
@@ -724,11 +797,6 @@
       ]
     },
     {
-      "name": "path",
-      "version": "1.9.1",
-      "dependencies": []
-    },
-    {
       "name": "meta",
       "version": "1.17.0",
       "dependencies": []
@@ -770,15 +838,6 @@
         "collection",
         "file",
         "path",
-        "string_scanner"
-      ]
-    },
-    {
-      "name": "yaml",
-      "version": "3.1.3",
-      "dependencies": [
-        "collection",
-        "source_span",
         "string_scanner"
       ]
     },
@@ -974,11 +1033,6 @@
       ]
     },
     {
-      "name": "args",
-      "version": "2.7.0",
-      "dependencies": []
-    },
-    {
       "name": "test_api",
       "version": "0.7.7",
       "dependencies": [
@@ -1087,6 +1141,44 @@
       "dependencies": [
         "clock",
         "collection"
+      ]
+    },
+    {
+      "name": "web",
+      "version": "1.1.1",
+      "dependencies": []
+    },
+    {
+      "name": "dbus",
+      "version": "0.7.12",
+      "dependencies": [
+        "args",
+        "ffi",
+        "meta",
+        "xml"
+      ]
+    },
+    {
+      "name": "win32",
+      "version": "5.15.0",
+      "dependencies": [
+        "ffi"
+      ]
+    },
+    {
+      "name": "wakelock_plus_platform_interface",
+      "version": "1.3.0",
+      "dependencies": [
+        "flutter",
+        "meta",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "flutter_web_plugins",
+      "version": "0.0.0",
+      "dependencies": [
+        "flutter"
       ]
     },
     {
@@ -1246,27 +1338,11 @@
       ]
     },
     {
-      "name": "image",
-      "version": "4.7.2",
-      "dependencies": [
-        "archive",
-        "meta",
-        "xml"
-      ]
-    },
-    {
       "name": "html",
       "version": "0.15.6",
       "dependencies": [
         "csslib",
         "source_span"
-      ]
-    },
-    {
-      "name": "flutter_web_plugins",
-      "version": "0.0.0",
-      "dependencies": [
-        "flutter"
       ]
     },
     {
@@ -1277,18 +1353,6 @@
         "meta",
         "win32"
       ]
-    },
-    {
-      "name": "win32",
-      "version": "5.15.0",
-      "dependencies": [
-        "ffi"
-      ]
-    },
-    {
-      "name": "web",
-      "version": "1.1.1",
-      "dependencies": []
     },
     {
       "name": "file",
@@ -1398,20 +1462,6 @@
       "version": "3.0.2",
       "dependencies": [
         "meta"
-      ]
-    },
-    {
-      "name": "wakelock_plus",
-      "version": "1.3.3",
-      "dependencies": [
-        "dbus",
-        "flutter",
-        "flutter_web_plugins",
-        "meta",
-        "package_info_plus",
-        "wakelock_plus_platform_interface",
-        "web",
-        "win32"
       ]
     },
     {
@@ -1695,6 +1745,13 @@
       "dependencies": []
     },
     {
+      "name": "string_scanner",
+      "version": "1.4.1",
+      "dependencies": [
+        "source_span"
+      ]
+    },
+    {
       "name": "source_span",
       "version": "1.10.2",
       "dependencies": [
@@ -1730,22 +1787,6 @@
         "collection",
         "fixnum",
         "meta"
-      ]
-    },
-    {
-      "name": "checked_yaml",
-      "version": "2.0.4",
-      "dependencies": [
-        "json_annotation",
-        "source_span",
-        "yaml"
-      ]
-    },
-    {
-      "name": "string_scanner",
-      "version": "1.4.1",
-      "dependencies": [
-        "source_span"
       ]
     },
     {
@@ -1880,16 +1921,6 @@
       ]
     },
     {
-      "name": "dbus",
-      "version": "0.7.12",
-      "dependencies": [
-        "args",
-        "ffi",
-        "meta",
-        "xml"
-      ]
-    },
-    {
       "name": "_flutterfire_internals",
       "version": "1.3.59",
       "dependencies": [
@@ -1922,15 +1953,6 @@
         "crypto",
         "fixnum",
         "meta"
-      ]
-    },
-    {
-      "name": "wakelock_plus_platform_interface",
-      "version": "1.3.0",
-      "dependencies": [
-        "flutter",
-        "meta",
-        "plugin_platform_interface"
       ]
     },
     {
@@ -2145,27 +2167,6 @@
       "dependencies": [
         "collection",
         "hooks"
-      ]
-    },
-    {
-      "name": "flutter_launcher_icons",
-      "version": "0.14.4",
-      "dependencies": [
-        "args",
-        "checked_yaml",
-        "cli_util",
-        "image",
-        "json_annotation",
-        "path",
-        "yaml"
-      ]
-    },
-    {
-      "name": "cli_util",
-      "version": "0.4.2",
-      "dependencies": [
-        "meta",
-        "path"
       ]
     }
   ],

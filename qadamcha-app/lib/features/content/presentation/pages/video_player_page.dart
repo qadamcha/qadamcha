@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:chewie/chewie.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:qadamcha_app/features/content/domain/entities/content_entity.dart';
 import '../../../../core/services/local_monitoring_service.dart';
 
@@ -13,11 +15,15 @@ import '../../../../core/services/local_monitoring_service.dart';
 class VideoPlayerPage extends StatefulWidget {
   final ContentEntity content;
   final String streamUrl;
+  final List<ContentEntity>? allContents;
+  final int? currentIndex;
 
   const VideoPlayerPage({
     super.key,
     required this.content,
     required this.streamUrl,
+    this.allContents,
+    this.currentIndex,
   });
 
   @override
@@ -35,10 +41,24 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   bool _hasError = false;
   late final DateTime _sessionStart;
 
+  // Auto-next
+  bool _showNextOverlay = false;
+  int _nextCountdown = 5;
+  Timer? _countdownTimer;
+  bool _videoCompleted = false;
+
+  ContentEntity? get _nextContent {
+    if (widget.allContents == null || widget.currentIndex == null) return null;
+    final nextIdx = widget.currentIndex! + 1;
+    if (nextIdx >= widget.allContents!.length) return null;
+    return widget.allContents![nextIdx];
+  }
+
   @override
   void initState() {
     super.initState();
     _sessionStart = DateTime.now();
+    WakelockPlus.enable(); // Ekran o'chmasin
     _loadQualities();
   }
 
@@ -159,6 +179,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   Future<void> _initializePlayer(String url) async {
     // Agar avvalgi controller bo'lsa, tozalash
     final oldPosition = _videoPlayerController?.value.position;
+    _videoPlayerController?.removeListener(_onVideoProgress);
     _chewieController?.dispose();
     _videoPlayerController?.dispose();
 
@@ -235,6 +256,10 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         _isLoading = false;
         _hasError = false;
       });
+
+      // Video tugash listener qo'shish
+      _videoCompleted = false;
+      _videoPlayerController!.addListener(_onVideoProgress);
     } catch (e) {
       setState(() {
         _hasError = true;
@@ -442,6 +467,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   @override
   void dispose() {
+    WakelockPlus.disable(); // Ekran qayta o'chishi mumkin
+    _countdownTimer?.cancel();
     // Video yopilganda activity qayd qilish
     final duration = DateTime.now().difference(_sessionStart);
     final minutes = duration.inMinutes < 1 ? 1 : duration.inMinutes;
@@ -452,9 +479,80 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       durationMinutes: minutes,
     );
 
+    _videoPlayerController?.removeListener(_onVideoProgress);
     _videoPlayerController?.dispose();
     _chewieController?.dispose();
     super.dispose();
+  }
+
+  /// Video progress listener — tugashini aniqlash
+  void _onVideoProgress() {
+    if (_videoCompleted) return;
+    final controller = _videoPlayerController;
+    if (controller == null || !controller.value.isInitialized) return;
+
+    final position = controller.value.position;
+    final duration = controller.value.duration;
+
+    // Video tugadimi tekshirish (oxirgi 1 soniya + play to'xtaganda)
+    if (duration > Duration.zero &&
+        position >= duration - const Duration(seconds: 1) &&
+        !controller.value.isPlaying) {
+      _videoCompleted = true;
+      _startNextCountdown();
+    }
+  }
+
+  /// 5 soniyalik countdown boshlash
+  void _startNextCountdown() {
+    final next = _nextContent;
+    if (next == null) return; // Keyingi video yo'q
+
+    setState(() {
+      _showNextOverlay = true;
+      _nextCountdown = 5;
+    });
+
+    _countdownTimer?.cancel();
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) { timer.cancel(); return; }
+      setState(() => _nextCountdown--);
+      if (_nextCountdown <= 0) {
+        timer.cancel();
+        _playNextVideo();
+      }
+    });
+  }
+
+  /// Keyingi videoga o'tish
+  void _playNextVideo() {
+    final next = _nextContent;
+    if (next == null || !mounted) return;
+
+    final nextIndex = widget.currentIndex! + 1;
+    final streamUrl = next.streamUrl ??
+        'https://vz-b4d1a082-e06.b-cdn.net/${next.videoId}/playlist.m3u8';
+
+    // Video counter
+    LocalMonitoringService.instance.addVideoWatched();
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => VideoPlayerPage(
+          content: next,
+          streamUrl: streamUrl,
+          allContents: widget.allContents,
+          currentIndex: nextIndex,
+        ),
+      ),
+    );
+  }
+
+  /// Countdown bekor qilish
+  void _cancelCountdown() {
+    _countdownTimer?.cancel();
+    setState(() => _showNextOverlay = false);
   }
 
   @override
@@ -462,92 +560,263 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            // Header
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      width: 36.w,
-                      height: 36.w,
-                      decoration: BoxDecoration(
-                        color: Colors.white12,
-                        borderRadius: BorderRadius.circular(10.r),
-                      ),
-                      child: Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        color: Colors.white,
-                        size: 16.sp,
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Text(
-                      widget.content.title,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w700,
-                        fontFamily: 'Nunito',
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  // Sifat tanlash tugmasi
-                  if (_qualities.length > 1)
-                    GestureDetector(
-                      onTap: _showQualityPicker,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 10.w,
-                          vertical: 5.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF7C4DFF).withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(8.r),
-                          border: Border.all(
-                            color:
-                                const Color(0xFF7C4DFF).withValues(alpha: 0.4),
+            Column(
+              children: [
+                // Header
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 36.w,
+                          height: 36.w,
+                          decoration: BoxDecoration(
+                            color: Colors.white12,
+                            borderRadius: BorderRadius.circular(10.r),
+                          ),
+                          child: Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            color: Colors.white,
+                            size: 16.sp,
                           ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.hd_rounded,
-                                color: const Color(0xFFB388FF), size: 16.sp),
-                            SizedBox(width: 4.w),
-                            Text(
-                              _currentQuality?.label ?? 'Avto',
-                              style: TextStyle(
-                                color: const Color(0xFFB388FF),
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w700,
-                                fontFamily: 'Nunito',
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Text(
+                          widget.content.title,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w700,
+                            fontFamily: 'Nunito',
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      // Sifat tanlash tugmasi
+                      if (_qualities.length > 1)
+                        GestureDetector(
+                          onTap: _showQualityPicker,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 10.w,
+                              vertical: 5.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF7C4DFF).withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(8.r),
+                              border: Border.all(
+                                color:
+                                    const Color(0xFF7C4DFF).withValues(alpha: 0.4),
                               ),
                             ),
-                          ],
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.hd_rounded,
+                                    color: const Color(0xFFB388FF), size: 16.sp),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  _currentQuality?.label ?? 'Avto',
+                                  style: TextStyle(
+                                    color: const Color(0xFFB388FF),
+                                    fontSize: 12.sp,
+                                    fontWeight: FontWeight.w700,
+                                    fontFamily: 'Nunito',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+
+                // Video Player
+                Expanded(
+                  child: Center(
+                    child: _buildPlayerContent(),
+                  ),
+                ),
+
+                // Bottom info bar
+                _buildBottomInfo(),
+              ],
+            ),
+
+            // Auto-next countdown overlay
+            if (_showNextOverlay && _nextContent != null)
+              _buildNextVideoOverlay(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// YouTube-style keyingi video overlay
+  Widget _buildNextVideoOverlay() {
+    final next = _nextContent!;
+    return Positioned.fill(
+      child: Container(
+        color: Colors.black.withOpacity(0.85),
+        child: Center(
+          child: Container(
+            margin: EdgeInsets.symmetric(horizontal: 32.w),
+            padding: EdgeInsets.all(20.w),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1A1A2E),
+              borderRadius: BorderRadius.circular(20.r),
+              border: Border.all(color: const Color(0xFF7C4DFF).withOpacity(0.3)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Keyingi video', style: TextStyle(
+                  fontSize: 13.sp,
+                  color: Colors.white54,
+                  fontFamily: 'Nunito',
+                  fontWeight: FontWeight.w600,
+                )),
+                SizedBox(height: 14.h),
+
+                // Next video thumbnail
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12.r),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 120.h,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        next.thumbnailUrl != null && next.thumbnailUrl!.isNotEmpty
+                            ? Image.network(
+                                next.thumbnailUrl!,
+                                fit: BoxFit.cover,
+                                headers: const {'Referer': 'https://qadamcha.uz/'},
+                                errorBuilder: (_, __, ___) => Container(
+                                  color: const Color(0xFF2A2A4A),
+                                  child: const Center(child: Icon(Icons.movie_rounded, color: Colors.white24, size: 40)),
+                                ),
+                              )
+                            : Container(
+                                color: const Color(0xFF2A2A4A),
+                                child: const Center(child: Icon(Icons.movie_rounded, color: Colors.white24, size: 40)),
+                              ),
+                        // Countdown overlay
+                        Center(
+                          child: Container(
+                            width: 56.w,
+                            height: 56.w,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.6),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 50.w,
+                                  height: 50.w,
+                                  child: CircularProgressIndicator(
+                                    value: _nextCountdown / 5,
+                                    strokeWidth: 3,
+                                    backgroundColor: Colors.white12,
+                                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF7C4DFF)),
+                                  ),
+                                ),
+                                Text(
+                                  '$_nextCountdown',
+                                  style: TextStyle(
+                                    fontSize: 20.sp,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                    fontFamily: 'Nunito',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(height: 12.h),
+
+                // Next video title
+                Text(
+                  next.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    fontFamily: 'Nunito',
+                  ),
+                ),
+                SizedBox(height: 16.h),
+
+                // Buttons
+                Row(
+                  children: [
+                    // Bekor qilish
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: _cancelCountdown,
+                        child: Container(
+                          height: 44.h,
+                          decoration: BoxDecoration(
+                            color: Colors.white12,
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          child: Center(
+                            child: Text('Bekor qilish', style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white70,
+                              fontFamily: 'Nunito',
+                            )),
+                          ),
                         ),
                       ),
                     ),
-                ],
-              ),
+                    SizedBox(width: 10.w),
+                    // Hozir o'ynash
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: _playNextVideo,
+                        child: Container(
+                          height: 44.h,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF7C4DFF), Color(0xFF5C2DDF)],
+                            ),
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          child: Center(
+                            child: Text('Hozir o\'ynash', style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              fontFamily: 'Nunito',
+                            )),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-
-            // Video Player
-            Expanded(
-              child: Center(
-                child: _buildPlayerContent(),
-              ),
-            ),
-
-            // Bottom info bar
-            _buildBottomInfo(),
-          ],
+          ),
         ),
       ),
     );
