@@ -466,12 +466,15 @@ class LocalMonitoringService {
     saveToLocal();
     _isDirty = false;
 
-    // ✅ Activity ni backend ga yozish (contentId + contentTitle + duration)
-    recordActivityToBackend(
-      durationMinutes: durationMinutes > 0 ? durationMinutes : 1,
-      contentId: contentId,
-      contentTitle: contentTitle,
-    );
+    // ✅ Activity ni backend ga yozish — FAQAT contentId bo'lganda
+    // session_tracker contentId yubormaydi (faqat counter), VideoPlayerPage yuboradi
+    if (contentId != null && contentId.isNotEmpty) {
+      recordActivityToBackend(
+        durationMinutes: durationMinutes > 0 ? durationMinutes : 1,
+        contentId: contentId,
+        contentTitle: contentTitle,
+      );
+    }
   }
 
   /// Local activity loglarni olish

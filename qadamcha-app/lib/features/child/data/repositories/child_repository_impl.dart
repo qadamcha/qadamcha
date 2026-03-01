@@ -183,7 +183,8 @@ class ChildRepositoryImpl implements ChildRepository {
         }
       }
       
-      return Right(logs);
+      // Eng oxirgi ko'rilgan birinchi turishi uchun teskari saralash
+      return Right(logs.reversed.toList());
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
