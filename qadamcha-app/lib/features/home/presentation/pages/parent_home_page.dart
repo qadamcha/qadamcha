@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/services/local_monitoring_service.dart';
 import '../../../subscription/presentation/bloc/subscription_bloc.dart';
 import '../../../subscription/presentation/pages/payment_page.dart';
 import '../../../subscription/domain/entities/subscription_entity.dart';
@@ -20,12 +22,39 @@ class ParentHomePage extends StatefulWidget {
 
 class _ParentHomePageState extends State<ParentHomePage> {
   bool _timeLimitEnabled = false;
-  int _timeLimitMinutes = 5;
+  int _timeLimitMinutes = 30;
+  int _usedSeconds = 0;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _loadTimeLimitSettings();
+    _usedSeconds = LocalMonitoringService.instance.secondsUsed;
+    // Har 30 soniyada used vaqtni yangilash
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) {
+        setState(() {
+          _usedSeconds = LocalMonitoringService.instance.secondsUsed;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  /// Vaqtni formatlash: "2 soat 15 daq" yoki "45 daq"
+  String _formatLimitTime(int minutes) {
+    if (minutes >= 60) {
+      final h = minutes ~/ 60;
+      final m = minutes % 60;
+      return m > 0 ? '$h soat $m daq' : '$h soat';
+    }
+    return '$minutes daq';
   }
 
   Future<void> _loadTimeLimitSettings() async {
@@ -489,6 +518,14 @@ class _ParentHomePageState extends State<ParentHomePage> {
   }
 
   Widget _buildTimeLimitCard() {
+    final limitHours = _timeLimitMinutes ~/ 60;
+    final limitMins = _timeLimitMinutes % 60;
+    final usedMinutes = _usedSeconds ~/ 60;
+    final remaining = _timeLimitMinutes - usedMinutes;
+    final progress = _timeLimitMinutes > 0 
+        ? (_usedSeconds / (_timeLimitMinutes * 60)).clamp(0.0, 1.0)
+        : 0.0;
+
     return Container(
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
@@ -541,7 +578,7 @@ class _ParentHomePageState extends State<ParentHomePage> {
                     ),
                     Text(
                       _timeLimitEnabled
-                          ? '$_timeLimitMinutes daqiqa/kun'
+                          ? '${_formatLimitTime(_timeLimitMinutes)}/kun'
                           : 'O\'chirilgan',
                       style: TextStyle(
                         fontSize: 12.sp,
@@ -563,13 +600,97 @@ class _ParentHomePageState extends State<ParentHomePage> {
             ],
           ),
 
-          // Slider (faqat yoqilgan bo'lsa)
+          // Vaqt tanlash + Progress
           if (_timeLimitEnabled) ...[
             SizedBox(height: 16.h),
+
+            // Vaqt tanlash
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+              padding: EdgeInsets.all(14.w),
               decoration: BoxDecoration(
                 color: AppColors.primary.withOpacity(0.04),
+                borderRadius: BorderRadius.circular(14.r),
+              ),
+              child: Column(
+                children: [
+                  Text('Kunlik limit', style: TextStyle(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                    fontFamily: 'Nunito',
+                  )),
+                  SizedBox(height: 10.h),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildTimePicker(
+                        value: limitHours,
+                        label: 'soat',
+                        onMinus: () {
+                          if (limitHours > 0) {
+                            final total = (limitHours - 1) * 60 + limitMins;
+                            setState(() => _timeLimitMinutes = total < 5 ? 5 : total);
+                            _saveTimeLimitSettings();
+                          }
+                        },
+                        onPlus: () {
+                          if (limitHours < 5) {
+                            final total = (limitHours + 1) * 60 + limitMins;
+                            setState(() => _timeLimitMinutes = total > 300 ? 300 : total);
+                            _saveTimeLimitSettings();
+                          }
+                        },
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(bottom: 20.h),
+                        child: Text(':', style: TextStyle(
+                          fontSize: 24.sp,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.primary,
+                          fontFamily: 'Nunito',
+                        )),
+                      ),
+                      _buildTimePicker(
+                        value: limitMins,
+                        label: 'daq',
+                        onMinus: () {
+                          var h = limitHours;
+                          var m = limitMins - 5;
+                          if (m < 0) { m = 55; h--; }
+                          if (h < 0) return;
+                          final total = h * 60 + m;
+                          if (total >= 5) {
+                            setState(() => _timeLimitMinutes = total);
+                            _saveTimeLimitSettings();
+                          }
+                        },
+                        onPlus: () {
+                          var h = limitHours;
+                          var m = limitMins + 5;
+                          if (m >= 60) { m = 0; h++; }
+                          final total = h * 60 + m;
+                          if (total <= 300) {
+                            setState(() => _timeLimitMinutes = total);
+                            _saveTimeLimitSettings();
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 12.h),
+
+            // Progress bar
+            Container(
+              padding: EdgeInsets.all(14.w),
+              decoration: BoxDecoration(
+                color: progress >= 1.0
+                    ? const Color(0xFFEF4444).withOpacity(0.06)
+                    : progress >= 0.75
+                        ? const Color(0xFFF59E0B).withOpacity(0.06)
+                        : const Color(0xFF22C55E).withOpacity(0.06),
                 borderRadius: BorderRadius.circular(14.r),
               ),
               child: Column(
@@ -577,72 +698,61 @@ class _ParentHomePageState extends State<ParentHomePage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      Text('Bugungi foydalanish', style: TextStyle(
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                        fontFamily: 'Nunito',
+                      )),
                       Text(
-                        'Kunlik limit:',
+                        remaining > 0
+                            ? 'Qolgan: ${_formatLimitTime(remaining)}'
+                            : 'Limit tugagan!',
                         style: TextStyle(
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w700,
+                          color: progress >= 1.0
+                              ? const Color(0xFFEF4444)
+                              : progress >= 0.75
+                                  ? const Color(0xFFD97706)
+                                  : const Color(0xFF16A34A),
                           fontFamily: 'Nunito',
-                        ),
-                      ),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 12.w, vertical: 4.h),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8.r),
-                        ),
-                        child: Text(
-                          '$_timeLimitMinutes daqiqa',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFF2D6A9F),
-                            fontFamily: 'Nunito',
-                          ),
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(height: 4.h),
-                  SliderTheme(
-                    data: SliderThemeData(
-                      activeTrackColor: const Color(0xFF2D6A9F),
-                      inactiveTrackColor:
-                          const Color(0xFF2D6A9F).withOpacity(0.15),
-                      thumbColor: const Color(0xFF2D6A9F),
-                      overlayColor:
-                          const Color(0xFF2D6A9F).withOpacity(0.12),
-                      trackHeight: 5,
-                      thumbShape: RoundSliderThumbShape(
-                          enabledThumbRadius: 10.r),
-                    ),
-                    child: Slider(
-                      value: _timeLimitMinutes.toDouble(),
-                      min: 1,
-                      max: 40,
-                      divisions: 39,
-                      onChanged: (value) {
-                        setState(() => _timeLimitMinutes = value.round());
-                      },
-                      onChangeEnd: (value) {
-                        _saveTimeLimitSettings();
-                      },
+                  SizedBox(height: 8.h),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6.r),
+                    child: LinearProgressIndicator(
+                      value: progress.toDouble(),
+                      minHeight: 8.h,
+                      backgroundColor: Colors.black.withOpacity(0.06),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        progress >= 1.0
+                            ? const Color(0xFFEF4444)
+                            : progress >= 0.75
+                                ? const Color(0xFFF59E0B)
+                                : const Color(0xFF22C55E),
+                      ),
                     ),
                   ),
+                  SizedBox(height: 6.h),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('1 daq', style: TextStyle(
-                        fontSize: 10.sp,
-                        color: AppColors.textDisabled,
+                      Text(_formatLimitTime(usedMinutes), style: TextStyle(
+                        fontSize: 11.sp, fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary, fontFamily: 'Nunito',
+                      )),
+                      Text('${(progress * 100).round()}%', style: TextStyle(
+                        fontSize: 11.sp, fontWeight: FontWeight.w700,
+                        color: progress >= 1.0 ? const Color(0xFFEF4444) : AppColors.textSecondary,
                         fontFamily: 'Nunito',
                       )),
-                      Text('40 daq', style: TextStyle(
-                        fontSize: 10.sp,
-                        color: AppColors.textDisabled,
-                        fontFamily: 'Nunito',
+                      Text(_formatLimitTime(_timeLimitMinutes), style: TextStyle(
+                        fontSize: 11.sp, fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary, fontFamily: 'Nunito',
                       )),
                     ],
                   ),
@@ -650,6 +760,70 @@ class _ParentHomePageState extends State<ParentHomePage> {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimePicker({
+    required int value,
+    required String label,
+    required VoidCallback onMinus,
+    required VoidCallback onPlus,
+  }) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 10.w),
+      child: Column(
+        children: [
+          GestureDetector(
+            onTap: onPlus,
+            child: Container(
+              width: 48.w,
+              height: 30.h,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.08),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(10.r)),
+              ),
+              child: Icon(Icons.keyboard_arrow_up_rounded,
+                  size: 22.sp, color: AppColors.primary),
+            ),
+          ),
+          Container(
+            width: 48.w,
+            height: 44.h,
+            color: AppColors.primary.withOpacity(0.05),
+            child: Center(
+              child: Text(
+                value.toString().padLeft(2, '0'),
+                style: TextStyle(
+                  fontSize: 24.sp,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF2D6A9F),
+                  fontFamily: 'Nunito',
+                ),
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: onMinus,
+            child: Container(
+              width: 48.w,
+              height: 30.h,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.08),
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(10.r)),
+              ),
+              child: Icon(Icons.keyboard_arrow_down_rounded,
+                  size: 22.sp, color: AppColors.primary),
+            ),
+          ),
+          SizedBox(height: 4.h),
+          Text(label, style: TextStyle(
+            fontSize: 11.sp,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textDisabled,
+            fontFamily: 'Nunito',
+          )),
         ],
       ),
     );
