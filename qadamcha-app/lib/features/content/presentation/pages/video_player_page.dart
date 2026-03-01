@@ -46,6 +46,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   int _nextCountdown = 5;
   Timer? _countdownTimer;
   bool _videoCompleted = false;
+  bool _isDisposing = false; // dispose vaqtida false trigger oldini olish
 
   ContentEntity? get _nextContent {
     if (widget.allContents == null || widget.currentIndex == null) return null;
@@ -467,7 +468,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   @override
   void dispose() {
-    WakelockPlus.disable(); // Ekran qayta o'chishi mumkin
+    _isDisposing = true; // ← Listener dan false trigger oldini olish
+    WakelockPlus.disable();
     _countdownTimer?.cancel();
     // Video yopilganda activity qayd qilish
     final duration = DateTime.now().difference(_sessionStart);
@@ -487,17 +489,19 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   /// Video progress listener — tugashini aniqlash
   void _onVideoProgress() {
-    if (_videoCompleted) return;
+    // Dispose vaqtida yoki allaqachon completed bo'lsa — o'tkazib yuborish
+    if (_videoCompleted || _isDisposing) return;
     final controller = _videoPlayerController;
     if (controller == null || !controller.value.isInitialized) return;
 
     final position = controller.value.position;
     final duration = controller.value.duration;
 
-    // Video tugadimi tekshirish (oxirgi 1 soniya + play to'xtaganda)
-    if (duration > Duration.zero &&
-        position >= duration - const Duration(seconds: 1) &&
-        !controller.value.isPlaying) {
+    // Minimum 5 soniya davomiylik bo'lishi kerak (false trigger oldini olish)
+    if (duration < const Duration(seconds: 5)) return;
+
+    // Video tugashiga 500ms qolganda trigger (HLS uchun !isPlaying shart emas)
+    if (position >= duration - const Duration(milliseconds: 500)) {
       _videoCompleted = true;
       _startNextCountdown();
     }
