@@ -47,6 +47,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   Timer? _countdownTimer;
   bool _videoCompleted = false;
   bool _isDisposing = false; // dispose vaqtida false trigger oldini olish
+  bool _activityRecorded = false; // activity 2 marta yozilmasligi uchun
 
   ContentEntity? get _nextContent {
     if (widget.allContents == null || widget.currentIndex == null) return null;
@@ -468,19 +469,22 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   @override
   void dispose() {
-    _isDisposing = true; // ← Listener dan false trigger oldini olish
+    _isDisposing = true;
     WakelockPlus.disable();
     _countdownTimer?.cancel();
-    // Video yopilganda activity qayd qilish
-    final duration = DateTime.now().difference(_sessionStart);
-    final minutes = duration.inMinutes < 1 ? 1 : duration.inMinutes;
-    LocalMonitoringService.instance.batchUpdate(
-      seconds: duration.inSeconds,
-      activityType: 'video_watch',
-      contentTitle: widget.content.title,
-      durationMinutes: minutes,
-      contentId: widget.content.id,
-    );
+    // Video yopilganda activity qayd qilish — FAQAT 1 MARTA
+    if (!_activityRecorded) {
+      _activityRecorded = true;
+      final duration = DateTime.now().difference(_sessionStart);
+      final minutes = duration.inMinutes < 1 ? 1 : duration.inMinutes;
+      LocalMonitoringService.instance.batchUpdate(
+        seconds: duration.inSeconds,
+        activityType: 'video_watch',
+        contentTitle: widget.content.title,
+        durationMinutes: minutes,
+        contentId: widget.content.id,
+      );
+    }
 
     _videoPlayerController?.removeListener(_onVideoProgress);
     _videoPlayerController?.dispose();
@@ -539,7 +543,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         'https://vz-b4d1a082-e06.b-cdn.net/${next.videoId}/playlist.m3u8';
 
     // Video counter
-    LocalMonitoringService.instance.addVideoWatched();
+    // addVideoWatched() o'chirildi — dispose() dagi batchUpdate allaqachon counter oshiradi
 
     Navigator.pushReplacement(
       context,
