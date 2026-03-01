@@ -171,9 +171,13 @@ class _ChildHomePageState extends State<ChildHomePage> {
           }
 
           if (!subState.isPremium) {
+            // Obuna faol emas — time limit tekshirmaslik kerak
+            LocalMonitoringService.instance.setChildSessionActive(false);
             return _buildNoSubscriptionScreen(context);
           }
 
+          // Obuna faol — time limit tekshirishni yoqish
+          LocalMonitoringService.instance.setChildSessionActive(true);
           return _buildMainScreen(context);
         },
       ),

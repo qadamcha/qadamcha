@@ -39,6 +39,7 @@ class LocalMonitoringService {
   bool _timeLimitEnabled = false;
   int _timeLimitMinutes = 60;
   bool _timeLimitTriggered = false; // Faqat 1 marta trigger bo'lsin
+  bool _childSessionActive = false; // Obuna faol va bola menuda
   
   // Activity logs (local)
   List<Map<String, dynamic>> _activityLogs = [];
@@ -235,11 +236,18 @@ class LocalMonitoringService {
   void clearTimeLimit() {
     _timeLimitEnabled = false;
     _timeLimitTriggered = false;
+    _childSessionActive = false;
+  }
+
+  /// Bola sessiyasi faolligini o'rnatish (obuna faol bo'lgandagina true)
+  void setChildSessionActive(bool active) {
+    _childSessionActive = active;
+    if (kDebugMode) print('👶 [LocalMonitoring] Child session active: $active');
   }
 
   /// Ichki tekshirish — secondTimer ichida har soniyada chaqiriladi
   void _checkTimeLimitInternal() {
-    if (!_timeLimitEnabled || _timeLimitTriggered) return;
+    if (!_timeLimitEnabled || _timeLimitTriggered || !_childSessionActive) return;
     final limitSeconds = _timeLimitMinutes * 60;
     
     // Har 5 soniyada log chiqarish
