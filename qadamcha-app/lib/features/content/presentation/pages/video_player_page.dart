@@ -479,6 +479,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       activityType: 'video_watch',
       contentTitle: widget.content.title,
       durationMinutes: minutes,
+      contentId: widget.content.id,
     );
 
     _videoPlayerController?.removeListener(_onVideoProgress);

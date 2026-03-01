@@ -6,52 +6,47 @@ const activitySchema = new mongoose.Schema({
         ref: 'Child',
         required: true
     },
-    contentId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Content'
+
+    // Kunlik activity — max 5 ta element (FIFO)
+    contentIds: {
+        type: [String],   // Content._id lari
+        default: []
+    },
+    durations: {
+        type: [Number],   // Soniyalarda, contentIds bilan index mos
+        default: []
     },
 
-    // Kontent ma'lumotlari (denormalized for quick access)
-    contentType: String,
-    contentTitle: String,
-
-    // Vaqt
-    duration: {
+    // Jami davomiylik (stats uchun — tez hisoblash)
+    totalDuration: {
         type: Number,
-        default: 0 // sekundlarda
+        default: 0
     },
-    date: {
-        type: String  // "2026-02-09" format
-    },
-    startedAt: Date,
-    endedAt: Date,
 
-    // Session info
-    deviceId: String,
+    // Sana
+    date: {
+        type: String  // "2026-03-02" format
+    },
 
 }, {
     timestamps: true
 });
 
 // Compound indexes
-activitySchema.index({ childId: 1, date: 1 });
+activitySchema.index({ childId: 1, date: 1 }, { unique: true });
 activitySchema.index({ childId: 1, createdAt: -1 });
-activitySchema.index({ date: 1, childId: 1 });
 
 // Kunlik statistika olish
 activitySchema.statics.getDailyStats = async function (childId, date) {
-    const activities = await this.find({ childId, date });
+    const activity = await this.findOne({ childId, date });
 
-    const totalDuration = activities.reduce((sum, a) => sum + (a.duration || 0), 0);
-    const byType = activities.reduce((acc, a) => {
-        acc[a.contentType] = (acc[a.contentType] || 0) + (a.duration || 0);
-        return acc;
-    }, {});
+    if (!activity) {
+        return { totalDuration: 0, count: 0 };
+    }
 
     return {
-        totalDuration,
-        byType,
-        count: activities.length
+        totalDuration: activity.totalDuration || 0,
+        count: activity.contentIds.length
     };
 };
 
@@ -68,13 +63,13 @@ activitySchema.statics.getWeeklyStats = async function (childId) {
             }
         },
         {
-            $group: {
-                _id: '$date',
-                totalDuration: { $sum: '$duration' },
-                sessions: { $sum: 1 }
+            $project: {
+                date: 1,
+                totalDuration: 1,
+                sessions: { $size: '$contentIds' }
             }
         },
-        { $sort: { _id: 1 } }
+        { $sort: { date: 1 } }
     ]);
 };
 

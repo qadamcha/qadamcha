@@ -20,13 +20,14 @@ module.exports = {
         const childIds = children.map(c => c._id);
         let statsMap = new Map();
         try {
+            // Yangi schema: har kuni 1 ta Activity doc, totalDuration fieldi bor
             const allStats = await Activity.aggregate([
                 { $match: { childId: { $in: childIds }, date: today } },
                 {
                     $group: {
                         _id: '$childId',
-                        totalDuration: { $sum: '$duration' },
-                        count: { $sum: 1 }
+                        totalDuration: { $sum: '$totalDuration' },
+                        count: { $sum: { $size: '$contentIds' } }
                     }
                 }
             ]);
@@ -309,7 +310,47 @@ module.exports = {
             .sort({ createdAt: -1 })
             .limit(parsedLimit);
 
-        return { success: true, activities };
+        // contentIds dan Content nomlarini olish
+        const allContentIds = [];
+        for (const act of activities) {
+            for (const cid of (act.contentIds || [])) {
+                if (cid && cid !== 'unknown' && !allContentIds.includes(cid)) {
+                    allContentIds.push(cid);
+                }
+            }
+        }
+
+        // Content nomlarini olish
+        const { Content } = require('../models');
+        let contentMap = {};
+        try {
+            const contents = await Content.find(
+                { _id: { $in: allContentIds } },
+                { title: 1 }
+            );
+            contentMap = Object.fromEntries(contents.map(c => [c._id.toString(), c.title]));
+        } catch (e) {
+            // Content topilmasa ham davom etsin
+        }
+
+        // Activity larni enriched holda qaytarish
+        const enriched = activities.map(act => {
+            const items = (act.contentIds || []).map((cid, i) => ({
+                contentId: cid,
+                title: contentMap[cid] || 'Noma\'lum',
+                duration: (act.durations || [])[i] || 0
+            }));
+            return {
+                _id: act._id,
+                childId: act.childId,
+                date: act.date,
+                totalDuration: act.totalDuration,
+                items,
+                createdAt: act.createdAt
+            };
+        });
+
+        return { success: true, activities: enriched };
     },
 
     // GET /children/:id/stats/weekly - Haftalik statistika
@@ -329,7 +370,6 @@ module.exports = {
         const oneWeekAgo = new Date();
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-        // Bitta aggregate — dailyMinutes + videosWatched + gamesPlayed
         const weeklyData = await Activity.aggregate([
             {
                 $match: {
@@ -338,34 +378,13 @@ module.exports = {
                 }
             },
             {
-                $group: {
-                    _id: '$date',
-                    totalDuration: { $sum: '$duration' },
-                    sessions: { $sum: 1 },
-                    videosWatched: {
-                        $sum: {
-                            $cond: [
-                                { $in: ['$contentType', ['video', 'cartoon', 'video_watch']] }, 1, 0
-                            ]
-                        }
-                    },
-                    gamesPlayed: {
-                        $sum: {
-                            $cond: [
-                                { $in: ['$contentType', ['game', 'game_play']] }, 1, 0
-                            ]
-                        }
-                    },
-                    storiesRead: {
-                        $sum: {
-                            $cond: [
-                                { $in: ['$contentType', ['story', 'story_read']] }, 1, 0
-                            ]
-                        }
-                    }
+                $project: {
+                    date: 1,
+                    totalDuration: 1,
+                    sessions: { $size: '$contentIds' }
                 }
             },
-            { $sort: { _id: 1 } }
+            { $sort: { date: 1 } }
         ]);
 
         const dailyMinutes = [0, 0, 0, 0, 0, 0, 0];
@@ -375,14 +394,21 @@ module.exports = {
         let storiesRead = 0;
 
         for (const day of weeklyData) {
-            const date = new Date(day._id);
+            const date = new Date(day.date);
             let dayIndex = date.getDay() - 1;
             if (dayIndex < 0) dayIndex = 6;
             dailyMinutes[dayIndex] = Math.round((day.totalDuration || 0) / 60);
             totalMinutes += Math.round((day.totalDuration || 0) / 60);
-            videosWatched += day.videosWatched || 0;
-            gamesPlayed += day.gamesPlayed || 0;
-            storiesRead += day.storiesRead || 0;
+            videosWatched += day.sessions || 0;
+        }
+
+        // videosWatched/gamesPlayed/storiesRead — Child.todayUsage dan olish
+        const syncedUsage = child.todayUsage || {};
+        const today = new Date().toISOString().split('T')[0];
+        if (child.lastUsageDate === today) {
+            videosWatched = Math.max(videosWatched, syncedUsage.videosWatched || 0);
+            gamesPlayed = syncedUsage.gamesPlayed || 0;
+            storiesRead = syncedUsage.storiesRead || 0;
         }
 
         return {
@@ -397,58 +423,12 @@ module.exports = {
         };
     },
 
-    // POST /children/:id/activity - Faoliyatni yozish (vaqt tracking)
+    // POST /children/:id/activity - Faoliyatni yozish
+    // Kuniga 1 ta Activity doc — contentIds[] va durations[] massivlari (max 5, FIFO)
     async recordActivity(request, reply) {
         const { userId } = request.user;
         const { id } = request.params;
-        const { contentId, activityType, durationMinutes, contentTitle } = request.body;
-
-        // Bola ota-onaga tegishliligini tekshirish
-        const child = await Child.findOne({ _id: id, parentId: userId });
-        if (!child) {
-            return reply.status(404).send({
-                success: false,
-                message: ERRORS.NOT_FOUND
-            });
-        }
-
-        const now = new Date();
-        const today = now.toISOString().split('T')[0];
-        const durationSeconds = (durationMinutes || 1) * 60;
-
-        // Content title aniqlash: request body'dan yoki default
-        const resolvedTitle = contentTitle ||
-            (activityType === 'video_watch' ? 'Multfilm ko\'rish' :
-                activityType === 'game_play' ? 'O\'yin o\'ynash' :
-                    activityType === 'story_read' ? 'Ertak o\'qish' :
-                        'Ilova foydalanish');
-
-        // Activity yozish (faqat Activity collection ga)
-        const activity = await Activity.create({
-            childId: child._id,
-            contentId: contentId || undefined,
-            contentType: activityType,
-            contentTitle: resolvedTitle,
-            duration: durationSeconds,
-            date: today,
-            startedAt: new Date(now.getTime() - durationSeconds * 1000),
-            endedAt: now,
-        });
-
-        // ✅ OPTIMIZED: todayUsage ni $inc bilan yangilamaslik
-        // syncUsage endpoint $max orqali boshqaradi
-        // Eskisi: $inc bu yerda + $max syncUsage da = double counting xavfi
-        // Yangisi: faqat Activity collection ga yozish, todayUsage ni syncUsage boshqaradi
-
-        return { success: true, activity };
-    },
-
-    // POST /children/:id/sync-usage — Batch sync (LocalMonitoringService → DB)
-    // $max operatori: faqat kattaroq qiymatni yozadi (double counting muammosini hal qiladi)
-    async syncUsage(request, reply) {
-        const { userId } = request.user;
-        const { id } = request.params;
-        const { minutesUsed, videosWatched, gamesPlayed, storiesRead } = request.body;
+        const { contentId, durationMinutes } = request.body;
 
         // Bola ota-onaga tegishliligini tekshirish
         const child = await Child.findOne({ _id: id, parentId: userId });
@@ -460,8 +440,57 @@ module.exports = {
         }
 
         const today = new Date().toISOString().split('T')[0];
+        const durationSeconds = (durationMinutes || 1) * 60;
+        const resolvedContentId = contentId || 'unknown';
 
-        // Kunlik reset tekshirish
+        // Avval 5 tadan oshib ketmasligi uchun eski elementni o'chirish
+        const existing = await Activity.findOne({ childId: child._id, date: today });
+        if (existing && existing.contentIds.length >= 5) {
+            // Birinchisini o'chirish (FIFO) — duration ham o'chiriladi
+            const removedDuration = existing.durations[0] || 0;
+            await Activity.updateOne(
+                { childId: child._id, date: today },
+                {
+                    $pop: { contentIds: -1, durations: -1 },
+                    $inc: { totalDuration: -removedDuration }
+                }
+            );
+        }
+
+        // Yangi element qo'shish
+        const activity = await Activity.findOneAndUpdate(
+            { childId: child._id, date: today },
+            {
+                $push: {
+                    contentIds: resolvedContentId,
+                    durations: durationSeconds
+                },
+                $inc: { totalDuration: durationSeconds },
+                $setOnInsert: { childId: child._id, date: today }
+            },
+            { upsert: true, new: true }
+        );
+
+        return { success: true, activity };
+    },
+
+    // POST /children/:id/sync-usage — Batch sync (LocalMonitoringService → DB)
+    // $max operatori: faqat kattaroq qiymatni yozadi
+    async syncUsage(request, reply) {
+        const { userId } = request.user;
+        const { id } = request.params;
+        const { minutesUsed, videosWatched, gamesPlayed, storiesRead } = request.body;
+
+        const child = await Child.findOne({ _id: id, parentId: userId });
+        if (!child) {
+            return reply.status(404).send({
+                success: false,
+                message: ERRORS.NOT_FOUND
+            });
+        }
+
+        const today = new Date().toISOString().split('T')[0];
+
         if (child.lastUsageDate !== today) {
             await Child.updateOne(
                 { _id: child._id },
@@ -476,7 +505,6 @@ module.exports = {
                 }
             );
         } else {
-            // $max — faqat kattaroq qiymatni saqlash
             await Child.updateOne(
                 { _id: child._id },
                 {

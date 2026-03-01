@@ -344,11 +344,9 @@ class LocalMonitoringService {
   }
 
   /// Activity ni backend'ga to'g'ridan-to'g'ri yozish (Dio orqali)
-  /// MongoDB `activities` collection ga yozadi
+  /// MongoDB `activities` collection ga yozadi (contentId + duration)
   Future<void> recordActivityToBackend({
-    required String activityType,
     required int durationMinutes,
-    String? contentTitle,
     String? contentId,
   }) async {
     if (_childId == null || _childId!.isEmpty) {
@@ -358,12 +356,10 @@ class LocalMonitoringService {
 
     try {
       final apiClient = GetIt.instance<ApiClient>();
-      if (kDebugMode) print('📝 [LocalMonitoring] recordActivity: childId=$_childId type=$activityType dur=$durationMinutes title=$contentTitle');
+      if (kDebugMode) print('📝 [LocalMonitoring] recordActivity: childId=$_childId contentId=$contentId dur=$durationMinutes');
       
       final response = await apiClient.dio.post('/children/$_childId/activity', data: {
-        'activityType': activityType,
         'durationMinutes': durationMinutes,
-        if (contentTitle != null) 'contentTitle': contentTitle,
         if (contentId != null && contentId.isNotEmpty) 'contentId': contentId,
       });
       
@@ -424,6 +420,7 @@ class LocalMonitoringService {
     required String activityType,
     required String contentTitle,
     required int durationMinutes,
+    String? contentId,
   }) {
     _addActivityLogLocal(
       activityType: activityType,
@@ -432,9 +429,8 @@ class LocalMonitoringService {
     );
     // Backend'ga ham yozish (asinxron — UI blocklash yo'q)
     recordActivityToBackend(
-      activityType: activityType,
       durationMinutes: durationMinutes,
-      contentTitle: contentTitle,
+      contentId: contentId,
     );
   }
 
@@ -445,9 +441,9 @@ class LocalMonitoringService {
     required String activityType,
     required String contentTitle,
     required int durationMinutes,
+    String? contentId,
   }) {
     // 1. Faqat activity turi bo'yicha counter oshiriladi
-    // Vaqt global timer (_secondTimer) tomonidan allaqachon hisoblanmoqda
     if (activityType == 'video_watch') {
       _videosWatched++;
     } else if (activityType == 'game_play') {
@@ -467,13 +463,10 @@ class LocalMonitoringService {
     saveToLocal();
     _isDirty = false;
 
-    // ✅ Activity ni backend ga yozish (faqat tur va title)
-    // Vaqt syncToBackend orqali boshqariladi (child_home chiqqanda)
-    // Bu yerda faqat Activity collection ga log yoziladi
+    // ✅ Activity ni backend ga yozish (contentId + duration)
     recordActivityToBackend(
-      activityType: activityType,
       durationMinutes: durationMinutes > 0 ? durationMinutes : 1,
-      contentTitle: contentTitle,
+      contentId: contentId,
     );
   }
 
