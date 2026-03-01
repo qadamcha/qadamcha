@@ -153,7 +153,32 @@ class ChildRepositoryImpl implements ChildRepository {
         queryParameters: queryParams,
       );
       final List<dynamic> data = response.data['activities'] ?? [];
-      final logs = data.map((json) => ActivityLogModel.fromJson(json).toEntity()).toList();
+      
+      // Yangi format: bitta doc ichida items[] massivi bor
+      final List<ActivityLog> logs = [];
+      for (final activityDoc in data) {
+        final List<dynamic> items = activityDoc['items'] ?? [];
+        final createdAt = activityDoc['createdAt'] != null 
+            ? DateTime.parse(activityDoc['createdAt']) 
+            : DateTime.now();
+        
+        for (int i = 0; i < items.length; i++) {
+          final item = items[i];
+          final durationSec = item['duration'] ?? 0;
+          final durationMin = (durationSec / 60).round();
+          
+          logs.add(ActivityLog(
+            id: '${activityDoc['_id']}_$i',
+            childId: activityDoc['childId'] ?? childId,
+            contentId: item['contentId'] ?? '',
+            contentTitle: item['title'] ?? '',
+            activityType: 'video_watch',
+            durationMinutes: durationMin > 0 ? durationMin : 1,
+            startedAt: createdAt,
+          ));
+        }
+      }
+      
       return Right(logs);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
