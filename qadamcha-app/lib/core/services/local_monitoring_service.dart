@@ -344,10 +344,11 @@ class LocalMonitoringService {
   }
 
   /// Activity ni backend'ga to'g'ridan-to'g'ri yozish (Dio orqali)
-  /// MongoDB `activities` collection ga yozadi (contentId + duration)
+  /// MongoDB `activities` collection ga yozadi (contentId + contentTitle + duration)
   Future<void> recordActivityToBackend({
     required int durationMinutes,
     String? contentId,
+    String? contentTitle,
   }) async {
     if (_childId == null || _childId!.isEmpty) {
       if (kDebugMode) print('⚠️ [LocalMonitoring] recordActivity: childId null — yozilmadi');
@@ -356,11 +357,12 @@ class LocalMonitoringService {
 
     try {
       final apiClient = GetIt.instance<ApiClient>();
-      if (kDebugMode) print('📝 [LocalMonitoring] recordActivity: childId=$_childId contentId=$contentId dur=$durationMinutes');
+      if (kDebugMode) print('📝 [LocalMonitoring] recordActivity: childId=$_childId contentId=$contentId title=$contentTitle dur=$durationMinutes');
       
       final response = await apiClient.dio.post('/children/$_childId/activity', data: {
         'durationMinutes': durationMinutes,
         if (contentId != null && contentId.isNotEmpty) 'contentId': contentId,
+        if (contentTitle != null && contentTitle.isNotEmpty) 'contentTitle': contentTitle,
       });
       
       if (kDebugMode) print('✅ [LocalMonitoring] recordActivity: ${response.statusCode} ${response.data}');
@@ -431,6 +433,7 @@ class LocalMonitoringService {
     recordActivityToBackend(
       durationMinutes: durationMinutes,
       contentId: contentId,
+      contentTitle: contentTitle,
     );
   }
 
@@ -463,10 +466,11 @@ class LocalMonitoringService {
     saveToLocal();
     _isDirty = false;
 
-    // ✅ Activity ni backend ga yozish (contentId + duration)
+    // ✅ Activity ni backend ga yozish (contentId + contentTitle + duration)
     recordActivityToBackend(
       durationMinutes: durationMinutes > 0 ? durationMinutes : 1,
       contentId: contentId,
+      contentTitle: contentTitle,
     );
   }
 

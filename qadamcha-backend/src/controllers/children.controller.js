@@ -20,20 +20,19 @@ module.exports = {
         const childIds = children.map(c => c._id);
         let statsMap = new Map();
         try {
-            // Yangi schema: har kuni 1 ta Activity doc, totalDuration fieldi bor
-            const allStats = await Activity.aggregate([
-                { $match: { childId: { $in: childIds }, date: today } },
-                {
-                    $group: {
-                        _id: '$childId',
-                        totalDuration: { $sum: '$totalDuration' },
-                        count: { $sum: { $size: '$contentIds' } }
-                    }
-                }
-            ]);
-            statsMap = new Map(allStats.map(s => [s._id.toString(), s]));
+            // Yangi schema: har bir childId uchun 1 ta Activity doc
+            const allActivities = await Activity.find(
+                { childId: { $in: childIds } },
+                { childId: 1, totalDuration: 1, contentIds: 1 }
+            );
+            for (const act of allActivities) {
+                statsMap.set(act.childId.toString(), {
+                    totalDuration: act.totalDuration || 0,
+                    count: (act.contentIds || []).length
+                });
+            }
         } catch (err) {
-            request.log.error('Aggregate stats error:', err);
+            request.log.error('Activity stats error:', err);
         }
 
         const childrenWithStats = children.map((child) => {
@@ -303,54 +302,29 @@ module.exports = {
             });
         }
 
-        const query = { childId: id };
-        if (date) query.date = date;
+        const activity = await Activity.findOne({ childId: id });
 
-        const activities = await Activity.find(query)
-            .sort({ createdAt: -1 })
-            .limit(parsedLimit);
-
-        // contentIds dan Content nomlarini olish
-        const allContentIds = [];
-        for (const act of activities) {
-            for (const cid of (act.contentIds || [])) {
-                if (cid && cid !== 'unknown' && !allContentIds.includes(cid)) {
-                    allContentIds.push(cid);
-                }
-            }
+        if (!activity) {
+            return { success: true, activities: [] };
         }
 
-        // Content nomlarini olish
-        const { Content } = require('../models');
-        let contentMap = {};
-        try {
-            const contents = await Content.find(
-                { _id: { $in: allContentIds } },
-                { title: 1 }
-            );
-            contentMap = Object.fromEntries(contents.map(c => [c._id.toString(), c.title]));
-        } catch (e) {
-            // Content topilmasa ham davom etsin
-        }
+        // Activity doc dan items ro'yxatini yaratish
+        const items = (activity.contentIds || []).map((cid, i) => ({
+            contentId: cid,
+            title: (activity.contentTitles || [])[i] || 'Noma\'lum',
+            duration: (activity.durations || [])[i] || 0
+        }));
 
-        // Activity larni enriched holda qaytarish
-        const enriched = activities.map(act => {
-            const items = (act.contentIds || []).map((cid, i) => ({
-                contentId: cid,
-                title: contentMap[cid] || 'Noma\'lum',
-                duration: (act.durations || [])[i] || 0
-            }));
-            return {
-                _id: act._id,
-                childId: act.childId,
-                date: act.date,
-                totalDuration: act.totalDuration,
+        return {
+            success: true,
+            activities: [{
+                _id: activity._id,
+                childId: activity.childId,
+                totalDuration: activity.totalDuration,
                 items,
-                createdAt: act.createdAt
-            };
-        });
-
-        return { success: true, activities: enriched };
+                createdAt: activity.createdAt
+            }]
+        };
     },
 
     // GET /children/:id/stats/weekly - Haftalik statistika
@@ -424,13 +398,12 @@ module.exports = {
     },
 
     // POST /children/:id/activity - Faoliyatni yozish
-    // Kuniga 1 ta Activity doc — contentIds[] va durations[] massivlari (max 5, FIFO)
+    // Har bir childId uchun 1 ta Activity doc — max 5 ta element (FIFO)
     async recordActivity(request, reply) {
         const { userId } = request.user;
         const { id } = request.params;
-        const { contentId, durationMinutes } = request.body;
+        const { contentId, contentTitle, durationMinutes } = request.body;
 
-        // Bola ota-onaga tegishliligini tekshirish
         const child = await Child.findOne({ _id: id, parentId: userId });
         if (!child) {
             return reply.status(404).send({
@@ -439,19 +412,18 @@ module.exports = {
             });
         }
 
-        const today = new Date().toISOString().split('T')[0];
         const durationSeconds = (durationMinutes || 1) * 60;
         const resolvedContentId = contentId || 'unknown';
+        const resolvedTitle = contentTitle || 'Noma\'lum';
 
-        // Avval 5 tadan oshib ketmasligi uchun eski elementni o'chirish
-        const existing = await Activity.findOne({ childId: child._id, date: today });
+        // 5 tadan oshib ketmasligi uchun eski elementni o'chirish (FIFO)
+        const existing = await Activity.findOne({ childId: child._id });
         if (existing && existing.contentIds.length >= 5) {
-            // Birinchisini o'chirish (FIFO) — duration ham o'chiriladi
             const removedDuration = existing.durations[0] || 0;
             await Activity.updateOne(
-                { childId: child._id, date: today },
+                { childId: child._id },
                 {
-                    $pop: { contentIds: -1, durations: -1 },
+                    $pop: { contentIds: -1, contentTitles: -1, durations: -1 },
                     $inc: { totalDuration: -removedDuration }
                 }
             );
@@ -459,14 +431,15 @@ module.exports = {
 
         // Yangi element qo'shish
         const activity = await Activity.findOneAndUpdate(
-            { childId: child._id, date: today },
+            { childId: child._id },
             {
                 $push: {
                     contentIds: resolvedContentId,
+                    contentTitles: resolvedTitle,
                     durations: durationSeconds
                 },
                 $inc: { totalDuration: durationSeconds },
-                $setOnInsert: { childId: child._id, date: today }
+                $setOnInsert: { childId: child._id }
             },
             { upsert: true, new: true }
         );
