@@ -177,5 +177,90 @@ class AppColors {
 
   // Dark theme variants
   static const Color darkSurfaceVariant = Color(0xFF2A2A3E);
+
+  // === BUBBLE WORLD 3D THEME ===
+  
+  // Bubble World Background Colors
+  static const Color bubbleBgTop = Color(0xFFD6E6F5);       // Soft sky blue
+  static const Color bubbleBgMid = Color(0xFFE4D9F0);       // Lavender
+  static const Color bubbleBgBottom = Color(0xFFF8F4FF);    // Almost white purple
+  
+  // Bubble colors
+  static const Color bubblePink = Color(0xFFFF99CC);
+  static const Color bubbleBlue = Color(0xFF99CCFF);
+  static const Color bubblePurple = Color(0xFFCC99FF);
+  static const Color bubbleMint = Color(0xFF99FFE0);
+  static const Color bubbleYellow = Color(0xFFFFE599);
+  
+  // 3D Card border gradient colors
+  static const Color bubble3dPurple = Color(0xFF9B59B6);
+  static const Color bubble3dBlue = Color(0xFF3498DB);
+  static const Color bubble3dPink = Color(0xFFE91E8C);
+  
+  // Sparkle
+  static const Color sparkleGold = Color(0xFFFFD700);
+  static const Color sparkleWhite = Color(0xFFFFFFF0);
+  
+  // Bubble World Background Gradient
+  static const LinearGradient bubbleWorldBg = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [Color(0xFFD6E6F5), Color(0xFFE4D9F0), Color(0xFFF8F4FF)],
+    stops: [0.0, 0.5, 1.0],
+  );
+  
+  // Bubble NavBar Gradient
+  static const LinearGradient bubbleNavBarGradient = LinearGradient(
+    colors: [Color(0xFFEDE7F6), Color(0xFFF3E5F5)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+  
+  // Bubble NavBar Selected Tab
+  static const LinearGradient bubbleNavSelectedGradient = LinearGradient(
+    colors: [Color(0xFF9B59B6), Color(0xFF3498DB)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+  
+  // Bubble Video Card Border
+  static const LinearGradient bubbleCardBorderGradient = LinearGradient(
+    colors: [Color(0xFF9B59B6), Color(0xFF3498DB), Color(0xFFE91E8C)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    stops: [0.0, 0.5, 1.0],
+  );
+  
+  // Bubble Game Card Gradients
+  static const LinearGradient bubbleMathGradient = LinearGradient(
+    colors: [Color(0xFF9B59B6), Color(0xFFB07CD8)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+  static const LinearGradient bubbleAlphabetGradient = LinearGradient(
+    colors: [Color(0xFFFF6B35), Color(0xFFFF9A76)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+  static const LinearGradient bubblePuzzleGradient = LinearGradient(
+    colors: [Color(0xFF2ECC71), Color(0xFF58D68D)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+  static const LinearGradient bubbleColorsGradient = LinearGradient(
+    colors: [Color(0xFFE91E8C), Color(0xFFFF69B4)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+  static const LinearGradient bubbleMusicGradient = LinearGradient(
+    colors: [Color(0xFF3498DB), Color(0xFF5DADE2)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+  static const LinearGradient bubbleGeoGradient = LinearGradient(
+    colors: [Color(0xFF1ABC9C), Color(0xFF48C9B0)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 }
 

@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:qadamcha_app/core/theme/app_colors.dart';
-import 'package:qadamcha_app/core/widgets/gradient_button.dart';
 import 'package:qadamcha_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:qadamcha_app/features/auth/presentation/pages/parent_pin_page.dart';
-import 'package:qadamcha_app/features/auth/presentation/pages/child_pin_page.dart';
 import 'package:qadamcha_app/features/auth/presentation/pages/phone_page.dart';
 import 'package:qadamcha_app/features/child/presentation/bloc/child_bloc.dart';
 import 'package:qadamcha_app/features/device/presentation/bloc/device_bloc.dart';
 import 'package:qadamcha_app/features/home/presentation/pages/child_home_page.dart';
-import 'package:qadamcha_app/features/home/presentation/pages/parent_home_page.dart';
 import 'package:qadamcha_app/features/subscription/presentation/bloc/subscription_bloc.dart';
 
 class RoleSelectionPage extends StatefulWidget {

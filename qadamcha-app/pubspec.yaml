@@ -94,6 +94,7 @@ flutter:
     - assets/icon/
     - assets/icons/
     - assets/animations/
+    - assets/bubble_world/
   
 flutter_launcher_icons:
   android: true

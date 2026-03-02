@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../bloc/auth_bloc.dart';
 import '../widgets/pin_dots.dart';
 import '../widgets/pin_keypad.dart';

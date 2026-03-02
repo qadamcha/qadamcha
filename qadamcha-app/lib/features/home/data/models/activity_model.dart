@@ -88,7 +88,7 @@ class ActivityModel extends Equatable {
     if (duration >= 60) {
       final hours = duration ~/ 60;
       final mins = duration % 60;
-      return mins > 0 ? '${hours}s ${mins}d' : '${hours} soat';
+      return mins > 0 ? '${hours}s ${mins}d' : '$hours soat';
     }
     return '$duration daqiqa';
   }

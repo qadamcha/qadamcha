@@ -2,36 +2,21 @@ import 'package:qadamcha_app/features/content/domain/entities/content_entity.dar
 
 class ContentModel extends ContentEntity {
   const ContentModel({
-    required String id,
-    required String title,
-    required String type,
-    required String category,
-    required String videoId,
-    String? streamUrl,
-    String? thumbnailUrl,
-    required int duration,
-    required int views,
-    required int likes,
-    required bool isFeatured,
-    String language = 'uz',
-    int ageMin = 3,
-    int ageMax = 12,
-  }) : super(
-          id: id,
-          title: title,
-          type: type,
-          category: category,
-          videoId: videoId,
-          streamUrl: streamUrl,
-          thumbnailUrl: thumbnailUrl,
-          duration: duration,
-          views: views,
-          likes: likes,
-          isFeatured: isFeatured,
-          language: language,
-          ageMin: ageMin,
-          ageMax: ageMax,
-        );
+    required super.id,
+    required super.title,
+    required super.type,
+    required super.category,
+    required super.videoId,
+    super.streamUrl,
+    super.thumbnailUrl,
+    required super.duration,
+    required super.views,
+    required super.likes,
+    required super.isFeatured,
+    super.language,
+    super.ageMin,
+    super.ageMax,
+  });
 
   factory ContentModel.fromJson(Map<String, dynamic> json) {
     // Bunny.net CDN host

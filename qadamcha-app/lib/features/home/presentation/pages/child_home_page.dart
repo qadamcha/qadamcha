@@ -4,19 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/services/session_tracker.dart';
 import '../../../../core/services/local_monitoring_service.dart';
+import '../../../../core/widgets/bubble_nav_bar.dart';
 import '../../../child/presentation/bloc/child_bloc.dart';
 import '../../../child/presentation/pages/content_page.dart';
 import '../../../child/presentation/pages/games_page.dart';
 import '../../../auth/presentation/pages/role_selection_page.dart';
 import '../../../subscription/presentation/bloc/subscription_bloc.dart';
-import 'time_limit_page.dart';
 
-/// Child Home Page — pastki navigatsiya paneli bilan
-/// 2 ta tab: Multfilmlar va O'yinlar
-/// Ota-ona menyusidagi bottom nav kabi ishlaydi
+/// YouTube Kids 1:1 — Child Home Page
+/// Oq fon, toza nav bar, YouTube Kids stilida
 class ChildHomePage extends StatefulWidget {
   const ChildHomePage({super.key});
 
@@ -30,19 +28,11 @@ class _ChildHomePageState extends State<ChildHomePage> {
   bool _childCreating = false;
   Timer? _subscriptionCheckTimer;
 
-  late final List<Widget> _pages;
-
   @override
   void initState() {
     super.initState();
     _childBloc = context.read<ChildBloc>();
 
-    _pages = const [
-      ContentPage(),
-      GamesPage(),
-    ];
-
-    // Child ID ni o'rnatish
     final childId = _childBloc.state.selectedChild?.id;
     if (childId != null) {
       LocalMonitoringService.instance.setChildId(childId);
@@ -50,24 +40,16 @@ class _ChildHomePageState extends State<ChildHomePage> {
     } else {
       if (kDebugMode) print('⚠️ [ChildHome] selectedChild null — LoadChildrenEvent yuborilmoqda');
       _childBloc.add(LoadChildrenEvent());
-      
-      // SharedPreferences'dan fallback
       final storedId = LocalMonitoringService.instance.childId;
       if (storedId != null && storedId.isNotEmpty) {
         if (kDebugMode) print('🆔 [ChildHome] childId SharedPreferences dan olindi: $storedId');
       }
     }
 
-    // Umumiy vaqt tracking boshlash (global soniya timer)
     SessionTracker.instance.startSession('child_home');
-
-    // Backend'dan sync qilish (kirganda)
     _syncFromBackend();
-
-    // Vaqt limiti sozlamalarini yuklash va LocalMonitoringService ga o'rnatish
     _setupTimeLimit();
 
-    // Obuna muddatini har 60 soniyada tekshirish
     _subscriptionCheckTimer = Timer.periodic(const Duration(seconds: 60), (_) {
       if (mounted) {
         context.read<SubscriptionBloc>().add(LoadSubscriptionEvent());
@@ -75,7 +57,6 @@ class _ChildHomePageState extends State<ChildHomePage> {
     });
   }
 
-  /// Bola menuga kirganda backend'dan ma'lumot sync qilish
   Future<void> _syncFromBackend() async {
     try {
       final childState = _childBloc.state;
@@ -94,22 +75,15 @@ class _ChildHomePageState extends State<ChildHomePage> {
     }
   }
 
-  /// Vaqt limiti — LocalMonitoringService o'zi navigatsiya qiladi
   Future<void> _setupTimeLimit() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final enabled = prefs.getBool('time_limit_enabled') ?? false;
       final minutes = prefs.getInt('time_limit_minutes') ?? 60;
-      if (kDebugMode) print('⏰ [ChildHome] Time limit setup: enabled=$enabled, minutes=$minutes');
-
-      // LocalMonitoringService o'zi tekshiradi va navigatsiya qiladi
-      // Callback kerak emas — navigatorKey orqali ishlaydi
-      LocalMonitoringService.instance.setTimeLimit(
-        enabled: enabled,
-        minutes: minutes,
-      );
+      if (kDebugMode) print('⏰ [ChildHome] Time limit: enabled=$enabled, minutes=$minutes');
+      LocalMonitoringService.instance.setTimeLimit(enabled: enabled, minutes: minutes);
     } catch (e) {
-      if (kDebugMode) print('⚠️ [ChildHome] Time limit setup xato: $e');
+      if (kDebugMode) print('⚠️ [ChildHome] Time limit xato: $e');
     }
   }
 
@@ -117,7 +91,6 @@ class _ChildHomePageState extends State<ChildHomePage> {
   void dispose() {
     _subscriptionCheckTimer?.cancel();
     LocalMonitoringService.instance.clearTimeLimit();
-    // Sessiya timer to'xtatish va backend'ga sync (SessionTracker ichida)
     SessionTracker.instance.endSession('child_home');
     super.dispose();
   }
@@ -128,17 +101,11 @@ class _ChildHomePageState extends State<ChildHomePage> {
       listener: (context, childState) {
         if (childState.status == ChildStatus.loaded) {
           if (childState.children.isEmpty && !_childCreating) {
-            // Backend'da bola profili yo'q — avtomatik yaratish
             _childCreating = true;
             if (kDebugMode) print('⚠️ [ChildHome] children=0 — avtomatik bola yaratilmoqda');
-            context.read<ChildBloc>().add(const AddChildEvent(
-              name: 'Bolajon',
-              age: 5,
-              gender: 'male',
-            ));
+            context.read<ChildBloc>().add(const AddChildEvent(name: 'Bolajon', age: 5, gender: 'male'));
             return;
           }
-          // Bolalar bor — childId o'rnatish
           final childId = childState.selectedChild?.id;
           if (childId != null && childId.isNotEmpty) {
             final currentId = LocalMonitoringService.instance.childId;
@@ -151,183 +118,61 @@ class _ChildHomePageState extends State<ChildHomePage> {
       },
       child: BlocBuilder<SubscriptionBloc, SubscriptionState>(
         builder: (context, subState) {
-          // Yuklash vaqtida spinner
           if (subState.status == SubscriptionLoadStatus.loading ||
               subState.status == SubscriptionLoadStatus.initial) {
-            return Scaffold(
-              body: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color(0xFFE8F0F8), Color(0xFFF0F4F8), Colors.white],
-                  ),
-                ),
-                child: const Center(
-                  child: CircularProgressIndicator(),
-                ),
+            return const Scaffold(
+              backgroundColor: Colors.white,
+              body: Center(
+                child: CircularProgressIndicator(color: Color(0xFF43A047)),
               ),
             );
           }
-
           if (!subState.isPremium) {
-            // Obuna faol emas — time limit tekshirmaslik kerak
             LocalMonitoringService.instance.setChildSessionActive(false);
-            return _buildNoSubscriptionScreen(context);
+            return _buildNoSubscription(context);
           }
-
-          // Obuna faol — time limit tekshirishni yoqish
           LocalMonitoringService.instance.setChildSessionActive(true);
-          return _buildMainScreen(context);
+          return _buildMain(context);
         },
       ),
     );
   }
 
-  // ─── No Subscription Screen ───
-  Widget _buildNoSubscriptionScreen(BuildContext context) {
+  Widget _buildNoSubscription(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFE8F0F8), Color(0xFFF0F4F8), Colors.white],
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 32.w),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 100.w,
-                    height: 100.w,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.08),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Icon(
-                        Icons.lock_rounded,
-                        size: 48.sp,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 24.h),
-                  Text(
-                    'Obuna faol emas',
-                    style: TextStyle(
-                      fontSize: 24.sp,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
-                      fontFamily: 'Nunito',
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  Text(
-                    'Multfilmlar va o\'yinlardan foydalanish uchun\nota-ona panelidan obunani faollashtiring',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 15.sp,
-                      color: AppColors.textSecondary,
-                      fontFamily: 'Nunito',
-                      height: 1.5,
-                    ),
-                  ),
-                  SizedBox(height: 36.h),
-                  GestureDetector(
-                    onTap: () => Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const RoleSelectionPage()),
-                    ),
-                    child: Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.symmetric(vertical: 16.h),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF2D6A9F), Color(0xFF4A90D9)],
-                        ),
-                        borderRadius: BorderRadius.circular(16.r),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF2D6A9F).withOpacity(0.35),
-                            blurRadius: 16,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20.sp),
-                          SizedBox(width: 8.w),
-                          Text(
-                            'Orqaga qaytish',
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                              fontFamily: 'Nunito',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ─── Main Screen with Bottom Navigation ───
-  Widget _buildMainScreen(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: const Color.fromRGBO(0, 0, 0, 0.06),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: SafeArea(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Center(
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 10.h),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+            padding: EdgeInsets.all(32.w),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _ChildNavItem(
-                  icon: Icons.movie_rounded,
-                  label: 'Multfilmlar',
-                  emoji: '🎬',
-                  isSelected: _currentIndex == 0,
-                  gradient: AppColors.cartoonGradient,
-                  onTap: () => setState(() => _currentIndex = 0),
+                Icon(Icons.lock_outline_rounded, size: 64.sp, color: const Color(0xFFBBBBBB)),
+                SizedBox(height: 20.h),
+                Text(
+                  'Obuna faol emas',
+                  style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.w600, color: const Color(0xFF0F0F0F)),
                 ),
-                _ChildNavItem(
-                  icon: Icons.sports_esports_rounded,
-                  label: 'O\'yinlar',
-                  emoji: '🎮',
-                  isSelected: _currentIndex == 1,
-                  gradient: AppColors.gamesGradient,
-                  onTap: () => setState(() => _currentIndex = 1),
+                SizedBox(height: 8.h),
+                Text(
+                  'Multfilmlar va o\'yinlardan foydalanish uchun\nota-ona panelidan obunani faollashtiring',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14.sp, color: const Color(0xFF606060), height: 1.5),
+                ),
+                SizedBox(height: 28.h),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48.h,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const RoleSelectionPage())),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF065FD4),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
+                      elevation: 0,
+                    ),
+                    child: Text('Orqaga qaytish', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: Colors.white)),
+                  ),
                 ),
               ],
             ),
@@ -336,59 +181,20 @@ class _ChildHomePageState extends State<ChildHomePage> {
       ),
     );
   }
-}
 
-/// Bola menyusi uchun navigatsiya elementi
-class _ChildNavItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String emoji;
-  final bool isSelected;
-  final LinearGradient gradient;
-  final VoidCallback onTap;
-
-  const _ChildNavItem({
-    required this.icon,
-    required this.label,
-    required this.emoji,
-    required this.isSelected,
-    required this.gradient,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: isSelected ? 20.w : 14.w,
-          vertical: 10.h,
-        ),
-        decoration: BoxDecoration(
-          gradient: isSelected ? gradient : null,
-          borderRadius: BorderRadius.circular(16.r),
-          color: isSelected ? null : Colors.transparent,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(emoji, style: TextStyle(fontSize: 22.sp)),
-            if (isSelected) ...[
-              SizedBox(width: 8.w),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  fontFamily: 'Nunito',
-                ),
-              ),
-            ],
-          ],
-        ),
+  Widget _buildMain(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: IndexedStack(
+        index: _currentIndex,
+        children: const [
+          ContentPage(),
+          GamesPage(),
+        ],
+      ),
+      bottomNavigationBar: YTKidsNavBar(
+        currentIndex: _currentIndex,
+        onTap: (i) => setState(() => _currentIndex = i),
       ),
     );
   }

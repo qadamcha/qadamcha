@@ -14,17 +14,29 @@ class AiChatRepositoryImpl implements AiChatRepository {
     String? childId,
     List<Map<String, String>>? history,
     CancelToken? cancelToken,
-  }) {
-    return _remoteDataSource.sendMessage(
-      message: message,
-      childId: childId,
-      history: history,
-      cancelToken: cancelToken,
-    );
+  }) async {
+    try {
+      return await _remoteDataSource.sendMessage(
+        message: message,
+        childId: childId,
+        history: history,
+        cancelToken: cancelToken,
+      );
+    } on DioException {
+      // CancelToken — qayta tashlash
+      rethrow;
+    } catch (e) {
+      // Barcha boshqa xatolarni qayta tashlash (bloc da tutiladi)
+      rethrow;
+    }
   }
 
   @override
-  Future<bool> checkStatus() {
-    return _remoteDataSource.checkStatus();
+  Future<bool> checkStatus() async {
+    try {
+      return await _remoteDataSource.checkStatus();
+    } catch (_) {
+      return false;
+    }
   }
 }

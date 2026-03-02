@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/back_button_box.dart';
 
 /// QR Scanner Page - matching full_architecture.html design
 /// Full screen camera preview with scanning frame
@@ -72,7 +71,7 @@ class QrScannerPage extends StatelessWidget {
                 ),
                 const Spacer(),
                 // Scanner frame
-                Container(
+                SizedBox(
                   width: 240,
                   height: 240,
                   child: Stack(

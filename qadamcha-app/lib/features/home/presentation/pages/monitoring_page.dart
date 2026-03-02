@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/services/session_tracker.dart';
 import '../../../../core/services/local_monitoring_service.dart';
 import '../../../child/presentation/bloc/child_bloc.dart';
 import '../../../child/domain/repositories/child_repository.dart';
@@ -229,7 +228,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
     if (minutes >= 60) {
       final hours = minutes ~/ 60;
       final mins = minutes % 60;
-      return mins > 0 ? '${hours}s ${mins}d' : '${hours} soat';
+      return mins > 0 ? '${hours}s ${mins}d' : '$hours soat';
     }
     return '$minutes daqiqa';
   }

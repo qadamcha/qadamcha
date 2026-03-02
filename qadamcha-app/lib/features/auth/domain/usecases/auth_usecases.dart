@@ -32,8 +32,9 @@ class RegisterUseCase {
     required String phone,
     required String name,
     required String pin,
+    required String verifiedToken,
   }) {
-    return repository.register(phone: phone, name: name, pin: pin);
+    return repository.register(phone: phone, name: name, pin: pin, verifiedToken: verifiedToken);
   }
 }
 

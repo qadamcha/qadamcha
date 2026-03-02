@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/gradient_button.dart';
-import '../../../subscription/presentation/pages/subscription_plans_page.dart';
 
 /// Subscription Expired Page - shown when subscription ends
 /// Matching full_architecture.html design with sad icon and upgrade prompt
@@ -90,11 +89,8 @@ class SubscriptionExpiredPage extends StatelessWidget {
               // Upgrade Button
               GradientButton(
                 onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const SubscriptionPlansPage(),
-                    ),
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Obuna rejalar tez orada qo\'shiladi')),
                   );
                 },
                 text: 'Obunani yangilash 💎',

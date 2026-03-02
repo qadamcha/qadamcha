@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/datasources/chat_local_datasource.dart';
 import '../../domain/repositories/ai_chat_repository.dart';

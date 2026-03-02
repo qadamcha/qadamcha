@@ -73,7 +73,7 @@ class ChildModel extends Equatable {
     if (remaining >= 60) {
       final hours = remaining ~/ 60;
       final mins = remaining % 60;
-      return mins > 0 ? '${hours}s ${mins}d' : '${hours} soat';
+      return mins > 0 ? '${hours}s ${mins}d' : '$hours soat';
     }
     return '$remaining daqiqa';
   }

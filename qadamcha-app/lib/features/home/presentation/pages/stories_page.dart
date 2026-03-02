@@ -40,6 +40,7 @@ class _StoriesPageState extends State<StoriesPage> {
   }
 
   Future<void> _loadStories() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _error = null;
@@ -50,6 +51,8 @@ class _StoriesPageState extends State<StoriesPage> {
       final response = await http.get(Uri.parse(url)).timeout(
         const Duration(seconds: 10),
       );
+
+      if (!mounted) return;
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -72,6 +75,7 @@ class _StoriesPageState extends State<StoriesPage> {
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = 'Serverga ulanib bo\'lmadi';
         _isLoading = false;

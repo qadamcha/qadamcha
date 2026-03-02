@@ -180,7 +180,7 @@ void main() {
               phone: '+998901234567',
               pin: '1234',
               deviceId: 'device-1',
-            )).thenAnswer((_) async => Right((tUser, tTokens)));
+            )).thenAnswer((_) async => Right((tUser, tTokens, 'parent')));
         return authBloc;
       },
       act: (bloc) => bloc.add(const LoginEvent(
@@ -231,6 +231,7 @@ void main() {
               phone: '+998901234567',
               name: 'Test User',
               pin: '1234',
+              verifiedToken: 'verified-token-123',
             )).thenAnswer((_) async => Right(tUser));
         return authBloc;
       },
@@ -238,6 +239,7 @@ void main() {
         phone: '+998901234567',
         name: 'Test User',
         pin: '1234',
+        verifiedToken: 'verified-token-123',
       )),
       expect: () => [
         const AuthState(status: AuthStatus.loading),
@@ -275,12 +277,14 @@ void main() {
         when(() => mockRepository.resetPin(
               phone: '+998901234567',
               newPin: '5678',
+              verifiedToken: 'verified-token-123',
             )).thenAnswer((_) async => const Right('PIN yangilandi'));
         return authBloc;
       },
       act: (bloc) => bloc.add(const ResetPinEvent(
         phone: '+998901234567',
         newPin: '5678',
+        verifiedToken: 'verified-token-123',
       )),
       expect: () => [
         const AuthState(status: AuthStatus.loading),

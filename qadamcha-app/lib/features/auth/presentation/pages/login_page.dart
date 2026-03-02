@@ -51,7 +51,7 @@ class _LoginPageState extends State<LoginPage> {
       try {
         final iosInfo = await deviceInfo.iosInfo;
         _deviceId = iosInfo.identifierForVendor ?? 'unknown';
-        _deviceName = iosInfo.name ?? iosInfo.model ?? 'iPhone';
+        _deviceName = iosInfo.name;
         _deviceType = 'ios';
       } catch (_) {
         try {
