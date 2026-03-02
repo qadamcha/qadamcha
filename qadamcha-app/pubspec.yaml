@@ -90,6 +90,8 @@ flutter:
   
   assets:
     - assets/images/
+    - assets/images/guides/
+    - assets/icon/
     - assets/icons/
     - assets/animations/
   
