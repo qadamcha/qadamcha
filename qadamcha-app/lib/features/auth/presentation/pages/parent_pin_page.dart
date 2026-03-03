@@ -20,6 +20,18 @@ class _ParentPinPageState extends State<ParentPinPage> {
   String _error = '';
   bool _isLoading = false;
 
+  @override
+  void dispose() {
+    // PIN sahifasidan chiqayotganda BLoC state'ni authenticated ga qaytarish
+    // Aks holda error state qolsa, RoleSelectionPage'da _isLoggedIn() false qaytaradi → logout
+    final authBloc = context.read<AuthBloc>();
+    if (authBloc.state.status == AuthStatus.error ||
+        authBloc.state.status == AuthStatus.loading) {
+      authBloc.add(const CheckAuthStatusEvent());
+    }
+    super.dispose();
+  }
+
   void _onDigitEntered(String digit) {
     if (_pin.length < 4) {
       setState(() {
