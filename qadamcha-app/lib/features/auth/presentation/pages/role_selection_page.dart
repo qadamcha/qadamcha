@@ -206,7 +206,9 @@ class _RoleSelectionPageState extends State<RoleSelectionPage> {
     return status == AuthStatus.authenticated ||
         status == AuthStatus.registered ||
         status == AuthStatus.pinVerified ||
-        status == AuthStatus.pinReset;
+        status == AuthStatus.pinReset ||
+        status == AuthStatus.error ||    // PIN xatosi ≠ logout
+        status == AuthStatus.loading;    // Yuklanmoqda ≠ logout
   }
 
   /// Qurilma o'chirilganligini tekshirish (keshdan — darhol)

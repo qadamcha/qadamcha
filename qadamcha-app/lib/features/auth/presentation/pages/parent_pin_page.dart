@@ -27,7 +27,7 @@ class _ParentPinPageState extends State<ParentPinPage> {
     final authBloc = context.read<AuthBloc>();
     if (authBloc.state.status == AuthStatus.error ||
         authBloc.state.status == AuthStatus.loading) {
-      authBloc.add(const CheckAuthStatusEvent());
+      authBloc.add(CheckAuthStatusEvent());
     }
     super.dispose();
   }

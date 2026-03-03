@@ -101,8 +101,8 @@ class _ContentPageState extends State<ContentPage> {
   void _onScroll() {
     if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent * 0.8) {
       final state = context.read<ContentBloc>().state;
-      if (state.status == ContentStatus.loaded && !state.hasReachedMax) {
-        context.read<ContentBloc>().add(const LoadContentEvent());
+      if (state.status == ContentStatus.loaded && state.allContents.length > state.windowSize) {
+        context.read<ContentBloc>().add(const SlideWindowEvent());
       }
     }
   }
@@ -525,7 +525,7 @@ class _ContentPageState extends State<ContentPage> {
         return StatefulBuilder(
           builder: (ctx, ss) {
             final state = context.read<ContentBloc>().state;
-            final results = query.isEmpty ? <ContentEntity>[] : state.contents.where((c) => c.title.toLowerCase().contains(query.toLowerCase())).toList();
+            final results = query.isEmpty ? <ContentEntity>[] : state.allContents.where((c) => c.title.toLowerCase().contains(query.toLowerCase())).toList();
             return Padding(
               padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, MediaQuery.of(ctx).viewInsets.bottom + 16.h),
               child: Column(
@@ -566,7 +566,7 @@ class _ContentPageState extends State<ContentPage> {
                               ),
                             ),
                             title: Text(c.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w500)),
-                            onTap: () { Navigator.pop(ctx); _navigate(context, c, allContents: state.contents, currentIndex: state.contents.indexOf(c)); },
+                            onTap: () { Navigator.pop(ctx); _navigate(context, c, allContents: state.allContents, currentIndex: state.allContents.indexOf(c)); },
                           );
                         },
                       ),
@@ -759,19 +759,14 @@ class _ContentPageState extends State<ContentPage> {
           Expanded(
             child: BlocBuilder<ContentBloc, ContentState>(
               builder: (context, state) {
-                if (state.status == ContentStatus.loading && state.contents.isEmpty) return _skeleton();
-                if (state.status == ContentStatus.error && state.contents.isEmpty) return _error(state);
-                final filtered = _getFiltered(state.contents);
-                if (state.contents.isEmpty) return _empty();
+                if (state.status == ContentStatus.loading && state.windowContents.isEmpty) return _skeleton();
+                if (state.status == ContentStatus.error && state.windowContents.isEmpty) return _error(state);
+                final filtered = _getFiltered(state.windowContents);
+                if (state.windowContents.isEmpty) return _empty();
 
                 return RefreshIndicator(
                   onRefresh: () async {
-                    final bloc = context.read<ContentBloc>();
-                    if (!bloc.state.hasReachedMax) {
-                      bloc.add(const LoadMoreContentEvent());
-                    } else {
-                      bloc.add(const LoadContentEvent(refresh: true));
-                    }
+                    context.read<ContentBloc>().add(const LoadContentEvent(refresh: true));
                   },
                   color: const Color(0xFF43A047),
                   child: ListView.separated(
@@ -794,7 +789,7 @@ class _ContentPageState extends State<ContentPage> {
   int _itemCount(List<ContentEntity> f, ContentState s) {
     int n = f.length;
     if (_lastWatched != null && _inlineContent == null) n++;
-    if (s.status == ContentStatus.loading && s.contents.isNotEmpty) n++;
+    if (s.status == ContentStatus.loading && s.windowContents.isNotEmpty) n++;
     return n;
   }
 

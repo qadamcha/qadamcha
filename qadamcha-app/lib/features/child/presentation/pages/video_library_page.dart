@@ -53,7 +53,7 @@ class VideoLibraryPage extends StatelessWidget {
           Expanded(
             child: BlocBuilder<ContentBloc, ContentState>(
               builder: (context, state) {
-                if (state.contents.isEmpty) {
+                if (state.allContents.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -68,7 +68,7 @@ class VideoLibraryPage extends StatelessWidget {
 
                 // Series bo'yicha guruhlash
                 final groups = <String, List<ContentEntity>>{};
-                for (final c in state.contents) {
+                for (final c in state.allContents) {
                   final key = c.series.isNotEmpty ? c.series : 'Boshqalar';
                   groups.putIfAbsent(key, () => []).add(c);
                 }
@@ -245,9 +245,10 @@ class _PlaylistDetailPageState extends State<_PlaylistDetailPage> {
   }
 
   void _loadNextPage() {
+    final all = widget.videos;
     final nextOffset = _videoOffset + _pageSize;
     setState(() {
-      _loadPage(nextOffset >= widget.videos.length ? 0 : nextOffset);
+      _loadPage(nextOffset >= all.length ? 0 : nextOffset);
     });
   }
 
@@ -670,7 +671,10 @@ class _PlaylistDetailPageState extends State<_PlaylistDetailPage> {
           // ===== VIDEO LIST =====
           Expanded(
             child: RefreshIndicator(
-              onRefresh: () async => _loadNextPage(),
+              onRefresh: () async {
+                // Serverdan yangilash — ContentBloc orqali
+                context.read<ContentBloc>().add(const LoadContentEvent(refresh: true));
+              },
               color: const Color(0xFF43A047),
               child: ListView.separated(
                 padding: EdgeInsets.only(top: 8.h, bottom: 16.h),

@@ -195,20 +195,43 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, void>> verifyPin(String pin) async {
     try {
-      // Avval lokal tekshirish (1ms — serverga bormasdan)
+      // 1. Lokal tekshirish (1ms — serverga bormasdan)
       final localResult = await localDataSource.verifyPinLocally(pin);
       if (localResult) {
-        return const Right(null); // ✅ Lokal tasdiqlandi!
+        return const Right(null); // ✅ PIN to'g'ri (lokal)
       }
       
-      // Lokal hash yo'q (birinchi kirish yoki boshqa qurilma) — serverda tekshirish
+      // 2. verifyPinLocally false qaytardi. Ikki holat:
+      //    a) Hash saqlangan, lekin PIN noto'g'ri
+      //    b) Hash saqlanmagan → serverda tekshirish kerak
+      final hasPin = await localDataSource.hasCachedPin();
+      if (hasPin) {
+        // Hash bor, lekin PIN mos kelmadi.
+        // Boshqa qurilmada PIN o'zgartirilgan bo'lishi mumkin — serverda tekshiramiz
+        try {
+          await remoteDataSource.verifyPin(pin);
+          // ✅ Server tasdiqladi = PIN o'zgartirilgan edi! Lokal hash yangilash
+          await localDataSource.cachePinHash(pin);
+          return const Right(null);
+        } on UnauthorizedException {
+          // Server ham rad etdi → PIN haqiqatan noto'g'ri
+          return const Left(ServerFailure('PIN kod noto\'g\'ri'));
+        } on NetworkException {
+          // Internet yo'q — lokal natijaga ishonish (noto'g'ri)
+          return const Left(ServerFailure('PIN kod noto\'g\'ri'));
+        } catch (_) {
+          return const Left(ServerFailure('PIN kod noto\'g\'ri'));
+        }
+      }
+      
+      // 3. Hash yo'q (birinchi kirish yoki boshqa qurilma) — serverda tekshirish
       await remoteDataSource.verifyPin(pin);
       // Muvaffaqiyat — keyingi safar uchun lokal saqlash
       await localDataSource.cachePinHash(pin);
       return const Right(null);
-    } on UnauthorizedException catch (e) {
-      // PIN noto'g'ri (server 401 qaytardi)
-      return Left(ServerFailure(e.message, 401));
+    } on UnauthorizedException catch (_) {
+      // Server ham PIN noto'g'ri dedi
+      return const Left(ServerFailure('PIN kod noto\'g\'ri'));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {

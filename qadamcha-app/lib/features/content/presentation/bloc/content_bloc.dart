@@ -11,9 +11,22 @@ class ContentBloc extends Bloc<ContentEvent, ContentState> {
 
   ContentBloc({required this.repository}) : super(const ContentState()) {
     on<LoadContentEvent>(_onLoadContent);
-    on<LoadMoreContentEvent>(_onLoadMoreContent);
+    on<SlideWindowEvent>(_onSlideWindow);
+    on<LoadSeriesContentEvent>(_onLoadSeriesContent);
   }
 
+  /// Zanjirning ko'rinadigan oynasini hisoblash
+  List<ContentEntity> _getWindow(List<ContentEntity> all, int start, int size) {
+    if (all.isEmpty) return [];
+    final actualSize = size.clamp(0, all.length);
+    final result = <ContentEntity>[];
+    for (int i = 0; i < actualSize; i++) {
+      result.add(all[(start + i) % all.length]);
+    }
+    return result;
+  }
+
+  /// Barcha videolarni serverdan yuklash
   Future<void> _onLoadContent(
     LoadContentEvent event,
     Emitter<ContentState> emit,
@@ -22,17 +35,21 @@ class ContentBloc extends Bloc<ContentEvent, ContentState> {
 
     emit(state.copyWith(
       status: ContentStatus.loading,
-      page: 1, // Reset page on fresh load
-      contents: event.refresh ? [] : state.contents,
-      hasReachedMax: false,
+      windowStart: 0,
+      allContents: event.refresh ? [] : state.allContents,
+      windowContents: event.refresh ? [] : state.windowContents,
+      currentType: event.type,
+      currentCategory: event.category,
+      currentAge: event.age,
     ));
 
+    // Barcha videolarni bir paytda yuklash (limit: 500)
     final result = await repository.getContents(
       type: event.type,
       category: event.category,
       age: event.age,
       page: 1,
-      limit: 50,
+      limit: 500,
     );
 
     result.fold(
@@ -40,48 +57,84 @@ class ContentBloc extends Bloc<ContentEvent, ContentState> {
         status: ContentStatus.error,
         errorMessage: failure.message,
       )),
-      (contents) => emit(state.copyWith(
-        status: ContentStatus.loaded,
-        contents: contents,
-        hasReachedMax: contents.length < 50,
-        page: 1,
-      )),
+      (contents) {
+        final window = _getWindow(contents, 0, state.windowSize);
+        emit(state.copyWith(
+          status: ContentStatus.loaded,
+          allContents: contents,
+          windowContents: window,
+          windowStart: 0,
+        ));
+      },
     );
   }
 
-  Future<void> _onLoadMoreContent(
-    LoadMoreContentEvent event,
+  /// Oynani oldinga siljitish (zanjir bo'ylab)
+  void _onSlideWindow(
+    SlideWindowEvent event,
+    Emitter<ContentState> emit,
+  ) {
+    if (state.allContents.isEmpty) return;
+    
+    final total = state.allContents.length;
+    // Agar jami videolar oyna hajmidan kam bo'lsa, siljitish kerak emas
+    if (total <= state.windowSize) return;
+
+    final newStart = (state.windowStart + event.slideAmount) % total;
+    final window = _getWindow(state.allContents, newStart, state.windowSize);
+
+    emit(state.copyWith(
+      windowStart: newStart,
+      windowContents: window,
+    ));
+  }
+
+  /// Ma'lum bir series videolarini yuklash (Video Library uchun)
+  Future<void> _onLoadSeriesContent(
+    LoadSeriesContentEvent event,
     Emitter<ContentState> emit,
   ) async {
-    if (state.hasReachedMax || state.status == ContentStatus.loading) return;
+    // allContents dan series bo'yicha filtrlash (server chaqirmasdan)
+    // Agar allContents bo'sh bo'lsa, avval serverdan yuklash kerak
+    if (state.allContents.isEmpty) {
+      emit(state.copyWith(status: ContentStatus.loading));
+      
+      final result = await repository.getContents(
+        page: 1,
+        limit: 500,
+      );
 
-    final nextPage = state.page + 1;
-    
-    // Note: We might want to pass current filters here. For now assuming basic pagination.
-    // Ideally state should store current filters.
-    
-    final result = await repository.getContents(
-      page: nextPage,
-      limit: 50,
-    );
-
-     result.fold(
-      (failure) => emit(state.copyWith(
-        status: ContentStatus.error,
-        errorMessage: failure.message,
-      )),
-      (newContents) {
-        if (newContents.isEmpty) {
-          emit(state.copyWith(hasReachedMax: true));
-        } else {
+      result.fold(
+        (failure) => emit(state.copyWith(
+          status: ContentStatus.error,
+          errorMessage: failure.message,
+        )),
+        (contents) {
+          final seriesVideos = contents
+              .where((c) => c.series == event.series || 
+                     (event.series == 'Boshqalar' && c.series.isEmpty))
+              .toList();
+          final window = _getWindow(seriesVideos, 0, state.windowSize);
           emit(state.copyWith(
             status: ContentStatus.loaded,
-            contents: List.of(state.contents)..addAll(newContents),
-            hasReachedMax: newContents.length < 50,
-            page: nextPage,
+            allContents: contents,
+            windowContents: window,
+            windowStart: 0,
           ));
-        }
-      },
-    );
+        },
+      );
+    } else {
+      // allContents mavjud — faqat filtrlash
+      final seriesVideos = state.allContents
+          .where((c) => c.series == event.series || 
+                 (event.series == 'Boshqalar' && c.series.isEmpty))
+          .toList();
+      final window = _getWindow(seriesVideos, 0, state.windowSize);
+      emit(state.copyWith(
+        status: ContentStatus.loaded,
+        windowContents: window,
+        windowStart: 0,
+      ));
+    }
   }
 }

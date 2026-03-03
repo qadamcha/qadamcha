@@ -4,35 +4,66 @@ enum ContentStatus { initial, loading, loaded, error }
 
 class ContentState extends Equatable {
   final ContentStatus status;
-  final List<ContentEntity> contents;
-  final bool hasReachedMax;
+  
+  /// Serverdan yuklangan BARCHA videolar
+  final List<ContentEntity> allContents;
+  
+  /// Hozir ko'rinayotgan "oyna" (zanjirning ko'rinadigan qismi)
+  final List<ContentEntity> windowContents;
+  
+  /// Oyna boshi indeksi (allContents ichida)
+  final int windowStart;
+  
+  /// Oyna hajmi (default 50)
+  final int windowSize;
+  
+  /// Xatolik xabari
   final String? errorMessage;
-  final int page;
+
+  /// Hozirgi filtrlar (qayta yuklash uchun saqlanadi)
+  final String? currentType;
+  final String? currentCategory;
+  final int? currentAge;
 
   const ContentState({
     this.status = ContentStatus.initial,
-    this.contents = const [],
-    this.hasReachedMax = false,
+    this.allContents = const [],
+    this.windowContents = const [],
+    this.windowStart = 0,
+    this.windowSize = 50,
     this.errorMessage,
-    this.page = 1,
+    this.currentType,
+    this.currentCategory,
+    this.currentAge,
   });
 
   ContentState copyWith({
     ContentStatus? status,
-    List<ContentEntity>? contents,
-    bool? hasReachedMax,
+    List<ContentEntity>? allContents,
+    List<ContentEntity>? windowContents,
+    int? windowStart,
+    int? windowSize,
     String? errorMessage,
-    int? page,
+    String? currentType,
+    String? currentCategory,
+    int? currentAge,
   }) {
     return ContentState(
       status: status ?? this.status,
-      contents: contents ?? this.contents,
-      hasReachedMax: hasReachedMax ?? this.hasReachedMax,
+      allContents: allContents ?? this.allContents,
+      windowContents: windowContents ?? this.windowContents,
+      windowStart: windowStart ?? this.windowStart,
+      windowSize: windowSize ?? this.windowSize,
       errorMessage: errorMessage ?? this.errorMessage,
-      page: page ?? this.page,
+      currentType: currentType ?? this.currentType,
+      currentCategory: currentCategory ?? this.currentCategory,
+      currentAge: currentAge ?? this.currentAge,
     );
   }
 
   @override
-  List<Object?> get props => [status, contents, hasReachedMax, errorMessage, page];
+  List<Object?> get props => [
+    status, allContents, windowContents, windowStart, windowSize,
+    errorMessage, currentType, currentCategory, currentAge,
+  ];
 }

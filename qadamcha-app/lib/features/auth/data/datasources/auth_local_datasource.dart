@@ -19,6 +19,9 @@ abstract class AuthLocalDataSource {
   /// PIN ni lokal tekshirish (server chaqirmasdan)
   Future<bool> verifyPinLocally(String pin);
   
+  /// PIN hash saqlangan yoki yo'qligini tekshirish
+  Future<bool> hasCachedPin();
+
   /// PIN hash'ni o'chirish (logout da)
   Future<void> clearPinHash();
 
@@ -118,6 +121,13 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
     
     final inputHash = base64Encode(utf8.encode('qadamcha_pin_$pin'));
     return savedHash == inputHash;
+  }
+
+  /// PIN hash saqlangan yoki yo'q?
+  @override
+  Future<bool> hasCachedPin() async {
+    final savedHash = await _secureStorage.read(key: StorageKeys.pinHash);
+    return savedHash != null;
   }
 
   /// PIN hash'ni o'chirish
