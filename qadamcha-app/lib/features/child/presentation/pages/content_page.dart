@@ -63,6 +63,9 @@ class _ContentPageState extends State<ContentPage> {
   Timer? _inlineCountdownTimer;
   OverlayEntry? _fullscreenOverlay;
 
+  // Overscroll debounce (bir marta ishlagandan keyin 1 soniya kutish)
+  bool _isSliding = false;
+
   @override
   void initState() {
     super.initState();
@@ -99,12 +102,37 @@ class _ContentPageState extends State<ContentPage> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent * 0.8) {
-      final state = context.read<ContentBloc>().state;
-      if (state.status == ContentStatus.loaded && state.allContents.length > state.windowSize) {
-        context.read<ContentBloc>().add(const SlideWindowEvent());
+    // Overscroll bilan ishlaydi — _handleOverscroll() quyida
+  }
+
+  /// YouTube/Instagram-style overscroll: oxirga yetib, yana pastga tortganda
+  /// 10 ta yangi video qo'shiladi, boshidan 10 ta olib tashlanadi
+  void _handleOverscroll(OverscrollNotification notification) {
+    // Faqat pastga overscroll (notification.overscroll > 0)
+    if (notification.overscroll <= 0) return;
+    if (_isSliding) return;
+
+    final state = context.read<ContentBloc>().state;
+    if (state.allContents.length <= state.windowSize) return;
+
+    _isSliding = true;
+    context.read<ContentBloc>().add(const SlideWindowEvent());
+
+    // Scroll'ni biroz tepaga qaytarish (yangi videolarni ko'rsatish uchun)
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted && _scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent - 200,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
       }
-    }
+    });
+
+    // 1 soniya debounce — tez-tez ishlamaslik uchun
+    Future.delayed(const Duration(seconds: 1), () {
+      _isSliding = false;
+    });
   }
 
   @override
@@ -764,17 +792,24 @@ class _ContentPageState extends State<ContentPage> {
                 final filtered = _getFiltered(state.windowContents);
                 if (state.windowContents.isEmpty) return _empty();
 
-                return RefreshIndicator(
-                  onRefresh: () async {
-                    context.read<ContentBloc>().add(const LoadContentEvent(refresh: true));
+                return NotificationListener<OverscrollNotification>(
+                  onNotification: (notification) {
+                    _handleOverscroll(notification);
+                    return false;
                   },
-                  color: const Color(0xFF43A047),
-                  child: ListView.separated(
-                    controller: _scrollController,
-                    padding: EdgeInsets.only(top: 8.h, bottom: 16.h),
-                    itemCount: _itemCount(filtered, state),
-                    separatorBuilder: (_, __) => SizedBox(height: 12.h),
-                    itemBuilder: (ctx, i) => _buildItem(ctx, i, filtered, state),
+                  child: RefreshIndicator(
+                    onRefresh: () async {
+                      context.read<ContentBloc>().add(const LoadContentEvent(refresh: true));
+                    },
+                    color: const Color(0xFF43A047),
+                    child: ListView.separated(
+                      controller: _scrollController,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: EdgeInsets.only(top: 8.h, bottom: 16.h),
+                      itemCount: _itemCount(filtered, state),
+                      separatorBuilder: (_, __) => SizedBox(height: 12.h),
+                      itemBuilder: (ctx, i) => _buildItem(ctx, i, filtered, state),
+                    ),
                   ),
                 );
               },
