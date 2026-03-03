@@ -1,5 +1,6 @@
 const { Child, Activity } = require('../models');
 const { ERRORS, SUCCESS } = require('../config/constants');
+const { todayUzbekistan } = require('../utils/dateUtils');
 
 module.exports = {
 
@@ -12,7 +13,7 @@ module.exports = {
             isActive: true
         }).sort({ createdAt: -1 });
 
-        const today = new Date().toISOString().split('T')[0];
+        const today = todayUzbekistan();
 
         // ✅ OPTIMIZED: Bitta aggregate — barcha bolalar uchun kunlik stats
         // Eskisi: N+1 query (har bir bola uchun alohida getDailyStats)
@@ -379,7 +380,7 @@ module.exports = {
 
         // videosWatched/gamesPlayed/storiesRead — Child.todayUsage dan olish
         const syncedUsage = child.todayUsage || {};
-        const today = new Date().toISOString().split('T')[0];
+        const today = todayUzbekistan();
         if (child.lastUsageDate === today) {
             videosWatched = Math.max(videosWatched, syncedUsage.videosWatched || 0);
             gamesPlayed = syncedUsage.gamesPlayed || 0;
@@ -464,7 +465,7 @@ module.exports = {
             });
         }
 
-        const today = new Date().toISOString().split('T')[0];
+        const today = todayUzbekistan();
 
         if (child.lastUsageDate !== today) {
             await Child.updateOne(

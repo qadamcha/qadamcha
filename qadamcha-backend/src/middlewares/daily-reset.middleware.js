@@ -1,4 +1,5 @@
 const { Child } = require('../models');
+const { todayUzbekistan } = require('../utils/dateUtils');
 
 /**
  * Daily Reset Middleware — todayUsage kunlik lazy reset
@@ -16,7 +17,7 @@ async function dailyResetMiddleware(request, reply) {
         const { userId } = request.user;
         if (!userId) return;
 
-        const today = new Date().toISOString().split('T')[0];
+        const today = todayUzbekistan();
 
         // Bugungi sana bilan mos kelmaydigan bolalarni topib, reset qilish
         await Child.updateMany(

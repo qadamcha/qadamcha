@@ -27,10 +27,7 @@
         "flutter_svg",
         "get_it",
         "google_fonts",
-        "hive",
-        "hive_flutter",
         "http",
-        "injectable",
         "intl",
         "json_annotation",
         "lottie",
@@ -53,8 +50,6 @@
         "flutter_launcher_icons",
         "flutter_lints",
         "flutter_test",
-        "hive_generator",
-        "injectable_generator",
         "json_serializable",
         "mocktail",
         "retrofit_generator"
@@ -71,17 +66,6 @@
         "json_annotation",
         "path",
         "yaml"
-      ]
-    },
-    {
-      "name": "hive_generator",
-      "version": "2.0.1",
-      "dependencies": [
-        "analyzer",
-        "build",
-        "hive",
-        "source_gen",
-        "source_helper"
       ]
     },
     {
@@ -116,23 +100,6 @@
         "pubspec_parse",
         "source_gen",
         "source_helper"
-      ]
-    },
-    {
-      "name": "injectable_generator",
-      "version": "2.6.2",
-      "dependencies": [
-        "analyzer",
-        "build",
-        "code_builder",
-        "collection",
-        "dart_style",
-        "glob",
-        "injectable",
-        "meta",
-        "path",
-        "recase",
-        "source_gen"
       ]
     },
     {
@@ -503,24 +470,6 @@
       ]
     },
     {
-      "name": "hive_flutter",
-      "version": "1.1.0",
-      "dependencies": [
-        "flutter",
-        "hive",
-        "path",
-        "path_provider"
-      ]
-    },
-    {
-      "name": "hive",
-      "version": "2.2.3",
-      "dependencies": [
-        "crypto",
-        "meta"
-      ]
-    },
-    {
       "name": "flutter_secure_storage",
       "version": "9.2.4",
       "dependencies": [
@@ -582,14 +531,6 @@
         "meta",
         "mime",
         "path"
-      ]
-    },
-    {
-      "name": "injectable",
-      "version": "2.7.1+4",
-      "dependencies": [
-        "get_it",
-        "meta"
       ]
     },
     {
@@ -681,31 +622,18 @@
       "dependencies": []
     },
     {
-      "name": "source_helper",
-      "version": "1.3.5",
+      "name": "protobuf",
+      "version": "3.1.0",
       "dependencies": [
-        "analyzer",
         "collection",
-        "source_gen"
+        "fixnum",
+        "meta"
       ]
     },
     {
-      "name": "analyzer",
-      "version": "6.4.1",
-      "dependencies": [
-        "_fe_analyzer_shared",
-        "collection",
-        "convert",
-        "crypto",
-        "glob",
-        "meta",
-        "package_config",
-        "path",
-        "pub_semver",
-        "source_span",
-        "watcher",
-        "yaml"
-      ]
+      "name": "tuple",
+      "version": "2.0.2",
+      "dependencies": []
     },
     {
       "name": "source_gen",
@@ -720,35 +648,6 @@
         "source_span",
         "yaml"
       ]
-    },
-    {
-      "name": "build",
-      "version": "2.4.1",
-      "dependencies": [
-        "analyzer",
-        "async",
-        "convert",
-        "crypto",
-        "glob",
-        "logging",
-        "meta",
-        "package_config",
-        "path"
-      ]
-    },
-    {
-      "name": "protobuf",
-      "version": "3.1.0",
-      "dependencies": [
-        "collection",
-        "fixnum",
-        "meta"
-      ]
-    },
-    {
-      "name": "tuple",
-      "version": "2.0.2",
-      "dependencies": []
     },
     {
       "name": "dart_style",
@@ -777,6 +676,48 @@
       "name": "built_collection",
       "version": "5.1.1",
       "dependencies": []
+    },
+    {
+      "name": "build",
+      "version": "2.4.1",
+      "dependencies": [
+        "analyzer",
+        "async",
+        "convert",
+        "crypto",
+        "glob",
+        "logging",
+        "meta",
+        "package_config",
+        "path"
+      ]
+    },
+    {
+      "name": "analyzer",
+      "version": "6.4.1",
+      "dependencies": [
+        "_fe_analyzer_shared",
+        "collection",
+        "convert",
+        "crypto",
+        "glob",
+        "meta",
+        "package_config",
+        "path",
+        "pub_semver",
+        "source_span",
+        "watcher",
+        "yaml"
+      ]
+    },
+    {
+      "name": "source_helper",
+      "version": "1.3.5",
+      "dependencies": [
+        "analyzer",
+        "collection",
+        "source_gen"
+      ]
     },
     {
       "name": "pubspec_parse",
@@ -823,22 +764,6 @@
       "dependencies": [
         "collection",
         "meta"
-      ]
-    },
-    {
-      "name": "recase",
-      "version": "4.1.0",
-      "dependencies": []
-    },
-    {
-      "name": "glob",
-      "version": "2.1.3",
-      "dependencies": [
-        "async",
-        "collection",
-        "file",
-        "path",
-        "string_scanner"
       ]
     },
     {
@@ -953,6 +878,17 @@
       "version": "2.3.2",
       "dependencies": [
         "collection"
+      ]
+    },
+    {
+      "name": "glob",
+      "version": "2.1.3",
+      "dependencies": [
+        "async",
+        "collection",
+        "file",
+        "path",
+        "string_scanner"
       ]
     },
     {
@@ -1761,20 +1697,6 @@
       ]
     },
     {
-      "name": "convert",
-      "version": "3.1.2",
-      "dependencies": [
-        "typed_data"
-      ]
-    },
-    {
-      "name": "_fe_analyzer_shared",
-      "version": "67.0.0",
-      "dependencies": [
-        "meta"
-      ]
-    },
-    {
       "name": "fixnum",
       "version": "1.1.1",
       "dependencies": []
@@ -1786,6 +1708,20 @@
         "built_collection",
         "collection",
         "fixnum",
+        "meta"
+      ]
+    },
+    {
+      "name": "convert",
+      "version": "3.1.2",
+      "dependencies": [
+        "typed_data"
+      ]
+    },
+    {
+      "name": "_fe_analyzer_shared",
+      "version": "67.0.0",
+      "dependencies": [
         "meta"
       ]
     },

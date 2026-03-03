@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:chewie/chewie.dart';
 import 'package:video_player/video_player.dart';
+import '../../../../core/services/local_monitoring_service.dart';
 import '../../../content/domain/entities/content_entity.dart';
 import '../../../content/presentation/bloc/content_bloc.dart';
 import '../../../content/presentation/widgets/bubble_video_card.dart';
@@ -215,6 +217,7 @@ class _PlaylistDetailPageState extends State<_PlaylistDetailPage> {
   bool _showNextOverlay = false;
   int _nextCountdown = 5;
   Timer? _countdownTimer;
+  DateTime? _sessionStart;
 
   // Pagination — 50 tadan ko'rsatish
   static const int _pageSize = 50;
@@ -256,6 +259,8 @@ class _PlaylistDetailPageState extends State<_PlaylistDetailPage> {
   }
 
   void _playVideo(int index) {
+    // ✅ Oldingi video uchun activity tracking (yangi video boshlamasdan oldin)
+    _trackCurrentVideo();
     _disposePlayer();
     final c = _displayedVideos[index];
     setState(() {
@@ -265,9 +270,48 @@ class _PlaylistDetailPageState extends State<_PlaylistDetailPage> {
       _error = false;
       _videoCompleted = false;
       _showNextOverlay = false;
+      _sessionStart = DateTime.now();
     });
+
+    // ✅ Last watched saqlash (content_page kabi)
+    LocalMonitoringService.instance.saveLastWatched({
+      'id': c.id, 'title': c.title, 'type': c.type,
+      'category': c.category, 'series': c.series,
+      'videoId': c.videoId, 'streamUrl': c.streamUrl,
+      'thumbnailUrl': c.thumbnailUrl, 'duration': c.duration,
+      'views': c.views, 'likes': c.likes,
+      'isFeatured': c.isFeatured, 'language': c.language,
+      'ageMin': c.ageMin, 'ageMax': c.ageMax,
+    });
+
+    if (kDebugMode) print('▶️ [VideoLibrary] _playVideo: index=$index, title=${c.title}, series=${c.series}, id=${c.id}');
+
     final url = c.streamUrl ?? 'https://vz-b4d1a082-e06.b-cdn.net/${c.videoId}/playlist.m3u8';
     _initPlayer(url);
+  }
+
+  /// ✅ Joriy videoni monitoring'ga yozish
+  void _trackCurrentVideo() {
+    if (_currentVideo == null || _sessionStart == null) return;
+    final dur = DateTime.now().difference(_sessionStart!);
+    final title = _currentVideo!.series.isNotEmpty
+        ? '${_currentVideo!.series} \u2014 ${_currentVideo!.title}'
+        : _currentVideo!.title;
+    if (kDebugMode) {
+      print('📊 [VideoLibrary] _trackCurrentVideo:');
+      print('   title=$title, duration=${dur.inSeconds}s, contentId=${_currentVideo!.id}');
+    }
+    LocalMonitoringService.instance.batchUpdate(
+      seconds: dur.inSeconds,
+      activityType: 'video_watch',
+      contentTitle: title,
+      durationMinutes: dur.inMinutes < 1 ? 1 : dur.inMinutes,
+      contentId: _currentVideo!.id,
+    );
+    _sessionStart = null;
+    if (kDebugMode) {
+      print('   ✅ batchUpdate chaqirildi. videosWatched=${LocalMonitoringService.instance.videosWatched}');
+    }
   }
 
   Future<void> _initPlayer(String url) async {
@@ -459,6 +503,8 @@ class _PlaylistDetailPageState extends State<_PlaylistDetailPage> {
   void _disposePlayer() {
     _countdownTimer?.cancel();
     _removeFullscreenOverlay();
+    // ✅ Activity tracking — joriy video uchun
+    _trackCurrentVideo();
     _vpc?.removeListener(_onProgress);
     _vpc?.dispose();
     _chewie?.dispose();
@@ -468,6 +514,7 @@ class _PlaylistDetailPageState extends State<_PlaylistDetailPage> {
 
   @override
   void dispose() {
+    if (kDebugMode) print('🔴 [VideoLibrary] _PlaylistDetailPage dispose() chaqirildi');
     _disposePlayer();
     super.dispose();
   }

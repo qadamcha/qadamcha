@@ -3,6 +3,7 @@ const videoService = require('../services/video.service');
 const cacheService = require('../services/cache.service');
 const notificationService = require('../services/notification.service');
 const { ERRORS, CONTENT_TYPES } = require('../config/constants');
+const { todayUzbekistan } = require('../utils/dateUtils');
 
 const VALID_CONTENT_TYPES = Object.values(CONTENT_TYPES);
 
@@ -187,7 +188,7 @@ module.exports = {
                 });
             }
 
-            const today = new Date().toISOString().split('T')[0];
+            const today = todayUzbekistan();
             const stats = await Activity.getDailyStats(childId, today);
 
             if (stats.totalDuration >= child.dailyLimit * 60) {
@@ -245,7 +246,7 @@ module.exports = {
             });
         }
 
-        const today = new Date().toISOString().split('T')[0];
+        const today = todayUzbekistan();
 
         try {
             if (action === 'start') {

@@ -119,10 +119,13 @@ class _ContentPageState extends State<ContentPage> {
     _removeFullscreenOverlay();
     if (_inlineContent != null && _inlineSessionStart != null) {
       final dur = DateTime.now().difference(_inlineSessionStart!);
+      final title = _inlineContent!.series.isNotEmpty
+          ? '${_inlineContent!.series} \u2014 ${_inlineContent!.title}'
+          : _inlineContent!.title;
       LocalMonitoringService.instance.batchUpdate(
         seconds: dur.inSeconds,
         activityType: 'video_watch',
-        contentTitle: _inlineContent!.title,
+        contentTitle: title,
         durationMinutes: dur.inMinutes < 1 ? 1 : dur.inMinutes,
         contentId: _inlineContent!.id,
       );

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { todayUzbekistan } = require('../utils/dateUtils');
 
 const childSchema = new mongoose.Schema({
     parentId: {
@@ -86,7 +87,7 @@ childSchema.virtual('remainingTime').get(function () {
 
 // Kunlik statistikani yangilash
 childSchema.methods.resetDailyUsage = function () {
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayUzbekistan();
     if (this.lastUsageDate !== today) {
         this.todayUsage = { minutesUsed: 0, videosWatched: 0, gamesPlayed: 0, storiesRead: 0 };
         this.lastUsageDate = today;
