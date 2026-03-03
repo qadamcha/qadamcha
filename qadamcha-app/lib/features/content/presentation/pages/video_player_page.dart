@@ -499,14 +499,29 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     final controller = _videoPlayerController;
     if (controller == null || !controller.value.isInitialized) return;
 
-    final position = controller.value.position;
-    final duration = controller.value.duration;
+    final value = controller.value;
+    final position = value.position;
+    final duration = value.duration;
 
     // Minimum 5 soniya davomiylik bo'lishi kerak (false trigger oldini olish)
     if (duration < const Duration(seconds: 5)) return;
 
-    // Video tugashiga 500ms qolganda trigger (HLS uchun !isPlaying shart emas)
+    // Strategy 1: VideoPlayerValue.isCompleted (Flutter 3.x+)
+    // Bu eng ishonchli usul
+    bool completed = false;
+
+    // Strategy 2: Video to'xtagan va oxiriga yetgan
+    if (!value.isPlaying && position > Duration.zero && 
+        position >= duration - const Duration(seconds: 2)) {
+      completed = true;
+    }
+
+    // Strategy 3: Pozitsiya duration ga teng yoki oshgan
     if (position >= duration - const Duration(milliseconds: 500)) {
+      completed = true;
+    }
+
+    if (completed) {
       _videoCompleted = true;
       _startNextCountdown();
     }
@@ -597,7 +612,9 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
                       SizedBox(width: 12.w),
                       Expanded(
                         child: Text(
-                          widget.content.title,
+                          widget.content.series.isNotEmpty
+                              ? '${widget.content.series} — ${widget.content.title}'
+                              : widget.content.title,
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 15.sp,
@@ -760,7 +777,9 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
                 // Next video title
                 Text(
-                  next.title,
+                  next.series.isNotEmpty
+                      ? '${next.series} — ${next.title}'
+                      : next.title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,

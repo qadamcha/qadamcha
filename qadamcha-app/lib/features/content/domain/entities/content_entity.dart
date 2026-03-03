@@ -5,6 +5,7 @@ class ContentEntity extends Equatable {
   final String title;
   final String type; // 'cartoon', 'game', etc.
   final String category;
+  final String series; // multfilm seriyasi (masalan: "Masha va Ayiq")
   final String videoId; // bunny.net video id
   final String? streamUrl;
   final String? thumbnailUrl;
@@ -21,6 +22,7 @@ class ContentEntity extends Equatable {
     required this.title,
     required this.type,
     required this.category,
+    this.series = '',
     required this.videoId,
     this.streamUrl,
     this.thumbnailUrl,
@@ -39,6 +41,7 @@ class ContentEntity extends Equatable {
         title,
         type,
         category,
+        series,
         videoId,
         streamUrl,
         thumbnailUrl,

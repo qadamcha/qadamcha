@@ -32,7 +32,7 @@ class ContentBloc extends Bloc<ContentEvent, ContentState> {
       category: event.category,
       age: event.age,
       page: 1,
-      limit: 20,
+      limit: 50,
     );
 
     result.fold(
@@ -43,7 +43,7 @@ class ContentBloc extends Bloc<ContentEvent, ContentState> {
       (contents) => emit(state.copyWith(
         status: ContentStatus.loaded,
         contents: contents,
-        hasReachedMax: contents.length < 20,
+        hasReachedMax: contents.length < 50,
         page: 1,
       )),
     );
@@ -62,7 +62,7 @@ class ContentBloc extends Bloc<ContentEvent, ContentState> {
     
     final result = await repository.getContents(
       page: nextPage,
-      limit: 20,
+      limit: 50,
     );
 
      result.fold(
@@ -77,7 +77,7 @@ class ContentBloc extends Bloc<ContentEvent, ContentState> {
           emit(state.copyWith(
             status: ContentStatus.loaded,
             contents: List.of(state.contents)..addAll(newContents),
-            hasReachedMax: newContents.length < 20,
+            hasReachedMax: newContents.length < 50,
             page: nextPage,
           ));
         }

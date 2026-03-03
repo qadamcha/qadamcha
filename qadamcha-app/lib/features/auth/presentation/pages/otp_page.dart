@@ -204,6 +204,7 @@ class _OtpPageState extends State<OtpPage> with SingleTickerProviderStateMixin {
         }
       },
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         body: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -343,7 +344,7 @@ class _OtpPageState extends State<OtpPage> with SingleTickerProviderStateMixin {
                               // OTP Input Boxes — Premium design
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
+                                  horizontal: 12,
                                   vertical: 24,
                                 ),
                                 decoration: BoxDecoration(
@@ -359,90 +360,96 @@ class _OtpPageState extends State<OtpPage> with SingleTickerProviderStateMixin {
                                 ),
                                 child: Column(
                                   children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: List.generate(6, (index) {
-                                        final isFilled =
-                                            _controllers[index].text.isNotEmpty;
-                                        final isFocused =
-                                            _focusNodes[index].hasFocus;
-                                        return AnimatedContainer(
-                                          duration:
-                                              const Duration(milliseconds: 200),
-                                          width: 46,
-                                          height: 56,
-                                          margin: const EdgeInsets.symmetric(
-                                              horizontal: 4),
-                                          decoration: BoxDecoration(
-                                            color: isFilled
-                                                ? AppColors.primary
-                                                    .withOpacity(0.05)
-                                                : isFocused
-                                                    ? AppColors.primary
-                                                        .withOpacity(0.03)
-                                                    : const Color(0xFFF5F7FA),
-                                            borderRadius:
-                                                BorderRadius.circular(14),
-                                            border: Border.all(
-                                              color: isFilled
-                                                  ? AppColors.primary
-                                                  : isFocused
-                                                      ? AppColors.primaryLight
-                                                      : const Color(0xFFE2E8F0),
-                                              width: isFilled || isFocused
-                                                  ? 2
-                                                  : 1.5,
-                                            ),
-                                            boxShadow: isFocused
-                                                ? [
-                                                    BoxShadow(
-                                                      color: AppColors.primary
-                                                          .withOpacity(0.15),
-                                                      blurRadius: 8,
-                                                      offset:
-                                                          const Offset(0, 2),
-                                                    ),
-                                                  ]
-                                                : null,
-                                          ),
-                                          child: KeyboardListener(
-                                            focusNode: FocusNode(),
-                                            onKeyEvent: (event) =>
-                                                _onKeyPress(index, event),
-                                            child: TextField(
-                                              controller: _controllers[index],
-                                              focusNode: _focusNodes[index],
-                                              textAlign: TextAlign.center,
-                                              keyboardType:
-                                                  TextInputType.number,
-                                              maxLength: 1,
-                                              style: TextStyle(
-                                                fontSize: 22,
-                                                fontWeight: FontWeight.w800,
-                                                fontFamily: 'Nunito',
+                                    LayoutBuilder(
+                                      builder: (context, constraints) {
+                                        final boxWidth = ((constraints.maxWidth - 12 * 5) / 6).clamp(36.0, 48.0);
+                                        final boxHeight = boxWidth * 1.2;
+                                        return Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: List.generate(6, (index) {
+                                            final isFilled =
+                                                _controllers[index].text.isNotEmpty;
+                                            final isFocused =
+                                                _focusNodes[index].hasFocus;
+                                            return AnimatedContainer(
+                                              duration:
+                                                  const Duration(milliseconds: 200),
+                                              width: boxWidth,
+                                              height: boxHeight,
+                                              margin: EdgeInsets.symmetric(
+                                                  horizontal: index == 0 || index == 5 ? 0 : 3),
+                                              decoration: BoxDecoration(
                                                 color: isFilled
                                                     ? AppColors.primary
-                                                    : AppColors.textPrimary,
+                                                        .withOpacity(0.05)
+                                                    : isFocused
+                                                        ? AppColors.primary
+                                                            .withOpacity(0.03)
+                                                        : const Color(0xFFF5F7FA),
+                                                borderRadius:
+                                                    BorderRadius.circular(14),
+                                                border: Border.all(
+                                                  color: isFilled
+                                                      ? AppColors.primary
+                                                      : isFocused
+                                                          ? AppColors.primaryLight
+                                                          : const Color(0xFFE2E8F0),
+                                                  width: isFilled || isFocused
+                                                      ? 2
+                                                      : 1.5,
+                                                ),
+                                                boxShadow: isFocused
+                                                    ? [
+                                                        BoxShadow(
+                                                          color: AppColors.primary
+                                                              .withOpacity(0.15),
+                                                          blurRadius: 8,
+                                                          offset:
+                                                              const Offset(0, 2),
+                                                        ),
+                                                      ]
+                                                    : null,
                                               ),
-                                              decoration: const InputDecoration(
-                                                counterText: '',
-                                                border: InputBorder.none,
-                                                contentPadding: EdgeInsets.zero,
-                                                filled: true,
-                                                fillColor: Colors.transparent,
+                                              child: KeyboardListener(
+                                                focusNode: FocusNode(),
+                                                onKeyEvent: (event) =>
+                                                    _onKeyPress(index, event),
+                                                child: TextField(
+                                                  controller: _controllers[index],
+                                                  focusNode: _focusNodes[index],
+                                                  textAlign: TextAlign.center,
+                                                  keyboardType:
+                                                      TextInputType.number,
+                                                  maxLength: 1,
+                                                  style: TextStyle(
+                                                    fontSize: 22,
+                                                    fontWeight: FontWeight.w800,
+                                                    fontFamily: 'Nunito',
+                                                    color: isFilled
+                                                        ? AppColors.primary
+                                                        : AppColors.textPrimary,
+                                                  ),
+                                                  decoration: const InputDecoration(
+                                                    counterText: '',
+                                                    border: InputBorder.none,
+                                                    contentPadding: EdgeInsets.zero,
+                                                    filled: true,
+                                                    fillColor: Colors.transparent,
+                                                  ),
+                                                  inputFormatters: [
+                                                    FilteringTextInputFormatter
+                                                        .digitsOnly,
+                                                  ],
+                                                  onChanged: (value) =>
+                                                      _onOtpDigitChanged(
+                                                          index, value),
+                                                ),
                                               ),
-                                              inputFormatters: [
-                                                FilteringTextInputFormatter
-                                                    .digitsOnly,
-                                              ],
-                                              onChanged: (value) =>
-                                                  _onOtpDigitChanged(
-                                                      index, value),
-                                            ),
-                                          ),
+                                            );
+                                          }),
                                         );
-                                      }),
+                                      },
                                     ),
 
                                     const SizedBox(height: 24),

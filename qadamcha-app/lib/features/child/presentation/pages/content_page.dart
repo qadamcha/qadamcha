@@ -54,6 +54,15 @@ class _ContentPageState extends State<ContentPage> {
   List<_InlineQuality> _inlineQualities = [];
   _InlineQuality? _currentInlineQuality;
 
+  // Auto-next for inline
+  List<ContentEntity>? _inlineAllContents;
+  int? _inlineCurrentIndex;
+  bool _inlineVideoCompleted = false;
+  bool _showInlineNextOverlay = false;
+  int _inlineNextCountdown = 5;
+  Timer? _inlineCountdownTimer;
+  OverlayEntry? _fullscreenOverlay;
+
   @override
   void initState() {
     super.initState();
@@ -72,6 +81,7 @@ class _ContentPageState extends State<ContentPage> {
             title: saved['title'] ?? '',
             type: saved['type'] ?? 'cartoon',
             category: saved['category'] ?? '',
+            series: saved['series'] ?? '',
             videoId: saved['videoId'] ?? '',
             streamUrl: saved['streamUrl'],
             thumbnailUrl: saved['thumbnailUrl'],
@@ -105,6 +115,8 @@ class _ContentPageState extends State<ContentPage> {
   }
 
   void _disposeInlinePlayer() {
+    _inlineCountdownTimer?.cancel();
+    _removeFullscreenOverlay();
     if (_inlineContent != null && _inlineSessionStart != null) {
       final dur = DateTime.now().difference(_inlineSessionStart!);
       LocalMonitoringService.instance.batchUpdate(
@@ -115,6 +127,7 @@ class _ContentPageState extends State<ContentPage> {
         contentId: _inlineContent!.id,
       );
     }
+    _vpc?.removeListener(_onInlineProgress);
     _vpc?.dispose();
     _chewie?.dispose();
     _vpc = null;
@@ -131,6 +144,10 @@ class _ContentPageState extends State<ContentPage> {
       _inlineSessionStart = DateTime.now();
       _inlineQualities = [];
       _currentInlineQuality = null;
+      _inlineAllContents = allContents;
+      _inlineCurrentIndex = currentIndex;
+      _inlineVideoCompleted = false;
+      _showInlineNextOverlay = false;
     });
     WakelockPlus.enable();
     final masterUrl = c.streamUrl ?? 'https://vz-b4d1a082-e06.b-cdn.net/${c.videoId}/playlist.m3u8';
@@ -229,7 +246,10 @@ class _ContentPageState extends State<ContentPage> {
           ),
         );
         _inlineLoading = false;
+        _inlineVideoCompleted = false;
       });
+      // Video tugash listeneri qo'shish
+      _vpc!.addListener(_onInlineProgress);
     } catch (e) {
       if (!mounted) return;
       setState(() { _inlineLoading = false; _inlineError = true; });
@@ -288,11 +308,181 @@ class _ContentPageState extends State<ContentPage> {
   }
 
   void _closeInlinePlayer() {
+    _inlineCountdownTimer?.cancel();
     _disposeInlinePlayer();
     setState(() {
       _inlineContent = null;
       _inlineSessionStart = null;
+      _inlineAllContents = null;
+      _inlineCurrentIndex = null;
+      _showInlineNextOverlay = false;
     });
+  }
+
+  // ===== INLINE AUTO-NEXT =====
+  ContentEntity? get _inlineNextContent {
+    if (_inlineAllContents == null || _inlineCurrentIndex == null) return null;
+    final nextIdx = _inlineCurrentIndex! + 1;
+    if (nextIdx >= _inlineAllContents!.length) return null;
+    return _inlineAllContents![nextIdx];
+  }
+
+  void _onInlineProgress() {
+    if (_inlineVideoCompleted) return;
+    final controller = _vpc;
+    if (controller == null || !controller.value.isInitialized) return;
+
+    final value = controller.value;
+    final position = value.position;
+    final duration = value.duration;
+    if (duration < const Duration(seconds: 5)) return;
+
+    bool completed = false;
+    if (!value.isPlaying && position > Duration.zero &&
+        position >= duration - const Duration(seconds: 2)) {
+      completed = true;
+    }
+    if (position >= duration - const Duration(milliseconds: 500)) {
+      completed = true;
+    }
+
+    if (completed) {
+      _inlineVideoCompleted = true;
+      _startInlineNextCountdown();
+    }
+  }
+
+  void _startInlineNextCountdown() {
+    final next = _inlineNextContent;
+    if (next == null) return;
+    _inlineNextCountdown = 5;
+    _showInlineNextOverlay = true;
+
+    // Fullscreen bo'lsa OverlayEntry ko'rsatish
+    final isFS = _chewie != null && _chewie!.isFullScreen;
+    if (isFS) {
+      _showFullscreenOverlay(next);
+    } else {
+      setState(() {});
+    }
+
+    _inlineCountdownTimer?.cancel();
+    _inlineCountdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) { timer.cancel(); return; }
+      _inlineNextCountdown--;
+      if (isFS) {
+        _fullscreenOverlay?.markNeedsBuild();
+      } else {
+        setState(() {});
+      }
+      if (_inlineNextCountdown <= 0) {
+        timer.cancel();
+        _playNextInline();
+      }
+    });
+  }
+
+  void _showFullscreenOverlay(ContentEntity next) {
+    _removeFullscreenOverlay();
+    _fullscreenOverlay = OverlayEntry(
+      builder: (_) => _buildFullscreenNextOverlay(next),
+    );
+    Overlay.of(context).insert(_fullscreenOverlay!);
+  }
+
+  void _removeFullscreenOverlay() {
+    _fullscreenOverlay?.remove();
+    _fullscreenOverlay = null;
+  }
+
+  Widget _buildFullscreenNextOverlay(ContentEntity next) {
+    final thumbUrl = next.thumbnailUrl ?? 'https://vz-b4d1a082-e06.b-cdn.net/${next.videoId}/thumbnail.jpg';
+    return Material(
+      color: Colors.black.withOpacity(0.92),
+      child: SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Keyingi video', style: TextStyle(fontSize: 12, color: Colors.white54, fontFamily: 'Nunito')),
+              const SizedBox(height: 6),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  thumbUrl, width: 150, height: 84, fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    width: 150, height: 84, color: Colors.white10,
+                    child: const Icon(Icons.play_circle_outline, color: Colors.white38, size: 32),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 40),
+                child: Text(
+                  next.series.isNotEmpty ? '${next.series} \u2014 ${next.title}' : next.title,
+                  maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white, fontFamily: 'Nunito'),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 32, height: 32,
+                    decoration: BoxDecoration(color: const Color(0xFF43A047).withOpacity(0.3), shape: BoxShape.circle),
+                    child: Center(child: Text('$_inlineNextCountdown', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white, fontFamily: 'Nunito'))),
+                  ),
+                  const SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: _cancelInlineCountdown,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(color: Colors.white12, borderRadius: BorderRadius.circular(8)),
+                      child: const Text('Bekor', style: TextStyle(fontSize: 13, color: Colors.white70, fontFamily: 'Nunito', fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: _playNextInline,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(color: const Color(0xFF43A047), borderRadius: BorderRadius.circular(8)),
+                      child: const Text('\u25B6 Boshlash', style: TextStyle(fontSize: 13, color: Colors.white, fontFamily: 'Nunito', fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _playNextInline() {
+    _removeFullscreenOverlay();
+    final next = _inlineNextContent;
+    if (next == null || !mounted) return;
+    // Fullscreen rejimidan chiqish
+    if (_chewie != null && _chewie!.isFullScreen) {
+      _chewie!.exitFullScreen();
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (!mounted) return;
+        final nextIndex = _inlineCurrentIndex! + 1;
+        _navigate(context, next, allContents: _inlineAllContents, currentIndex: nextIndex);
+      });
+    } else {
+      final nextIndex = _inlineCurrentIndex! + 1;
+      _navigate(context, next, allContents: _inlineAllContents, currentIndex: nextIndex);
+    }
+  }
+
+  void _cancelInlineCountdown() {
+    _inlineCountdownTimer?.cancel();
+    _removeFullscreenOverlay();
+    setState(() => _showInlineNextOverlay = false);
   }
 
   List<ContentEntity> _getFiltered(List<ContentEntity> contents) {
@@ -300,7 +490,7 @@ class _ContentPageState extends State<ContentPage> {
     if (_selectedCategory > 0) {
       final val = _categories[_selectedCategory]['value'];
       if (val == 'new') {
-        if (filtered.length > 20) filtered = filtered.sublist(0, 20);
+        // Eng yangi videolar — hammasini ko'rsat
       } else if (val != null) {
         filtered = filtered.where((c) => c.type.toLowerCase() == val).toList();
       }
@@ -488,7 +678,10 @@ class _ContentPageState extends State<ContentPage> {
                       ),
                       // Video library
                       IconButton(
-                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VideoLibraryPage())),
+                        onPressed: () {
+                          _closeInlinePlayer();
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const VideoLibraryPage()));
+                        },
                         icon: Icon(Icons.video_library_rounded, color: Colors.white, size: 24.sp),
                       ),
                       // Filter
@@ -569,7 +762,14 @@ class _ContentPageState extends State<ContentPage> {
                 if (state.contents.isEmpty) return _empty();
 
                 return RefreshIndicator(
-                  onRefresh: () async => context.read<ContentBloc>().add(const LoadContentEvent(refresh: true)),
+                  onRefresh: () async {
+                    final bloc = context.read<ContentBloc>();
+                    if (!bloc.state.hasReachedMax) {
+                      bloc.add(const LoadMoreContentEvent());
+                    } else {
+                      bloc.add(const LoadContentEvent(refresh: true));
+                    }
+                  },
                   color: const Color(0xFF43A047),
                   child: ListView.separated(
                     controller: _scrollController,
@@ -639,9 +839,12 @@ class _ContentPageState extends State<ContentPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_lastWatched!.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500, color: const Color(0xFF0F0F0F), height: 1.3)),
+                    Text(_lastWatched!.series.isNotEmpty
+                        ? '${_lastWatched!.series} \u2014 ${_lastWatched!.title}'
+                        : _lastWatched!.title,
+                        maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500, color: const Color(0xFF0F0F0F), height: 1.3)),
                     SizedBox(height: 4.h),
-                    Text(_lastWatched!.category.isNotEmpty ? _lastWatched!.category : 'Multfilm', style: TextStyle(fontSize: 12.sp, color: const Color(0xFF606060))),
+                    Text(_lastWatched!.series.isNotEmpty ? _lastWatched!.series : (_lastWatched!.category.isNotEmpty ? _lastWatched!.category : 'Multfilm'), style: TextStyle(fontSize: 12.sp, color: const Color(0xFF606060))),
                   ],
                 ),
               ),
@@ -734,7 +937,7 @@ class _ContentPageState extends State<ContentPage> {
   void _navigate(BuildContext ctx, ContentEntity c, {List<ContentEntity>? allContents, int? currentIndex}) {
     setState(() => _lastWatched = c);
     LocalMonitoringService.instance.saveLastWatched({
-      'id': c.id, 'title': c.title, 'type': c.type, 'category': c.category,
+      'id': c.id, 'title': c.title, 'type': c.type, 'category': c.category, 'series': c.series,
       'videoId': c.videoId, 'streamUrl': c.streamUrl, 'thumbnailUrl': c.thumbnailUrl,
       'duration': c.duration, 'views': c.views, 'likes': c.likes,
       'isFeatured': c.isFeatured, 'language': c.language, 'ageMin': c.ageMin, 'ageMax': c.ageMax,
@@ -750,19 +953,96 @@ class _ContentPageState extends State<ContentPage> {
   Widget _buildInlinePlayer() {
     return Column(
       children: [
-        // Video player — compact
+        // Video player with auto-next overlay ON TOP
         Container(
           color: Colors.black,
           width: double.infinity,
           child: AspectRatio(
             aspectRatio: 16 / 9,
-            child: _inlineLoading
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFF43A047)))
-                : _inlineError
-                    ? Center(child: Icon(Icons.error_outline, color: Colors.white54, size: 48.sp))
-                    : _chewie != null
-                        ? Chewie(controller: _chewie!)
-                        : const SizedBox.shrink(),
+            child: Stack(
+              children: [
+                // Video content
+                if (_inlineLoading)
+                  const Center(child: CircularProgressIndicator(color: Color(0xFF43A047)))
+                else if (_inlineError)
+                  Center(child: Icon(Icons.error_outline, color: Colors.white54, size: 48.sp))
+                else if (_chewie != null)
+                  Positioned.fill(child: Chewie(controller: _chewie!))
+                else
+                  const SizedBox.shrink(),
+
+                // Auto-next overlay — FULL video area
+                if (_showInlineNextOverlay && _inlineNextContent != null)
+                  Positioned.fill(
+                    child: Container(
+                      color: Colors.black.withOpacity(0.92),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Keyingi video', style: TextStyle(fontSize: 12.sp, color: Colors.white54, fontFamily: 'Nunito')),
+                          SizedBox(height: 8.h),
+                          // Thumbnail
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10.r),
+                            child: Image.network(
+                              _inlineNextContent!.thumbnailUrl ?? 'https://vz-b4d1a082-e06.b-cdn.net/${_inlineNextContent!.videoId}/thumbnail.jpg',
+                              width: 160.w, height: 90.w,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                width: 160.w, height: 90.w,
+                                color: Colors.white10,
+                                child: Icon(Icons.play_circle_outline, color: Colors.white38, size: 40.sp),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 10.h),
+                          // Title
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 24.w),
+                            child: Text(
+                              _inlineNextContent!.series.isNotEmpty
+                                  ? '${_inlineNextContent!.series} \u2014 ${_inlineNextContent!.title}'
+                                  : _inlineNextContent!.title,
+                              maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700, color: Colors.white, fontFamily: 'Nunito'),
+                            ),
+                          ),
+                          SizedBox(height: 14.h),
+                          // Countdown + buttons
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 36.w, height: 36.w,
+                                decoration: BoxDecoration(color: const Color(0xFF43A047).withOpacity(0.3), shape: BoxShape.circle),
+                                child: Center(child: Text('$_inlineNextCountdown', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w800, color: Colors.white, fontFamily: 'Nunito'))),
+                              ),
+                              SizedBox(width: 12.w),
+                              GestureDetector(
+                                onTap: _cancelInlineCountdown,
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 7.h),
+                                  decoration: BoxDecoration(color: Colors.white12, borderRadius: BorderRadius.circular(8.r)),
+                                  child: Text('Bekor', style: TextStyle(fontSize: 13.sp, color: Colors.white70, fontFamily: 'Nunito', fontWeight: FontWeight.w600)),
+                                ),
+                              ),
+                              SizedBox(width: 8.w),
+                              GestureDetector(
+                                onTap: _playNextInline,
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 7.h),
+                                  decoration: BoxDecoration(color: const Color(0xFF43A047), borderRadius: BorderRadius.circular(8.r)),
+                                  child: Text('\u25B6 Boshlash', style: TextStyle(fontSize: 13.sp, color: Colors.white, fontFamily: 'Nunito', fontWeight: FontWeight.w600)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
         // Compact info bar
@@ -773,7 +1053,9 @@ class _ContentPageState extends State<ContentPage> {
             children: [
               Expanded(
                 child: Text(
-                  _inlineContent!.title,
+                  _inlineContent!.series.isNotEmpty
+                      ? '${_inlineContent!.series} \u2014 ${_inlineContent!.title}'
+                      : _inlineContent!.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: const Color(0xFF0F0F0F)),

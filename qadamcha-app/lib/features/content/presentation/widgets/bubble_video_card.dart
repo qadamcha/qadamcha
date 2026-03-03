@@ -87,7 +87,9 @@ class BubbleVideoCard extends StatelessWidget {
               Padding(
                 padding: EdgeInsets.fromLTRB(12.w, 10.h, 12.w, 0),
                 child: Text(
-                  content.title,
+                  content.series.isNotEmpty
+                      ? '${content.series} \u2014 ${content.title}'
+                      : content.title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -130,7 +132,9 @@ class BubbleVideoCard extends StatelessWidget {
 
   String _buildChannelText() {
     final parts = <String>[];
-    if (content.category.isNotEmpty) {
+    if (content.series.isNotEmpty) {
+      parts.add(content.series);
+    } else if (content.category.isNotEmpty) {
       parts.add(content.category);
     } else {
       parts.add('Qadamcha Kids');

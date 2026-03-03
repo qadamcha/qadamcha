@@ -97,91 +97,99 @@ class _ParentPinPageState extends State<ParentPinPage> {
                 ),
               ),
 
-              // Upper content — icon, title, PIN dots
-              const Spacer(flex: 2),
+              // Scrollable content
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 40.w),
+                    child: Column(
+                      children: [
+                        SizedBox(height: 20.h),
 
-              // Icon
-              Container(
-                width: 64.w,
-                height: 64.w,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    '👋',
-                    style: TextStyle(fontSize: 32.sp),
+                        // Icon
+                        Container(
+                          width: 64.w,
+                          height: 64.w,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              '\u{1F44B}',
+                              style: TextStyle(fontSize: 32.sp),
+                            ),
+                          ),
+                        ),
+
+                        SizedBox(height: 16.h),
+
+                        // Title
+                        Text(
+                          'Salom, Ota-ona!',
+                          style: TextStyle(
+                            fontSize: 22.sp,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                            fontFamily: 'Nunito',
+                          ),
+                        ),
+
+                        SizedBox(height: 6.h),
+
+                        Text(
+                          'PIN kodingizni kiriting',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: AppColors.textSecondary,
+                            fontFamily: 'Nunito',
+                          ),
+                        ),
+
+                        SizedBox(height: 24.h),
+
+                        // PIN Dots
+                        PinDots(
+                          currentLength: _pin.length,
+                          errorMessage: _error,
+                        ),
+
+                        SizedBox(height: 16.h),
+
+                        // Forgot PIN
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const PinResetPage()),
+                            );
+                          },
+                          child: Text(
+                            'PIN kodni unutdingizmi?',
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Nunito',
+                              fontSize: 13.sp,
+                            ),
+                          ),
+                        ),
+
+                        SizedBox(height: 16.h),
+
+                        // Keypad
+                        PinKeypad(
+                          onDigitEntered: _onDigitEntered,
+                          onBackspace: _onBackspace,
+                          isLoading: _isLoading,
+                        ),
+
+                        SizedBox(height: 16.h),
+                      ],
+                    ),
                   ),
                 ),
               ),
-
-              SizedBox(height: 16.h),
-
-              // Title
-              Text(
-                'Salom, Ota-ona!',
-                style: TextStyle(
-                  fontSize: 22.sp,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                  fontFamily: 'Nunito',
-                ),
-              ),
-
-              SizedBox(height: 6.h),
-
-              Text(
-                'PIN kodingizni kiriting',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: AppColors.textSecondary,
-                  fontFamily: 'Nunito',
-                ),
-              ),
-
-              SizedBox(height: 24.h),
-
-              // PIN Dots
-              PinDots(
-                currentLength: _pin.length,
-                errorMessage: _error,
-              ),
-
-              SizedBox(height: 16.h),
-
-              // Forgot PIN
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const PinResetPage()),
-                  );
-                },
-                child: Text(
-                  'PIN kodni unutdingizmi?',
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'Nunito',
-                    fontSize: 13.sp,
-                  ),
-                ),
-              ),
-
-              const Spacer(flex: 1),
-
-              // Keypad — pastda
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 40.w),
-                child: PinKeypad(
-                  onDigitEntered: _onDigitEntered,
-                  onBackspace: _onBackspace,
-                  isLoading: _isLoading,
-                ),
-              ),
-
-              SizedBox(height: 16.h),
             ],
           ),
         ),

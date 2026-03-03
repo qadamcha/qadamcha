@@ -24,7 +24,7 @@ module.exports = {
             return reply.status(400).send({ success: false, message: 'Yosh 1-18 orasida bo\'lishi kerak' });
         }
         const parsedPage = Math.max(1, parseInt(page) || 1);
-        const parsedLimit = Math.min(100, Math.max(1, parseInt(limit) || 20));
+        const parsedLimit = Math.min(500, Math.max(1, parseInt(limit) || 20));
 
         // Cache tekshirish
         const cacheKey = `content:list:${type || ''}:${category || ''}:${parsedAge || ''}:${parsedPage}:${parsedLimit}`;
