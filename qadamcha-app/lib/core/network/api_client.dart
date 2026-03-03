@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../constants/app_constants.dart';
 import '../errors/exceptions.dart';
@@ -25,7 +26,7 @@ class ApiClient {
     _dio.interceptors.addAll([
       _RetryInterceptor(_dio),
       _AuthInterceptor(_storage, _dio),
-      _LoggingInterceptor(),
+      if (kDebugMode) _LoggingInterceptor(),
     ]);
   }
   
@@ -175,19 +176,19 @@ class _AuthInterceptor extends Interceptor {
             return handler.resolve(cloneRequest);
           }
         } catch (e) {
-          print('⚠️ Queued request retry failed: $e');
+          if (kDebugMode) print('⚠️ Queued request retry failed: $e');
         }
         return handler.next(err);
       }
 
       // Birinchi 401 — biz refresh qilamiz
       _isRefreshing = true;
-      print('🔄 Token refresh boshlandi...');
+      if (kDebugMode) print('🔄 Token refresh boshlandi...');
       
       try {
         final refreshToken = await _storage.read(key: StorageKeys.refreshToken);
         if (refreshToken == null) {
-          print('⚠️ Refresh token topilmadi! Storage da yo\'q.');
+          if (kDebugMode) print('⚠️ Refresh token topilmadi! Storage da yo\'q.');
         }
         if (refreshToken != null) {
           final response = await _dio.post(
@@ -196,7 +197,7 @@ class _AuthInterceptor extends Interceptor {
           );
           
           if (response.statusCode == 200 && response.data['accessToken'] != null) {
-            print('✅ Token refresh muvaffaqiyatli!');
+            if (kDebugMode) print('✅ Token refresh muvaffaqiyatli!');
             final newAccessToken = response.data['accessToken'] as String;
             await _storage.write(key: StorageKeys.accessToken, value: newAccessToken);
             
@@ -214,14 +215,14 @@ class _AuthInterceptor extends Interceptor {
             final cloneRequest = await _dio.fetch(err.requestOptions);
             return handler.resolve(cloneRequest);
           } else {
-            print('⚠️ Token refresh javobi noto\'g\'ri: statusCode=${response.statusCode}, data=${response.data}');
+            if (kDebugMode) print('⚠️ Token refresh javobi noto\'g\'ri: statusCode=${response.statusCode}, data=${response.data}');
           }
         }
         // Refresh ishlamadi — navbatni reject qilish
-        print('⚠️ Token refresh muvaffaqiyatsiz.');
+        if (kDebugMode) print('⚠️ Token refresh muvaffaqiyatsiz.');
         _rejectQueue();
       } catch (e) {
-        print('⚠️ Token refresh xatosi: $e');
+        if (kDebugMode) print('⚠️ Token refresh xatosi: $e');
         _rejectQueue();
       } finally {
         _isRefreshing = false;
@@ -263,19 +264,19 @@ class _QueuedRequest {
 class _LoggingInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    print('→ ${options.method} ${options.path}');
+    debugPrint('→ ${options.method} ${options.path}');
     handler.next(options);
   }
   
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
-    print('← ${response.statusCode} ${response.requestOptions.path}');
+    debugPrint('← ${response.statusCode} ${response.requestOptions.path}');
     handler.next(response);
   }
   
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    print('✖ ${err.response?.statusCode} ${err.requestOptions.path}');
+    debugPrint('✖ ${err.response?.statusCode} ${err.requestOptions.path}');
     handler.next(err);
   }
 }
@@ -302,11 +303,11 @@ class _RetryInterceptor extends Interceptor {
     final retryCount = err.requestOptions.extra['retryCount'] ?? 0;
 
     if (retryCount >= _maxRetries) {
-      print('⚠ Retry limit reached for ${err.requestOptions.path}');
+      if (kDebugMode) print('⚠ Retry limit reached for ${err.requestOptions.path}');
       return handler.next(err);
     }
 
-    print('🔄 Retry ${retryCount + 1}/$_maxRetries: ${err.requestOptions.path}');
+    if (kDebugMode) print('🔄 Retry ${retryCount + 1}/$_maxRetries: ${err.requestOptions.path}');
     await Future.delayed(_retryDelay);
 
     try {

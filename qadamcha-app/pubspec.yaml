@@ -17,7 +17,6 @@ dependencies:
 
   # Dependency Injection
   get_it: 8.3.0
-  injectable: 2.7.1+4
 
   # Network
   dio: 5.9.1
@@ -28,8 +27,6 @@ dependencies:
   # Local Storage
   shared_preferences: 2.5.4
   flutter_secure_storage: 9.2.4
-  hive: 2.2.3
-  hive_flutter: 1.1.0
 
   # UI/UX
   flutter_screenutil: 5.9.3
@@ -79,10 +76,8 @@ dev_dependencies:
   bloc_test: 9.1.7
   mocktail: 1.0.4
   build_runner: 2.4.13
-  injectable_generator: 2.6.2
   json_serializable: 6.8.0
   retrofit_generator: 8.2.1
-  hive_generator: 2.0.1
   flutter_launcher_icons: ^0.14.3
 
 flutter:

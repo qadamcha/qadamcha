@@ -118,7 +118,7 @@ Future<void> initializeDependencies() async {
   sl.registerLazySingleton<AiChatRepository>(
     () => AiChatRepositoryImpl(remoteDataSource: sl()),
   );
-  sl.registerFactory<AiChatBloc>(
+  sl.registerLazySingleton<AiChatBloc>(
     () => AiChatBloc(repository: sl(), localDataSource: sl()),
   );
 }
