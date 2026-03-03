@@ -62,14 +62,59 @@ class LocalMonitoringService {
   static const _keyWeekNumber = '${_keyPrefix}weekNumber';
 
   /// O'zbekiston vaqti (UTC+5) — barcha sana hisob-kitoblari shu bilan
-  static DateTime get _nowUzbekistan => DateTime.now().toUtc().add(const Duration(hours: 5));
-  static String get _todayUzbekistan => _nowUzbekistan.toIso8601String().split('T')[0];
+  // ═══════════════════════════════════════════════════════════════════
+  // 🧪 TEST MODE — Test tugagach _testMode = false qilib qo'ying!
+  // Har 5 daqiqada "kun" almashadi, har 35 daqiqada "hafta" almashadi
+  // Backend (dateUtils.js) da ham xuddi shu flag va formula bor
+  // ═══════════════════════════════════════════════════════════════════
+  static const bool _testMode = true;
+  static const int _testDayDurationMs = 5 * 60 * 1000; // 5 daqiqa = 1 "kun"
+
+  static DateTime get _nowUzbekistan {
+    if (_testMode) {
+      return _virtualNow();
+    }
+    return DateTime.now().toUtc().add(const Duration(hours: 5));
+  }
+
+  static String get _todayUzbekistan {
+    if (_testMode) {
+      return _virtualToday();
+    }
+    return _nowUzbekistan.toIso8601String().split('T')[0];
+  }
+
   /// ISO hafta raqami (yil + hafta)
   static String get _currentWeekNumber {
     final now = _nowUzbekistan;
     final firstDayOfYear = DateTime(now.year, 1, 1);
     final weekNumber = ((now.difference(firstDayOfYear).inDays + firstDayOfYear.weekday) / 7).ceil();
     return '${now.year}-W$weekNumber';
+  }
+
+  // ─── Test helpers ──────────────────────────────────────────────────
+  /// Virtual "bugun" — har 5 daqiqada yangi kun
+  /// Formula: virtualDayNumber = epoch ~/ 5min
+  /// Backend (dateUtils.js) da ham XUDDI SHU formula ishlatiladi
+  static String _virtualToday() {
+    final epoch = DateTime.now().millisecondsSinceEpoch;
+    final virtualDayNumber = epoch ~/ _testDayDurationMs;
+    final base = DateTime(2026, 1, 1).add(Duration(days: virtualDayNumber % 365));
+    final result = base.toIso8601String().split('T')[0];
+    if (kDebugMode) {
+      final remaining = (_testDayDurationMs - (epoch % _testDayDurationMs)) ~/ 1000;
+      print('🧪 [TEST] virtualDay #$virtualDayNumber → $result (keyingi kun: ${remaining}s)');
+    }
+    return result;
+  }
+
+  /// Virtual "now" — sana virtual, soat real
+  static DateTime _virtualNow() {
+    final epoch = DateTime.now().millisecondsSinceEpoch;
+    final virtualDayNumber = epoch ~/ _testDayDurationMs;
+    final base = DateTime(2026, 1, 1).add(Duration(days: virtualDayNumber % 365));
+    final real = DateTime.now().toUtc().add(const Duration(hours: 5));
+    return DateTime(base.year, base.month, base.day, real.hour, real.minute, real.second);
   }
 
   /// Service'ni boshlash (app startup da chaqiriladi)
