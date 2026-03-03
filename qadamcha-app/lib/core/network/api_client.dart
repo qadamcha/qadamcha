@@ -165,6 +165,12 @@ class _AuthInterceptor extends Interceptor {
       return handler.next(err);
     }
 
+    // PIN verify 401 = "PIN noto'g'ri", token bilan bog'liq EMAS
+    // Bu yerda refresh qilmasdan, xatoni to'g'ridan-to'g'ri qaytarish kerak
+    if (err.requestOptions.path.contains('/auth/verify-pin')) {
+      return handler.next(err);
+    }
+
     if (err.response?.statusCode == 401) {
       // Agar allaqachon refresh qilinayotgan bo'lsa — navbatga qo'shamiz
       if (_isRefreshing) {

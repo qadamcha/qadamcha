@@ -37,9 +37,6 @@ module.exports = {
         }
 
         const childrenWithStats = children.map((child) => {
-            const stats = statsMap.get(child._id.toString()) || { totalDuration: 0, count: 0 };
-            const activityMinutes = Math.round((stats.totalDuration || 0) / 60);
-
             const syncedUsage = child.todayUsage || {};
             const isSameDay = child.lastUsageDate === today;
             const syncMinutes = isSameDay ? (syncedUsage.minutesUsed || 0) : 0;
@@ -47,7 +44,8 @@ module.exports = {
             const syncGames = isSameDay ? (syncedUsage.gamesPlayed || 0) : 0;
             const syncStories = isSameDay ? (syncedUsage.storiesRead || 0) : 0;
 
-            const totalMinutes = Math.max(activityMinutes, syncMinutes);
+            // Faqat todayUsage dan olish (Activity.totalDuration kunlik emas — FIFO)
+            const totalMinutes = syncMinutes;
 
             return {
                 ...child.toObject(),

@@ -206,6 +206,9 @@ class AuthRepositoryImpl implements AuthRepository {
       // Muvaffaqiyat — keyingi safar uchun lokal saqlash
       await localDataSource.cachePinHash(pin);
       return const Right(null);
+    } on UnauthorizedException catch (e) {
+      // PIN noto'g'ri (server 401 qaytardi)
+      return Left(ServerFailure(e.message, 401));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {

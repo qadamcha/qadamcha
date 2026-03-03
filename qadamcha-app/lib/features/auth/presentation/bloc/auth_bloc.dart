@@ -229,10 +229,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     
     result.fold(
       (failure) {
-        // Agar 401 yoki AuthFailure bo'lsa, demak sessiya tugagan
-        if (failure is AuthFailure || (failure is ServerFailure && failure.statusCode == 401)) {
+        // PIN noto'g'ri bo'lsa — faqat xato ko'rsatish (logout EMAS!)
+        // Server 401 qaytaradi lekin bu "sessiya tugadi" EMAS, "PIN noto'g'ri"
+        final msg = failure.message.toLowerCase();
+        final isPinError = msg.contains('pin') || 
+                           msg.contains('noto') || 
+                           msg.contains('invalid') ||
+                           msg.contains('incorrect') ||
+                           msg.contains('wrong');
+        
+        if (isPinError || (failure is ServerFailure && failure.statusCode == 401)) {
+          // PIN noto'g'ri — qayta kiritish imkonini berish
           emit(state.copyWith(
-            status: AuthStatus.unauthenticated, // Login sahifasiga o'tkazish
+            status: AuthStatus.error,
+            errorMessage: 'PIN kod noto\'g\'ri',
+          ));
+        } else if (failure is AuthFailure) {
+          // Haqiqiy auth xatosi (token yo'q, expired)
+          emit(state.copyWith(
+            status: AuthStatus.unauthenticated,
             errorMessage: 'Sessiya vaqti tugadi. Qayta kiring.',
           ));
         } else {

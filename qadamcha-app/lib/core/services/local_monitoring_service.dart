@@ -717,6 +717,21 @@ class LocalMonitoringService {
 
   // ─── Data getters ───────────────────────────────────────────────────
 
+  /// MonitoringPage ochilganda chaqiriladi — in-memory counterlarni
+  /// yangi kun bo'lsa 0 ga qaytaradi (auto-save timer to'xtagan bo'lsa ham)
+  /// Qaytaradi: true agar reset bo'lgan bo'lsa (BLoC state ham yangilanishi kerak)
+  bool ensureDailyReset() {
+    _checkWeeklyReset();
+    if (_prefs == null) return false;
+    final savedDate = _prefs!.getString(_keyDate);
+    final today = _todayUzbekistan;
+    if (savedDate != today) {
+      _checkDailyReset();
+      return true; // Reset bo'ldi — cached backend data ham eskirgan
+    }
+    return false;
+  }
+
   /// Umumiy soniyalar (ichki)
   int get secondsUsed => _secondsUsed;
 

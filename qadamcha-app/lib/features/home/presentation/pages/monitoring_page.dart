@@ -18,6 +18,8 @@ class MonitoringPage extends StatefulWidget {
 }
 
 class _MonitoringPageState extends State<MonitoringPage> {
+  bool _pendingDayReset = false;
+
   @override
   void initState() {
     super.initState();
@@ -137,25 +139,41 @@ class _MonitoringPageState extends State<MonitoringPage> {
 
   Widget _buildSummarySection(BuildContext context, ChildState state) {
     final children = state.children;
+    // Yangi kun bo'lsa in-memory counterlarni 0 ga qaytarish
+    // (auto-save timer to'xtagan bo'lsa ham ishlaydi)
+    final didReset = LocalMonitoringService.instance.ensureDailyReset();
     final localStats = LocalMonitoringService.instance;
 
-    // Backend'dan bolalar umumiy vaqti
-    final backendMinutes = children.fold<int>(
+    // Agar kun almashgan bo'lsa — BLoC dagi cached data eskirgan!
+    // Backend dan yangi data olish (bir marta)
+    if (didReset && !_pendingDayReset) {
+      _pendingDayReset = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          context.read<ChildBloc>().add(const LoadChildrenEvent());
+          _loadMonitoringData();
+          _pendingDayReset = false;
+        }
+      });
+    }
+
+    // Agar reset bo'lgan bo'lsa, cached backend data eskirgan — 0 ishlatish
+    final backendMinutes = didReset ? 0 : children.fold<int>(
       0,
       (sum, child) => sum + child.todayUsage.minutesUsed,
     );
-    final backendVideos = children.fold<int>(
+    final backendVideos = didReset ? 0 : children.fold<int>(
       0,
       (sum, child) => sum + child.todayUsage.videosWatched,
     );
-    final backendGames = children.fold<int>(
+    final backendGames = didReset ? 0 : children.fold<int>(
       0,
       (sum, child) => sum + child.todayUsage.gamesPlayed,
     );
 
     // Debug: Ma'lumot manbalarini ko'rish
     if (kDebugMode) {
-      print('📊 [Monitoring] _buildSummarySection:');
+      print('📊 [Monitoring] _buildSummarySection: didReset=$didReset');
       print('   children.length=${children.length}');
       for (var c in children) {
         print('   child ${c.name}: min=${c.todayUsage.minutesUsed}, vid=${c.todayUsage.videosWatched}, game=${c.todayUsage.gamesPlayed}');
