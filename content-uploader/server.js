@@ -20,6 +20,7 @@ app.use(cors({
 const contentSchema = new mongoose.Schema({
     title: { type: String, required: true, trim: true, maxlength: 100 },
     type: { type: String, enum: ['cartoon', 'game', 'story', 'quest', 'talimiy', 'ozbek', 'jahon'], required: true },
+    series: { type: String, trim: true, maxlength: 100 },
     category: { type: String },
     description: { type: String, maxlength: 500 },
     ageRange: {
@@ -207,9 +208,15 @@ app.post('/api/bunny/sync/:videoId', asyncHandler(async (req, res) => {
     });
 }));
 
+// GET - Barcha seriyalar ro'yxatini olish (distinct)
+app.get('/api/series', asyncHandler(async (req, res) => {
+    const seriesList = await Content.distinct('series', { series: { $ne: null, $ne: '' } });
+    res.json({ success: true, series: seriesList.filter(Boolean).sort() });
+}));
+
 // POST - Yangi kontent qo'shish
 app.post('/api/contents', asyncHandler(async (req, res) => {
-    const { title, type, category, description, ageMin, ageMax, videoId, duration, thumbnail, tags, isFeatured, language } = req.body;
+    const { title, type, series, category, description, ageMin, ageMax, videoId, duration, thumbnail, tags, isFeatured, language } = req.body;
 
     // Validatsiya
     if (!title || !type) {
@@ -222,6 +229,7 @@ app.post('/api/contents', asyncHandler(async (req, res) => {
     const content = await Content.create({
         title,
         type,
+        series: series || undefined,
         category,
         description,
         ageRange: { min: parseInt(ageMin) || 3, max: parseInt(ageMax) || 12 },
@@ -238,12 +246,13 @@ app.post('/api/contents', asyncHandler(async (req, res) => {
 
 // PUT - Kontentni tahrirlash
 app.put('/api/contents/:id', asyncHandler(async (req, res) => {
-    const { title, type, category, description, ageMin, ageMax, videoId, duration, thumbnail, tags, isFeatured, isActive, language, order } = req.body;
+    const { title, type, series, category, description, ageMin, ageMax, videoId, duration, thumbnail, tags, isFeatured, isActive, language, order } = req.body;
 
     const updateData = {};
     if (title !== undefined) updateData.title = title;
     if (type !== undefined) updateData.type = type;
     if (category !== undefined) updateData.category = category;
+    if (series !== undefined) updateData.series = series;
     if (description !== undefined) updateData.description = description;
     if (ageMin !== undefined || ageMax !== undefined) {
         updateData.ageRange = {};

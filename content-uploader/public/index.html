@@ -427,6 +427,17 @@
                     <h2>➕ Yangi Video Qo'shish</h2>
                     <form id="uploadForm">
                         <div class="form-group">
+                            <label>Multfilm seriyasi</label>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <input type="text" name="series" id="seriesInput" list="seriesList"
+                                    placeholder="Tanlang yoki yangi yozing..." style="flex: 1;">
+                                <datalist id="seriesList"></datalist>
+                            </div>
+                            <small style="color: var(--text-muted); font-size: 0.75rem;">Mavjudlardan tanlang yoki yangi
+                                seriya nomini yozing</small>
+                        </div>
+
+                        <div class="form-group">
                             <label>Video Nomi *</label>
                             <input type="text" name="title" required placeholder="Masalan: Alpomish ertagi">
                         </div>
@@ -672,10 +683,10 @@
                     contentList.innerHTML = data.contents.map(c => `
                         <div class="content-item">
                             <div class="content-info">
-                                <h3>${c.title}</h3>
+                                <h3>${c.series ? '<span style="color: var(--primary); font-weight: 600;">[' + c.series + ']</span> ' : ''}${c.title}</h3>
                                 <div class="content-meta">
                                     <span class="badge ${c.type}">${c.type}</span>
-                                    <span>📂 ${c.category || 'Kategoriyasiz'}</span>
+                                    ${c.series ? '<span>🎬 ' + c.series + '</span>' : ''}
                                     <span>🌐 ${c.language === 'uz' ? "O'zbek" : c.language === 'ru' ? 'Rus' : 'Ingliz'}</span>
                                     <span>👶 ${c.ageRange?.min || 3}-${c.ageRange?.max || 12} yosh</span>
                                     <span>⏱ ${c.duration ? Math.floor(c.duration / 60) + ' daq' : '-'}</span>
@@ -709,6 +720,7 @@
                     showToast('✅ Kontent qo\'shildi!');
                     form.reset();
                     loadContents();
+                    loadSeries();
                 } else {
                     showToast('❌ ' + result.message, 'error');
                 }
@@ -874,8 +886,21 @@
             }
         }
 
+        // ===== SERIES =====
+        async function loadSeries() {
+            try {
+                const res = await fetch('/api/series');
+                const data = await res.json();
+                if (data.success) {
+                    const datalist = document.getElementById('seriesList');
+                    datalist.innerHTML = data.series.map(s => `<option value="${s}">`).join('');
+                }
+            } catch (e) { /* silent */ }
+        }
+
         // ===== INIT =====
         loadContents();
+        loadSeries();
     </script>
 </body>
 
