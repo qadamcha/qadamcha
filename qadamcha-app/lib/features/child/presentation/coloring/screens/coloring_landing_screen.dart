@@ -1,18 +1,17 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../data/coloring_image_data.dart';
-import '../data/coloring_storage.dart';
 import '../engine/sound_service.dart';
-import 'coloring_screen.dart';
+import 'coloring_browse_screen.dart';
+import 'coloring_gallery_screen.dart';
 import 'my_artworks_screen.dart';
 
 // ═══════════════════════════════════════════════════════════
-// Material Design 3 — Coloring Landing Page
-// Hero banner + Category chips + 2-column grid
+// LANDING PAGE — Doodle Background + Bold Game Buttons
 // ═══════════════════════════════════════════════════════════
-
 class ColoringLandingScreen extends StatefulWidget {
   const ColoringLandingScreen({super.key});
 
@@ -22,156 +21,184 @@ class ColoringLandingScreen extends StatefulWidget {
 
 class _ColoringLandingScreenState extends State<ColoringLandingScreen>
     with TickerProviderStateMixin {
-  late PageController _bannerCtrl;
-  late AnimationController _fadeCtrl;
-  int _currentBanner = 0;
-  int _selectedCategoryIdx = 0;
-  final _storage = ColoringStorage();
+  late AnimationController _introCtrl;
+  late AnimationController _floatCtrl;
+  late AnimationController _sparkleCtrl;
 
-  // Kategoriya ma'lumotlari
-  static const _categoryMeta = [
-    _CatMeta('Mashinalar', '🚗', Color(0xFF4A90D9), Color(0xFF357ABD)),
-    _CatMeta('Hayvonlar', '🐾', Color(0xFF66BB6A), Color(0xFF43A047)),
-    _CatMeta('Mevalar', '🍎', Color(0xFFEF5350), Color(0xFFE53935)),
-    _CatMeta('Tabiat', '🌿', Color(0xFF26A69A), Color(0xFF00897B)),
-    _CatMeta('Poliz Mevalari', '🥬', Color(0xFFFF7043), Color(0xFFE64A19)),
-  ];
+  bool _introDone = false;
 
-  List<ColoringImageInfo> _filteredImages = [];
+  // Animatsiya vaqtlari (normalizatsiyalangan 0-1, 5.5s umumiy):
+  // 0.00-0.18 = 0-1s     : Rasmlarim pastdan
+  // 0.18-0.36 = 1-2s     : O'yna chapdan
+  // 0.36-0.45 = 2-2.5s   : Yangilar o'ngdan
+  // 0.45-0.64 = 2.5-3.5s : Mascot tepadan
+  // 0.64-0.80 = 3.5-4.5s : Rangli chapdan + Dunyo o'ngdan
+  // 0.80-1.00 = 4.5-5.5s : Hammasi joylashib bo'ldi
 
   @override
   void initState() {
     super.initState();
     SoundService().init();
-    _bannerCtrl = PageController(viewportFraction: 0.92);
-    _fadeCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 400),
-    )..forward();
-    _updateFilteredImages();
+    SoundService().preloadIntro();
+
+    _introCtrl = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 5500),
+    )..addStatusListener((s) {
+      if (s == AnimationStatus.completed) setState(() => _introDone = true);
+    });
+
+    _floatCtrl = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 3500),
+    )..repeat(reverse: true);
+
+    _sparkleCtrl = AnimationController(
+      vsync: this, duration: const Duration(seconds: 5),
+    )..repeat();
+
+    Future.delayed(const Duration(milliseconds: 250), () {
+      if (mounted) {
+        SoundService().playIntro();
+        _introCtrl.forward();
+      }
+    });
   }
 
-  void _updateFilteredImages() {
-    final catName = _categoryMeta[_selectedCategoryIdx].name;
-    _filteredImages = ColoringImages.byCategory(catName);
+  /// Smooth ease helper — [start..end] oralig'ida progress hisoblaydi
+  double _ease(double start, double end, [Curve curve = Curves.easeOutCubic]) {
+    final v = _introCtrl.value;
+    if (v < start) return 0.0;
+    if (v > end) return 1.0;
+    return curve.transform(((v - start) / (end - start)).clamp(0.0, 1.0));
   }
 
   @override
   void dispose() {
-    _bannerCtrl.dispose();
-    _fadeCtrl.dispose();
+    SoundService().stopIntro();
+    _introCtrl.dispose();
+    _floatCtrl.dispose();
+    _sparkleCtrl.dispose();
     super.dispose();
-  }
-
-  void _selectCategory(int idx) {
-    if (idx == _selectedCategoryIdx) return;
-    HapticFeedback.selectionClick();
-    SoundService().playPop();
-    _fadeCtrl.reset();
-    setState(() {
-      _selectedCategoryIdx = idx;
-      _updateFilteredImages();
-    });
-    _fadeCtrl.forward();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FE),
-      body: SafeArea(
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            // ─── TOP BAR ───
-            SliverToBoxAdapter(child: _buildTopBar()),
-            // ─── HERO BANNER CAROUSEL ───
-            SliverToBoxAdapter(child: _buildHeroBanner()),
-            // ─── BANNER DOTS ───
-            SliverToBoxAdapter(child: _buildDots()),
-            // ─── CATEGORY CHIPS ───
-            SliverToBoxAdapter(child: _buildCategoryChips()),
-            // ─── COLORING GRID ───
-            SliverPadding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-              sliver: _buildColoringGrid(),
-            ),
-            SliverToBoxAdapter(child: SizedBox(height: 20.h)),
-          ],
-        ),
+      backgroundColor: Colors.white,
+      body: AnimatedBuilder(
+        animation: Listenable.merge([_introCtrl, _floatCtrl, _sparkleCtrl]),
+        builder: (context, _) {
+          final size = MediaQuery.of(context).size;
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              // Orqa fon rasmi
+              Positioned.fill(
+                child: Image.asset(
+                  'assets/images/landing_bg.png',
+                  fit: BoxFit.cover,
+                ),
+              ),
+              // Sparkle elementlar
+              ..._buildSparkleDecos(size),
+              // Main content
+              SafeArea(child: _buildContent()),
+            ],
+          );
+        },
       ),
     );
   }
 
-  // ═══ TOP BAR ═══
-  Widget _buildTopBar() {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 4.h),
-      child: Row(
+  // ═══ SPARKLE DEKORLARI ═══
+  List<Widget> _buildSparkleDecos(Size size) {
+    final rng = Random(42);
+    final sparkles = <Widget>[];
+    final emojis = ['✨', '⭐', '🌟', '💫', '✨', '⭐', '🌟', '💫'];
+
+    for (int i = 0; i < 8; i++) {
+      final t = (_sparkleCtrl.value + i * 0.125) % 1.0;
+      final opacity = (sin(t * pi) * 0.6).clamp(0.0, 1.0);
+      final scale = 0.7 + sin(t * pi) * 0.4;
+      // Faqat mascot atrofida
+      final angle = (i / 8) * 2 * pi + _sparkleCtrl.value * pi * 0.5;
+      final radius = 130.w + rng.nextDouble() * 50;
+      final cx = size.width / 2 + cos(angle) * radius;
+      final cy = size.height * 0.38 + sin(angle) * radius * 0.7;
+
+      sparkles.add(Positioned(
+        left: cx - 10, top: cy - 10,
+        child: Opacity(
+          opacity: opacity,
+          child: Transform.scale(
+            scale: scale,
+            child: Text(emojis[i], style: TextStyle(fontSize: 14.sp)),
+          ),
+        ),
+      ));
+    }
+    return sparkles;
+  }
+
+  // ═══ MAIN CONTENT ═══
+  Widget _buildContent() {
+    return Column(
+      children: [
+        SizedBox(height: 6.h),
+        // Title — 5-bosqich: chapdan Rangli + o'ngdan Dunyo
+        _buildTitle(),
+        // Mascot — 4-bosqich: tepadan tushadi
+        Expanded(
+          child: _buildMascot(),
+        ),
+        // Game Buttons — alohida animatsiyalar
+        _buildGameButtons(),
+        SizedBox(height: 14.h),
+      ],
+    );
+  }
+
+  // ═══ TITLE — 5-bosqich: Rangli chapdan, Dunyo o'ngdan ═══
+  Widget _buildTitle() {
+    // Rangli chapdan (0.73-0.88)
+    final rangliP = _ease(0.64, 0.80, Curves.easeOutBack);
+    // Dunyo o'ngdan (0.64-0.80)
+    final dunyoP = _ease(0.64, 0.80, Curves.easeOutBack);
+
+    return SizedBox(
+      width: 1.sw,
+      height: 190.h,
+      child: Stack(
         children: [
-          // Back button
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              width: 40.w, height: 40.w,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
-                    blurRadius: 8, offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Icon(Icons.arrow_back_ios_new_rounded, size: 18.sp, color: const Color(0xFF333333)),
-            ),
-          ),
-          SizedBox(width: 12.w),
-          // Title
-          Expanded(
-            child: Text(
-              'Color Fun',
-              style: TextStyle(
-                fontSize: 24.sp,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF2D2D3A),
-                letterSpacing: -0.5,
-              ),
-            ),
-          ),
-          // My Artworks button
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              SoundService().playPop();
-              Navigator.push(context, MaterialPageRoute(
-                builder: (_) => const MyArtworksScreen(),
-              ));
-            },
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF7C4DFF), Color(0xFF536DFE)],
+          // Rangli — chapdan kiradi
+          Opacity(
+            opacity: rangliP.clamp(0.0, 1.0),
+            child: Transform.translate(
+              offset: Offset(-1.sw * (1 - rangliP), 0),
+              child: SizedBox(
+                width: 1.sw,
+                height: 95.h,
+                child: CustomPaint(
+                  painter: _ArcTitlePainter(line: 1),
                 ),
-                borderRadius: BorderRadius.circular(20.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF7C4DFF).withOpacity(0.3),
-                    blurRadius: 8, offset: const Offset(0, 3),
-                  ),
-                ],
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.palette_rounded, size: 16.sp, color: Colors.white),
-                  SizedBox(width: 6.w),
-                  Text('Rasmlarim', style: TextStyle(
-                    fontSize: 12.sp, fontWeight: FontWeight.w600, color: Colors.white,
-                  )),
-                ],
+            ),
+          ),
+          // Dunyo — o'ngdan kiradi
+          Positioned(
+            top: 95.h,
+            left: 0,
+            right: 0,
+            child: Opacity(
+              opacity: dunyoP.clamp(0.0, 1.0),
+              child: Transform.translate(
+                offset: Offset(1.sw * (1 - dunyoP), 0),
+                child: SizedBox(
+                  width: 1.sw,
+                  height: 95.h,
+                  child: CustomPaint(
+                    painter: _ArcTitlePainter(line: 2),
+                  ),
+                ),
               ),
             ),
           ),
@@ -180,246 +207,229 @@ class _ColoringLandingScreenState extends State<ColoringLandingScreen>
     );
   }
 
-  // ═══ HERO BANNER ═══
-  Widget _buildHeroBanner() {
-    final banners = _categoryMeta;
-    return SizedBox(
-      height: 180.h,
-      child: PageView.builder(
-        controller: _bannerCtrl,
-        itemCount: banners.length,
-        onPageChanged: (i) => setState(() => _currentBanner = i),
-        itemBuilder: (ctx, i) {
-          final cat = banners[i];
-          final images = ColoringImages.byCategory(cat.name);
-          return AnimatedBuilder(
-            animation: _bannerCtrl,
-            builder: (ctx, child) {
-              double scale = 1.0;
-              if (_bannerCtrl.position.haveDimensions) {
-                final page = _bannerCtrl.page ?? _currentBanner.toDouble();
-                scale = (1 - (page - i).abs() * 0.08).clamp(0.9, 1.0);
-              }
-              return Transform.scale(
-                scale: scale,
-                child: child,
-              );
-            },
-            child: GestureDetector(
-              onTap: () => _selectCategory(i),
-              child: Container(
-                margin: EdgeInsets.symmetric(horizontal: 4.w, vertical: 10.h),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [cat.color, cat.darkColor],
-                  ),
-                  borderRadius: BorderRadius.circular(20.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: cat.color.withOpacity(0.35),
-                      blurRadius: 15, offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
-                    // Dekorativ doiralar
-                    Positioned(
-                      right: -20.w, top: -20.h,
-                      child: Container(
-                        width: 100.w, height: 100.w,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.1),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      left: -15.w, bottom: -15.h,
-                      child: Container(
-                        width: 70.w, height: 70.w,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.08),
-                        ),
-                      ),
-                    ),
-                    // Content
-                    Padding(
-                      padding: EdgeInsets.all(20.w),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  '${cat.emoji} ${cat.name}',
-                                  style: TextStyle(
-                                    fontSize: 22.sp,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                SizedBox(height: 6.h),
-                                Text(
-                                  '${images.length} ta rasm',
-                                  style: TextStyle(
-                                    fontSize: 13.sp,
-                                    color: Colors.white.withOpacity(0.85),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                SizedBox(height: 10.h),
-                                Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.25),
-                                    borderRadius: BorderRadius.circular(12.r),
-                                  ),
-                                  child: Text(
-                                    'Boshlash →',
-                                    style: TextStyle(
-                                      fontSize: 12.sp,
-                                      fontWeight: FontWeight.w700,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Image preview stack
-                          SizedBox(
-                            width: 110.w,
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                if (images.length > 1)
-                                  Positioned(
-                                    right: 0, top: 10.h,
-                                    child: _miniPreview(images[1], 70.w, 8),
-                                  ),
-                                Positioned(
-                                  left: 0,
-                                  child: _miniPreview(images[0], 85.w, 0),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+  // ═══ MASCOT — 4-bosqich: o'ngdan tangadek aylanib kiradi ═══
+  Widget _buildMascot() {
+    // 4-bosqich: 0.45-0.64
+    final spinP = _ease(0.45, 0.64, Curves.easeOutCubic);
+    final mascotReady = spinP >= 1.0;
+    final floatY = mascotReady ? sin(_floatCtrl.value * pi) * 8 : 0.0;
+    final tilt = mascotReady ? sin(_floatCtrl.value * pi * 1.3) * 0.008 : 0.0;
+
+    // Tanga aylanishi — 2 marta to'liq aylana (4π)
+    final coinSpin = (1 - spinP) * pi * 4;
+    // O'ngdan chapga gorizontal harakat
+    final slideX = (1 - spinP) * 1.sw;
+
+    return Center(
+      child: Opacity(
+        opacity: spinP.clamp(0.0, 1.0),
+        child: Transform.translate(
+          offset: Offset(slideX, floatY - 45.h),
+          child: Transform(
+            alignment: Alignment.center,
+            transform: Matrix4.identity()
+              ..setEntry(3, 2, 0.003) // 3D perspektiv
+              ..rotateY(coinSpin), // Tanga effekti
+            child: Transform.rotate(
+              angle: tilt,
+              child: Transform.scale(
+                scale: (0.3 + spinP * 0.7).clamp(0.0, 1.0),
+                child: Image.asset(
+                  'assets/images/paint_mascot.png',
+                  width: 1.sw,
+                  height: 1.sw,
+                  fit: BoxFit.contain,
                 ),
               ),
             ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _miniPreview(ColoringImageInfo img, double size, double rotation) {
-    return Transform.rotate(
-      angle: rotation * 0.02,
-      child: Container(
-        width: size, height: size,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8, offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        padding: EdgeInsets.all(6.w),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(10.r),
-          child: Image.asset(img.assetPath, fit: BoxFit.contain),
+          ),
         ),
       ),
     );
   }
 
-  // ═══ DOTS ═══
-  Widget _buildDots() {
+  // ═══ GAME BUTTONS — staggered animatsiya ═══
+  Widget _buildGameButtons() {
+    // 1-bosqich Rasmlarim: pastdan (0.00-0.18)
+    final rasmlarimP = _ease(0.00, 0.18, Curves.easeOutBack);
+    // 2-bosqich O'yna: chapdan (0.18-0.36)
+    final oynaP = _ease(0.18, 0.36, Curves.easeOutBack);
+    // 3-bosqich Yangilar: o'ngdan (0.36-0.45)
+    final yangilarP = _ease(0.36, 0.45, Curves.easeOutBack);
+
     return Padding(
-      padding: EdgeInsets.only(top: 4.h, bottom: 8.h),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(_categoryMeta.length, (i) {
-          final isActive = i == _currentBanner;
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            margin: EdgeInsets.symmetric(horizontal: 3.w),
-            width: isActive ? 20.w : 6.w,
-            height: 6.w,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(3.r),
-              color: isActive
-                  ? _categoryMeta[i].color
-                  : const Color(0xFFD0D0D0),
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      child: Column(
+        children: [
+          // 1-qator: O'yna + Yangilar
+          SizedBox(
+            height: 62.h,
+            child: Row(
+              children: [
+                // O'YNA — chapdan kiradi (2-bosqich)
+                Expanded(
+                  flex: 5,
+                  child: Opacity(
+                    opacity: oynaP.clamp(0.0, 1.0),
+                    child: Transform.translate(
+                      offset: Offset(-1.sw * (1 - oynaP), 0),
+                      child: _capsuleButton(
+                        label: "O'yna",
+                        icon: '',
+                        iconRight: true,
+                        bgColors: [const Color(0xFF9AE84E), const Color(0xFF6BC72F)],
+                        bottomColor: const Color(0xFF3E8C1E),
+                        fontSize: 26.sp,
+                        iconSize: 22.sp,
+                        onTap: () => _navigate(const ColoringBrowseScreen()),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                // YANGILAR — o'ngdan kiradi (3-bosqich)
+                Expanded(
+                  flex: 4,
+                  child: Opacity(
+                    opacity: yangilarP.clamp(0.0, 1.0),
+                    child: Transform.translate(
+                      offset: Offset(1.sw * (1 - yangilarP), 0),
+                      child: _capsuleButton(
+                        label: 'Yangilar',
+                        icon: '',
+                        iconRight: false,
+                        bgColors: [const Color(0xFFFFBB5C), const Color(0xFFF59E20)],
+                        bottomColor: const Color(0xFFCC7A10),
+                        fontSize: 19.sp,
+                        iconSize: 16.sp,
+                        onTap: () => _navigate(const ColoringGalleryScreen()),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          );
-        }),
+          ),
+          SizedBox(height: 12.h),
+          // 2-qator: Rasmlarim — pastdan kiradi (1-bosqich)
+          SizedBox(
+            height: 56.h,
+            child: FractionallySizedBox(
+              widthFactor: 0.72,
+              child: Opacity(
+                opacity: rasmlarimP.clamp(0.0, 1.0),
+                child: Transform.translate(
+                  offset: Offset(0, 150.h * (1 - rasmlarimP)),
+                  child: _capsuleButton(
+                    label: 'Rasmlarim',
+                    icon: '',
+                    iconRight: true,
+                    bgColors: [const Color(0xFFC289E8), const Color(0xFF9B5CC5)],
+                    bottomColor: const Color(0xFF6D3A96),
+                    fontSize: 20.sp,
+                    iconSize: 18.sp,
+                    onTap: () => _navigate(const MyArtworksScreen()),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // ═══ CATEGORY CHIPS ═══
-  Widget _buildCategoryChips() {
-    return SizedBox(
-      height: 48.h,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: 14.w),
-        itemCount: _categoryMeta.length,
-        itemBuilder: (ctx, i) {
-          final cat = _categoryMeta[i];
-          final isSelected = i == _selectedCategoryIdx;
-          return Padding(
-            padding: EdgeInsets.symmetric(horizontal: 4.w),
-            child: GestureDetector(
-              onTap: () => _selectCategory(i),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeOutCubic,
-                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
-                decoration: BoxDecoration(
-                  color: isSelected ? cat.color : Colors.white,
-                  borderRadius: BorderRadius.circular(20.r),
-                  border: Border.all(
-                    color: isSelected ? cat.color : const Color(0xFFE0E0E0),
-                    width: 1.5,
-                  ),
-                  boxShadow: isSelected ? [
-                    BoxShadow(
-                      color: cat.color.withOpacity(0.3),
-                      blurRadius: 8, offset: const Offset(0, 3),
-                    ),
-                  ] : null,
+  /// Capsule-shakldagi o'yin tugmasi — skrinshot 1:1
+  Widget _capsuleButton({
+    required String label,
+    required String icon,
+    required bool iconRight,
+    required List<Color> bgColors,
+    required Color bottomColor,
+    required VoidCallback onTap,
+    required double fontSize,
+    required double iconSize,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.mediumImpact();
+        SoundService().playPop();
+        onTap();
+      },
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final h = constraints.maxHeight;
+          return Container(
+            decoration: BoxDecoration(
+              // Pastki 3D soya — to'q rang
+              color: bottomColor,
+              borderRadius: BorderRadius.circular(h / 2),
+            ),
+            padding: EdgeInsets.only(bottom: 4.h),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: bgColors,
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(cat.emoji, style: TextStyle(fontSize: 16.sp)),
-                    SizedBox(width: 6.w),
-                    Text(
-                      cat.name,
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        fontWeight: FontWeight.w600,
-                        color: isSelected ? Colors.white : const Color(0xFF555555),
+                borderRadius: BorderRadius.circular(h / 2),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.65),
+                  width: 3.5,
+                ),
+              ),
+              child: Stack(
+                children: [
+                  // Tepada yorqin shimmer highlight
+                  Positioned(
+                    top: 4.h,
+                    left: h * 0.3,
+                    right: h * 0.3,
+                    child: Container(
+                      height: 4.h,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4.r),
+                        color: Colors.white.withValues(alpha: 0.35),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  // Matn + icon
+                  Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (!iconRight)
+                          Text(icon, style: TextStyle(
+                            fontSize: iconSize,
+                            color: Colors.white,
+                          )),
+                        Text(
+                          label,
+                          style: TextStyle(
+                            fontSize: fontSize,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withValues(alpha: 0.15),
+                                blurRadius: 2,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (iconRight)
+                          Text(icon, style: TextStyle(
+                            fontSize: iconSize,
+                            color: Colors.white,
+                          )),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           );
@@ -428,148 +438,317 @@ class _ColoringLandingScreenState extends State<ColoringLandingScreen>
     );
   }
 
-  // ═══ COLORING GRID ═══
-  SliverGrid _buildColoringGrid() {
-    return SliverGrid.builder(
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.85,
-        crossAxisSpacing: 12.w,
-        mainAxisSpacing: 12.h,
-      ),
-      itemCount: _filteredImages.length,
-      itemBuilder: (ctx, i) {
-        final img = _filteredImages[i];
+  void _navigate(Widget page) {
+    Navigator.push(context, PageRouteBuilder(
+      pageBuilder: (_, __, ___) => page,
+      transitionsBuilder: (_, anim, __, child) {
         return FadeTransition(
-          opacity: _fadeCtrl,
-          child: SlideTransition(
-            position: Tween<Offset>(
-              begin: Offset(0, 0.15 + i * 0.03),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOutCubic)),
-            child: _buildImageCard(img, i + 1),
+          opacity: anim,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.93, end: 1.0).animate(
+              CurvedAnimation(parent: anim, curve: Curves.easeOutCubic),
+            ),
+            child: child,
           ),
         );
       },
-    );
-  }
-
-  Widget _buildImageCard(ColoringImageInfo img, int number) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        SoundService().playPop();
-        Navigator.push(context, MaterialPageRoute(
-          builder: (_) => ColoringScreen(imageInfo: img),
-        ));
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 12, offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            // Image
-            Expanded(
-              child: Stack(
-                children: [
-                  // Main image
-                  Positioned.fill(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
-                      child: Padding(
-                        padding: EdgeInsets.all(12.w),
-                        child: Image.asset(img.assetPath, fit: BoxFit.contain),
-                      ),
-                    ),
-                  ),
-                  // Number badge
-                  Positioned(
-                    top: 8.h, left: 8.w,
-                    child: Container(
-                      width: 28.w, height: 28.w,
-                      decoration: BoxDecoration(
-                        color: _categoryMeta[_selectedCategoryIdx].color.withOpacity(0.15),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Text(
-                          '$number',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w700,
-                            color: _categoryMeta[_selectedCategoryIdx].color,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Difficulty stars
-                  Positioned(
-                    top: 8.h, right: 8.w,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: List.generate(3, (si) => Icon(
-                        si < img.difficulty ? Icons.star_rounded : Icons.star_border_rounded,
-                        size: 14.sp,
-                        color: si < img.difficulty
-                            ? const Color(0xFFFFB300)
-                            : const Color(0xFFD0D0D0),
-                      )),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Bottom info
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF5F6FA),
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(16.r)),
-              ),
-              child: Row(
-                children: [
-                  Text(img.emoji, style: TextStyle(fontSize: 16.sp)),
-                  SizedBox(width: 6.w),
-                  Expanded(
-                    child: Text(
-                      img.name,
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF333333),
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  Icon(
-                    Icons.play_circle_filled_rounded,
-                    size: 20.sp,
-                    color: _categoryMeta[_selectedCategoryIdx].color,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+      transitionDuration: const Duration(milliseconds: 400),
+    ));
   }
 }
 
-/// Kategoriya meta ma'lumotlari
-class _CatMeta {
-  final String name;
-  final String emoji;
-  final Color color;
-  final Color darkColor;
-  const _CatMeta(this.name, this.emoji, this.color, this.darkColor);
+// ═══════════════════════════════════════════════════════════
+// DOODLE PAINTER — ochiq kulrang chiziqlar orqa fonda
+// ═══════════════════════════════════════════════════════════
+class _DoodlePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFFCCCCCC).withValues(alpha: 0.55)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.8
+      ..strokeCap = StrokeCap.round;
+
+    final rng = Random(123);
+    final w = size.width;
+    final h = size.height;
+
+    // Yulduzchalar — ko'proq va kattaroq
+    _drawStar(canvas, Offset(w * 0.10, h * 0.06), 14, paint);
+    _drawStar(canvas, Offset(w * 0.88, h * 0.10), 12, paint);
+    _drawStar(canvas, Offset(w * 0.06, h * 0.48), 10, paint);
+    _drawStar(canvas, Offset(w * 0.92, h * 0.42), 13, paint);
+    _drawStar(canvas, Offset(w * 0.50, h * 0.04), 11, paint);
+    _drawStar(canvas, Offset(w * 0.20, h * 0.30), 8, paint);
+    _drawStar(canvas, Offset(w * 0.80, h * 0.55), 9, paint);
+    _drawStar(canvas, Offset(w * 0.35, h * 0.68), 7, paint);
+
+    // Yurakchalar
+    _drawHeart(canvas, Offset(w * 0.85, h * 0.06), 12, paint);
+    _drawHeart(canvas, Offset(w * 0.06, h * 0.22), 10, paint);
+    _drawHeart(canvas, Offset(w * 0.93, h * 0.58), 11, paint);
+    _drawHeart(canvas, Offset(w * 0.70, h * 0.03), 8, paint);
+
+    // Mushukcha yuzlar
+    _drawCat(canvas, Offset(w * 0.90, h * 0.18), 16, paint);
+    _drawCat(canvas, Offset(w * 0.08, h * 0.65), 14, paint);
+
+    // Nota belgilari
+    _drawNote(canvas, Offset(w * 0.04, h * 0.12), 12, paint);
+    _drawNote(canvas, Offset(w * 0.96, h * 0.32), 10, paint);
+
+    // Kichik doiralar — ko'proq
+    for (int i = 0; i < 15; i++) {
+      final x = rng.nextDouble() * w;
+      final y = rng.nextDouble() * h;
+      canvas.drawCircle(Offset(x, y), 1.5 + rng.nextDouble() * 3, paint);
+    }
+
+    // Bo'yoq tomchilari
+    _drawDrop(canvas, Offset(w * 0.15, h * 0.38), 10, paint);
+    _drawDrop(canvas, Offset(w * 0.87, h * 0.48), 8, paint);
+    _drawDrop(canvas, Offset(w * 0.06, h * 0.82), 9, paint);
+    _drawDrop(canvas, Offset(w * 0.75, h * 0.70), 7, paint);
+  }
+
+  void _drawStar(Canvas canvas, Offset c, double r, Paint paint) {
+    final path = Path();
+    for (int i = 0; i < 5; i++) {
+      final outerAngle = (i * 72 - 90) * pi / 180;
+      final innerAngle = ((i * 72) + 36 - 90) * pi / 180;
+      final ox = c.dx + cos(outerAngle) * r;
+      final oy = c.dy + sin(outerAngle) * r;
+      final ix = c.dx + cos(innerAngle) * r * 0.4;
+      final iy = c.dy + sin(innerAngle) * r * 0.4;
+      if (i == 0) {
+        path.moveTo(ox, oy);
+      } else {
+        path.lineTo(ox, oy);
+      }
+      path.lineTo(ix, iy);
+    }
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
+  void _drawHeart(Canvas canvas, Offset c, double s, Paint paint) {
+    final path = Path();
+    path.moveTo(c.dx, c.dy + s * 0.35);
+    path.cubicTo(c.dx - s, c.dy - s * 0.5, c.dx - s * 0.3, c.dy - s, c.dx, c.dy - s * 0.4);
+    path.cubicTo(c.dx + s * 0.3, c.dy - s, c.dx + s, c.dy - s * 0.5, c.dx, c.dy + s * 0.35);
+    canvas.drawPath(path, paint);
+  }
+
+  void _drawCat(Canvas canvas, Offset c, double s, Paint paint) {
+    // Yuz
+    canvas.drawCircle(c, s, paint);
+    // Quloqlar
+    final path = Path();
+    path.moveTo(c.dx - s * 0.7, c.dy - s * 0.5);
+    path.lineTo(c.dx - s * 0.4, c.dy - s * 1.2);
+    path.lineTo(c.dx - s * 0.1, c.dy - s * 0.6);
+    canvas.drawPath(path, paint);
+    final path2 = Path();
+    path2.moveTo(c.dx + s * 0.7, c.dy - s * 0.5);
+    path2.lineTo(c.dx + s * 0.4, c.dy - s * 1.2);
+    path2.lineTo(c.dx + s * 0.1, c.dy - s * 0.6);
+    canvas.drawPath(path2, paint);
+    // Ko'zlar
+    final fill = Paint()..color = paint.color..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(c.dx - s * 0.35, c.dy - s * 0.15), s * 0.12, fill);
+    canvas.drawCircle(Offset(c.dx + s * 0.35, c.dy - s * 0.15), s * 0.12, fill);
+    // Og'iz
+    final smile = Path();
+    smile.moveTo(c.dx - s * 0.15, c.dy + s * 0.2);
+    smile.quadraticBezierTo(c.dx, c.dy + s * 0.4, c.dx + s * 0.15, c.dy + s * 0.2);
+    canvas.drawPath(smile, paint);
+  }
+
+  void _drawNote(Canvas canvas, Offset c, double s, Paint paint) {
+    // Nota boshi
+    canvas.drawOval(Rect.fromCenter(center: c, width: s, height: s * 0.7), paint);
+    // Poya
+    canvas.drawLine(Offset(c.dx + s * 0.4, c.dy), Offset(c.dx + s * 0.4, c.dy - s * 1.5), paint);
+    // Bayroqcha
+    final flag = Path();
+    flag.moveTo(c.dx + s * 0.4, c.dy - s * 1.5);
+    flag.quadraticBezierTo(c.dx + s * 1.2, c.dy - s * 1.2, c.dx + s * 0.4, c.dy - s * 0.8);
+    canvas.drawPath(flag, paint);
+  }
+
+  void _drawDrop(Canvas canvas, Offset c, double s, Paint paint) {
+    final path = Path();
+    path.moveTo(c.dx, c.dy - s);
+    path.quadraticBezierTo(c.dx + s * 0.8, c.dy + s * 0.3, c.dx, c.dy + s * 0.6);
+    path.quadraticBezierTo(c.dx - s * 0.8, c.dy + s * 0.3, c.dx, c.dy - s);
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _DoodlePainter old) => false;
+}
+// ═══════════════════════════════════════════════════════════
+// ARC TITLE PAINTER — haqiqiy doira yoyi (circular arc)
+// ═══════════════════════════════════════════════════════════
+class _ArcTitlePainter extends CustomPainter {
+  final int line; // 0=ikkalasi, 1=faqat Rangli, 2=faqat Dunyo
+  _ArcTitlePainter({this.line = 0});
+
+  // 1-qator
+  static const _line1 = 'Rangli';
+  static const _colors1 = [
+    Color(0xFFFF5A5F), // R
+    Color(0xFFFF9F43), // a
+    Color(0xFFFECA57), // n
+    Color(0xFF2ED573), // g
+    Color(0xFF45AAF2), // l
+    Color(0xFFA55EEA), // i
+  ];
+
+  // 2-qator
+  static const _line2 = 'Dunyo';
+  static const _colors2 = [
+    Color(0xFF45AAF2), // D
+    Color(0xFF2ED573), // u
+    Color(0xFFFECA57), // n
+    Color(0xFFFF9F43), // y
+    Color(0xFFFF5A5F), // o
+  ];
+
+  static const _outlineColor = Color(0xFF3D3270);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final fontSize = size.width * 0.21;
+    final outlineWidth = fontSize * 0.09;
+    final cx = size.width / 2;
+    final R = size.width * 0.85;
+
+    if (line == 0 || line == 1) {
+      // "Rangli" — bitta SizedBox ichida, markazda
+      final cyR = (line == 1) ? size.height * 0.50 + R : size.height * 0.30 + R;
+      _drawCircularArc(
+        canvas,
+        word: _line1, colors: _colors1,
+        cx: cx, cy: cyR, R: R,
+        fontSize: fontSize, outlineWidth: outlineWidth,
+      );
+    }
+
+    if (line == 0 || line == 2) {
+      // "Dunyo" — bitta SizedBox ichida, markazda
+      final cyD = (line == 2) ? size.height * 0.50 + R : size.height * 0.74 + R;
+      _drawCircularArc(
+        canvas,
+        word: _line2, colors: _colors2,
+        cx: cx, cy: cyD, R: R,
+        fontSize: fontSize, outlineWidth: outlineWidth,
+      );
+    }
+  }
+
+  /// Haqiqiy doira yoyi bo'ylab so'zni chizish
+  /// cx, cy — doira markazi
+  /// R — doira radiusi
+  /// Har bir harf doira bo'ylab θ burchakda joylashadi:
+  ///   x = cx + R * sin(θ)
+  ///   y = cy - R * cos(θ)
+  /// Harf θ burchakka moslashtiriladi (tangent yo'nalishi)
+  void _drawCircularArc(
+    Canvas canvas, {
+    required String word,
+    required List<Color> colors,
+    required double cx,
+    required double cy,
+    required double R,
+    required double fontSize,
+    required double outlineWidth,
+  }) {
+    // 1. Har bir harfni o'lchab, ularning kengliklari ro'yxatini olish
+    final widths = <double>[];
+    final tps = <TextPainter>[];
+    for (int i = 0; i < word.length; i++) {
+      final tp = TextPainter(
+        text: TextSpan(
+          text: word[i],
+          style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w900),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      tps.add(tp);
+      widths.add(tp.width);
+    }
+
+    // 2. Umumiy matn kengligi
+    double totalWidth = 0;
+    for (final w in widths) {
+      totalWidth += w;
+    }
+
+    // 3. Har bir harfning burchagini hisoblash
+    //    Harf kengligi -> doira yoyi uzunligi -> burchak
+    //    arcLength = R * angle  ->  angle = arcLength / R
+    final totalAngle = totalWidth / R; // umumiy yoy burchagi (radianda)
+    final startAngle = -totalAngle / 2; // chapdan boshlash
+
+    // 4. Har bir harfni doira yoyi bo'ylab joylashtirish
+    double currentAngle = startAngle;
+
+    for (int i = 0; i < word.length; i++) {
+      final tp = tps[i];
+      final letterAngle = widths[i] / R; // bu harfning burchak uzunligi
+      final theta = currentAngle + letterAngle / 2; // harfning markaz burchagi
+
+      // Doiradagi pozitsiya:
+      //   x = cx + R * sin(theta)
+      //   y = cy - R * cos(theta)
+      final x = cx + R * sin(theta);
+      final y = cy - R * cos(theta);
+
+      canvas.save();
+      canvas.translate(x, y);
+      canvas.rotate(theta); // harfni yoyga mos burib qo'yish
+
+      final color = colors[i % colors.length];
+
+      // ══ OUTLINE (stroke) ══
+      final outlineTp = TextPainter(
+        text: TextSpan(
+          text: word[i],
+          style: TextStyle(
+            fontSize: fontSize,
+            fontWeight: FontWeight.w900,
+            foreground: Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = outlineWidth
+              ..color = _outlineColor,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      outlineTp.paint(canvas, Offset(-tp.width / 2, -tp.height / 2));
+
+      // ══ FILL (rangli) ══
+      final fillTp = TextPainter(
+        text: TextSpan(
+          text: word[i],
+          style: TextStyle(
+            fontSize: fontSize,
+            fontWeight: FontWeight.w900,
+            color: color,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      fillTp.paint(canvas, Offset(-tp.width / 2, -tp.height / 2));
+
+      canvas.restore();
+
+      // Keyingi harfga o'tish
+      currentAngle += letterAngle;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ArcTitlePainter old) => old.line != line;
 }
