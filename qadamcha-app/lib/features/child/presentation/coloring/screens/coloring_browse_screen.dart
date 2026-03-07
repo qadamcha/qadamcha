@@ -71,7 +71,7 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
     // Ketma-ket animatsiya intervallari
     _topBarAnim = CurvedAnimation(
       parent: _introCtrl,
-      curve: const Interval(0.0, 0.3, curve: Curves.easeOutBack),
+      curve: const Interval(0.0, 0.3, curve: Curves.easeOut),
     );
     _bannerAnim = CurvedAnimation(
       parent: _introCtrl,
@@ -83,7 +83,7 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
     );
     _chipsAnim = CurvedAnimation(
       parent: _introCtrl,
-      curve: const Interval(0.4, 0.7, curve: Curves.easeOutBack),
+      curve: const Interval(0.4, 0.7, curve: Curves.easeOut),
     );
     _gridAnim = CurvedAnimation(
       parent: _introCtrl,
@@ -172,9 +172,9 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
   // ═══ TOP BAR — tepadan slide + fade ═══
   Widget _buildTopBar() {
     return Transform.translate(
-      offset: Offset(0, -30 * (1 - _topBarAnim.value)),
+      offset: Offset(0, -30 * (1 - _topBarAnim.value.clamp(0.0, 1.0))),
       child: Opacity(
-        opacity: _topBarAnim.value,
+        opacity: _topBarAnim.value.clamp(0.0, 1.0),
         child: Padding(
           padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 4.h),
           child: Row(
@@ -489,9 +489,9 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
   // ═══ CATEGORY CHIPS — bounce in + scale on select ═══
   Widget _buildCategoryChips() {
     return Transform.translate(
-      offset: Offset(0, 20 * (1 - _chipsAnim.value)),
+      offset: Offset(0, 20 * (1 - _chipsAnim.value.clamp(0.0, 1.0))),
       child: Opacity(
-        opacity: _chipsAnim.value,
+        opacity: _chipsAnim.value.clamp(0.0, 1.0),
         child: SizedBox(
           height: 48.h,
           child: ListView.builder(
@@ -569,7 +569,7 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
   Widget _buildSectionTitle() {
     final cat = _categoryMeta[_selectedCategoryIdx];
     return Opacity(
-      opacity: _gridAnim.value,
+      opacity: _gridAnim.value.clamp(0.0, 1.0),
       child: Padding(
         padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 2.h),
         child: AnimatedSwitcher(
@@ -636,7 +636,7 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
         final delay = (i * 0.06).clamp(0.0, 0.5);
         final itemAnim = CurvedAnimation(
           parent: _gridChangeCtrl,
-          curve: Interval(delay, (delay + 0.5).clamp(0.0, 1.0), curve: Curves.easeOutBack),
+          curve: Interval(delay, (delay + 0.5).clamp(0.0, 1.0), curve: Curves.easeOutCubic),
         );
         
         return AnimatedBuilder(
