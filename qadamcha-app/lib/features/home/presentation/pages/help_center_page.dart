@@ -15,6 +15,7 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
   int _selectedCategoryIndex = 0;
 
   static const _categories = [
+    // ═══ 1. UMUMIY ═══
     _FaqCategory(
       emoji: '📋',
       title: 'Umumiy',
@@ -23,30 +24,211 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
         _FaqItem(
           question: 'Qadamcha nima?',
           answer:
-              'Qadamcha — bu ota-onalar uchun bolalarning raqamli vaqtini '
-              'boshqarish ilovasi. Ilova orqali siz farzandingizning '
-              'qurilmada o\'tkazayotgan vaqtini kuzatishingiz, kontentni '
-              'boshqarishingiz va foydali ta\'limiy materiallar taqdim '
-              'etishingiz mumkin.',
+              'Qadamcha — bu ota-onalar uchun mo\'ljallangan bolalar nazorati '
+              'va ta\'lim ilovasi. Ilova orqali siz:\n\n'
+              '• 📱 Farzandingiz qurilmasini masofadan boshqarasiz\n'
+              '• ⏰ Ekran vaqtini kuzatasiz va cheklaysiz\n'
+              '• 🎨 Bo\'yash o\'yini orqali ijodiy mashq berasiz\n'
+              '• 🤖 Bilimdon AI yordamchisi bilan bola savol-javob qiladi\n'
+              '• 📚 Ta\'limiy video va hikoyalar tomosha qildirarsiz',
         ),
         _FaqItem(
-          question: 'Ilovadan qanday foydalanaman?',
+          question: 'Qadamchadan qanday foydalanaman?',
           answer:
-              '1. Telefon raqamingiz orqali ro\'yxatdan o\'ting\n'
-              '2. PIN kod yarating\n'
-              '3. Farzandingiz profilini qo\'shing\n'
-              '4. QR kod orqali bola qurilmasini ulang\n'
-              '5. Monitoring va kontent boshqaruvidan foydalaning',
+              '1️⃣ Telefon raqamingiz orqali ro\'yxatdan o\'ting\n'
+              '2️⃣ SMS tasdiqlash kodini kiriting\n'
+              '3️⃣ PIN kod yarating (4 raqamli)\n'
+              '4️⃣ Farzandingiz profilini qo\'shing (ism, tug\'ilgan yil)\n'
+              '5️⃣ Bola qurilmasiga Qadamcha ilovasini o\'rnating\n'
+              '6️⃣ QR kod orqali qurilmani ulang\n'
+              '7️⃣ Monitoring avtomatik ishlaydi!',
         ),
         _FaqItem(
           question: 'Ilova qaysi qurilmalarda ishlaydi?',
           answer:
-              'Qadamcha Android (5.0+) va iOS (13.0+) qurilmalarida '
-              'ishlaydi. Ota-ona va bola qurilmalari turli platformalardan '
-              'bo\'lishi mumkin.',
+              '📱 Android: 5.0 (Lollipop) va undan yuqori\n'
+              '🍎 iOS: 13.0 va undan yuqori\n\n'
+              'Ota-ona va bola qurilmalari turli platformalardan '
+              'bo\'lishi mumkin (masalan, ota-ona iPhone, bola Samsung).\n\n'
+              '💡 Eng yaxshi natija uchun qurilmalar so\'nggi versiyaga '
+              'yangilangan bo\'lishi tavsiya etiladi.',
+        ),
+        _FaqItem(
+          question: 'Bir nechta bola profilini qo\'shish mumkinmi?',
+          answer:
+              'Ha! Siz bir nechta bola profilini qo\'shishingiz mumkin:\n\n'
+              '• Asosiy sahifadan \"+ Bola qo\'shish\" tugmasini bosing\n'
+              '• Har bir bola uchun alohida ism va tug\'ilgan yil kiriting\n'
+              '• Har bir bola uchun alohida qurilma ulashingiz mumkin\n'
+              '• Profillar orasida osongina almashish mumkin\n\n'
+              '📌 Bola profillari soni obuna rejangizga bog\'liq.',
         ),
       ],
     ),
+
+    // ═══ 2. MONITORING ═══
+    _FaqCategory(
+      emoji: '👁️',
+      title: 'Monitoring',
+      color: Color(0xFF7C4DFF),
+      questions: [
+        _FaqItem(
+          question: 'Monitoring qanday ishlaydi?',
+          answer:
+              'Qadamcha bola qurilmasidagi faoliyatni avtomatik kuzatadi:\n\n'
+              '📊 Kuzatiladigan ma\'lumotlar:\n'
+              '• Ekran vaqti — kunlik va haftalik statistika\n'
+              '• Qaysi ilovalar qancha vaqt ishlatilgani\n'
+              '• Ilova foydalanish vaqtlari\n\n'
+              '⏰ Vaqt cheklovlari:\n'
+              '• Kunlik ekran vaqtini belgilash mumkin\n'
+              '• Muddat tugaganda bola bildirishnoma oladi\n\n'
+              '💡 Ma\'lumotlar har 2 daqiqada serverga yuboriladi.',
+        ),
+        _FaqItem(
+          question: 'Bola monitoring haqida biladimi?',
+          answer:
+              'Ha, Qadamcha ochiq nazorat tamoyilida ishlaydi. Bola '
+              'qurilmasida Qadamcha ilovasi o\'rnatilgan va bola bu haqda '
+              'biladi.\n\n'
+              'Psixologlar tavsiyasi: bolaga monitoring maqsadini '
+              'tushuntiring — bu nazorat emas, balki xavfsizlik uchun.',
+        ),
+        _FaqItem(
+          question: 'Monitoring ishlamay qolsa nima qilay?',
+          answer:
+              'Monitoring to\'xtab qolishining sabablari:\n\n'
+              '• 📡 Bola qurilmasida internet yo\'q\n'
+              '• 🔋 Bola qurilmasi o\'chirilgan\n'
+              '• ⚙️ Qadamcha ilovasi fonda ishlashi cheklangan\n\n'
+              'Tuzatish:\n'
+              '1. Bola qurilmasida internetni tekshiring\n'
+              '2. Qadamcha ilovasining \"fonda ishlash\" ruxsatini yoqing\n'
+              '3. Batareya optimallashtiruvchidan Qadamchani istisno qiling\n'
+              '4. Ilovani so\'nggi versiyaga yangilang',
+        ),
+        _FaqItem(
+          question: 'Monitoring ma\'lumotlari qancha vaqt saqlanadi?',
+          answer:
+              'Monitoring statistikasi quyidagicha saqlanadi:\n\n'
+              '• Kunlik hisobot — 90 kun\n'
+              '• Haftalik hisobot — 12 hafta\n'
+              '• Umumiy statistika — obuna davomida\n\n'
+              'Hisob o\'chirilganda barcha ma\'lumotlar 30 kun ichida '
+              'butunlay yo\'q qilinadi.',
+        ),
+      ],
+    ),
+
+    // ═══ 3. BO'YASH VA AI ═══
+    _FaqCategory(
+      emoji: '🎨',
+      title: 'Bo\'yash & AI',
+      color: Color(0xFFFF6D00),
+      questions: [
+        _FaqItem(
+          question: 'Bo\'yash o\'yini qanday ishlaydi?',
+          answer:
+              'Qadamcha ichida 70+ bo\'yash rasmi mavjud, 5 ta kategoriyada:\n\n'
+              '🐾 Hayvonlar — mushuk, it, fil va boshqalar\n'
+              '🚗 Mashinalar — mashina, samolyot, raketa\n'
+              '🍎 Mevalar — olma, banan, tarvuz\n'
+              '🌿 Tabiat — daraxt, quyosh, kamalak\n'
+              '🥬 Poliz mevalari — pomidor, sabzi, qovoq\n\n'
+              'Bola rasmni tanlab, qalamchalar bilan bo\'yaydi. '
+              'Bo\'yalgan rasmlarni saqlash va galereyada ko\'rish mumkin.',
+        ),
+        _FaqItem(
+          question: 'Bo\'yalgan rasmlar qaerda saqlanadi?',
+          answer:
+              'Bo\'yalgan rasmlar faqat mahalliy qurilmada saqlanadi '
+              '(serverga yuborilmaydi).\n\n'
+              '• \"Rasmlarim\" bo\'limida barcha saqlangan rasmlarni ko\'rishingiz mumkin\n'
+              '• Rasmlarni o\'chirish ham mumkin\n'
+              '• Ilovani o\'chirsangiz, rasmlar ham o\'chadi\n\n'
+              '💡 Muhim rasmlarni telefon galereyasiga eksport qilish tavsiya etiladi.',
+        ),
+        _FaqItem(
+          question: 'Bilimdon AI nima?',
+          answer:
+              'Bilimdon AI — bu bolalar uchun maxsus yaratilgan sun\'iy '
+              'intellekt yordamchisi.\n\n'
+              '🤖 Imkoniyatlari:\n'
+              '• Bolaning istalgan savoliga tushunarli javob beradi\n'
+              '• Matematika, fan, tabiat haqida o\'rgatadi\n'
+              '• Hikoyalar aytib beradi\n'
+              '• Bolaning yoshiga mos tilda gaplashadi\n\n'
+              '🛡️ Xavfsizlik:\n'
+              '• Noto\'g\'ri yoki zararli kontentga ruxsat bermaydi\n'
+              '• Shaxsiy ma\'lumotlarni so\'ramaydi\n'
+              '• Ota-ona chat tarixini ko\'ra oladi',
+        ),
+        _FaqItem(
+          question: 'AI chat tarixi saqlanadimi?',
+          answer:
+              'Ha, Bilimdon AI bilan suhbat tarixi 30 kun saqlanadi.\n\n'
+              '• Ota-ona istalgan vaqtda chat tarixini ko\'rishi mumkin\n'
+              '• Chat tarixini tozalash mumkin\n'
+              '• 30 kundan eski xabarlar avtomatik o\'chiriladi\n\n'
+              'AI bolaning shaxsiy ma\'lumotlarini saqlamaydi va '
+              'uchinchi tomonlarga bermaydi.',
+        ),
+      ],
+    ),
+
+    // ═══ 4. QURILMA ═══
+    _FaqCategory(
+      emoji: '📱',
+      title: 'Qurilma',
+      color: Color(0xFF22C55E),
+      questions: [
+        _FaqItem(
+          question: 'Bola qurilmasini qanday ulash mumkin?',
+          answer:
+              'Qurilma ulash jarayoni:\n\n'
+              '1️⃣ Ota-ona ilovasidan \"Qurilma qo\'shish\" tugmasini bosing\n'
+              '2️⃣ Ekranda QR kod paydo bo\'ladi\n'
+              '3️⃣ Bola qurilmasida Qadamcha ilovasini o\'rnating\n'
+              '4️⃣ Bola ilovasida \"QR kod skanerlash\" tugmasini bosing\n'
+              '5️⃣ QR kodni skanerlang — qurilma avtomatik ulanadi\n\n'
+              '⚠️ Ikkala qurilma ham internetga ulangan bo\'lishi kerak.',
+        ),
+        _FaqItem(
+          question: 'Nechta qurilma ulash mumkin?',
+          answer:
+              'Qurilmalar soni obuna rejangizga bog\'liq.\n\n'
+              'Qurilmalar ro\'yxatini va limitini Sozlamalar > '
+              'Qurilmalarni boshqarish bo\'limida ko\'rishingiz mumkin.\n\n'
+              '💡 Qo\'shimcha qurilma qo\'shish uchun obunangizni '
+              'yuqori rejaga o\'tkazishingiz mumkin.',
+        ),
+        _FaqItem(
+          question: 'Qurilma ulanmayapti, nima qilay?',
+          answer:
+              'Agar qurilma ulanmasa:\n\n'
+              '1. ✅ Ikkala qurilmada internet borligini tekshiring\n'
+              '2. ✅ QR kodni yangilab, qayta skanerlang\n'
+              '3. ✅ Ilovani so\'nggi versiyaga yangilang\n'
+              '4. ✅ Qurilmani qayta ishga tushiring\n'
+              '5. ✅ VPN yoqilgan bo\'lsa, o\'chiring\n\n'
+              '🔄 Qurilma ulashda muammo davom etsa, '
+              'qurilmani ro\'yxatdan o\'chirib qayta ulang.\n\n'
+              'Muammo hal bo\'lmasa — support@qadamcha.uz ga yozing.',
+        ),
+        _FaqItem(
+          question: 'Qurilmani ro\'yxatdan o\'chirish mumkinmi?',
+          answer:
+              'Ha, istalgan vaqtda:\n\n'
+              '1. Sozlamalar > Qurilmalarni boshqarish\n'
+              '2. Kerakli qurilmani tanlang\n'
+              '3. \"O\'chirish\" tugmasini bosing\n\n'
+              'O\'chirilgan qurilma monitoring to\'xtatiladi. '
+              'Qayta ulash uchun QR kodni skanerlash kerak bo\'ladi.',
+        ),
+      ],
+    ),
+
+    // ═══ 5. OBUNA VA TO'LOV ═══
     _FaqCategory(
       emoji: '👑',
       title: 'Obuna',
@@ -56,82 +238,54 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
           question: 'Obuna turlari qanday?',
           answer:
               'Qadamcha quyidagi obuna turlarini taklif etadi:\n\n'
-              '• Oylik obuna — 1 oy muddatga\n'
-              '• 3 oylik obuna — tejamkor variant\n'
-              '• Yillik obuna — eng foydali narx\n\n'
-              'Barcha obunalar bir xil funksiyalarni taqdim etadi.',
+              '📅 Oylik — 1 oy muddatga\n'
+              '📅 3 oylik — tejamkor variant (oyiga arzonroq)\n'
+              '📅 Yillik — eng foydali narx (katta chegirma)\n\n'
+              '💎 Barcha rejalarda:\n'
+              '• To\'liq monitoring\n'
+              '• Bo\'yash o\'yini\n'
+              '• Bilimdon AI chat\n'
+              '• Ta\'limiy kontent (video va hikoyalar)\n'
+              '• Qurilma boshqaruvi',
+        ),
+        _FaqItem(
+          question: 'To\'lov qanday amalga oshiriladi?',
+          answer:
+              'To\'lov tizimlari:\n\n'
+              '💳 Payme — karta orqali\n'
+              '💳 Click — karta yoki Click hamyon orqali\n\n'
+              '🔒 Xavfsizlik:\n'
+              '• Karta ma\'lumotlari bizning serverlarimizda saqlanMaydi\n'
+              '• Barcha tranzaksiyalar PCI DSS standartiga mos\n'
+              '• To\'lov tizimlari tekshirilgan va litsenziyalangan',
         ),
         _FaqItem(
           question: 'Obunani qanday bekor qilaman?',
           answer:
-              'Obunani istalgan vaqtda Sozlamalar > Obuna holati bo\'limidan '
-              'bekor qilishingiz mumkin. Bekor qilingan obuna muddati '
-              'tugaguncha faol bo\'lib qoladi.',
+              'Obunani bekor qilish:\n\n'
+              '1. Sozlamalar sahifasiga o\'ting\n'
+              '2. \"Obuna holati\" bo\'limini bosing\n'
+              '3. \"Obunani bekor qilish\" tugmasini bosing\n'
+              '4. Tasdiqlang\n\n'
+              '📌 Muhim:\n'
+              '• Bekor qilingan obuna muddati tugaguncha faol qoladi\n'
+              '• Qayta obuna bo\'lish istalgan vaqtda mumkin\n'
+              '• Ma\'lumotlaringiz 30 kun saqlanadi',
         ),
         _FaqItem(
-          question: 'To\'lov usullari qanday?',
+          question: 'Pulimni qaytarib olsam bo\'ladimi?',
           answer:
-              'Hozirda Payme va Click to\'lov tizimlari orqali to\'lov '
-              'qilish mumkin. Barcha to\'lovlar xavfsiz kanal orqali '
-              'amalga oshiriladi.',
+              'Qaytarish siyosati:\n\n'
+              '• To\'lovdan 7 kun ichida — to\'liq qaytarish\n'
+              '• 7 kundan keyin — qolgan muddat uchun proporsional\n\n'
+              'Qaytarish so\'rovi uchun support@qadamcha.uz ga yozing '
+              'yoki Telegram orqali murojaat qiling.\n\n'
+              'So\'rov 3-5 ish kuni ichida ko\'rib chiqiladi.',
         ),
       ],
     ),
-    _FaqCategory(
-      emoji: '📱',
-      title: 'Qurilma',
-      color: Color(0xFF7C4DFF),
-      questions: [
-        _FaqItem(
-          question: 'Bola qurilmasini qanday ulash mumkin?',
-          answer:
-              '1. Ota-ona ilovasidan "Qurilma qo\'shish" tugmasini bosing\n'
-              '2. QR kod paydo bo\'ladi\n'
-              '3. Bola qurilmasida Qadamcha ilovasini o\'rnating\n'
-              '4. Bola ilovasidan QR kodni skanerlang\n'
-              '5. Qurilma avtomatik ulanadi',
-        ),
-        _FaqItem(
-          question: 'Nechta qurilma ulash mumkin?',
-          answer:
-              'Qurilmalar soni obuna rejangizga bog\'liq. Joriy '
-              'limitingizni Sozlamalar > Qurilmalarni boshqarish '
-              'bo\'limida ko\'rishingiz mumkin.',
-        ),
-        _FaqItem(
-          question: 'Qurilma ulanmayapti, nima qilishim kerak?',
-          answer:
-              '• Ikkala qurilmada internet ulanishini tekshiring\n'
-              '• QR kodni qayta yarating\n'
-              '• Ilovani so\'nggi versiyaga yangilang\n'
-              '• Qurilmani qayta ishga tushiring\n\n'
-              'Muammo davom etsa, yordam xizmatiga murojaat qiling.',
-        ),
-      ],
-    ),
-    _FaqCategory(
-      emoji: '🎬',
-      title: 'Kontent',
-      color: Color(0xFF22C55E),
-      questions: [
-        _FaqItem(
-          question: 'Qanday kontentlar mavjud?',
-          answer:
-              'Qadamcha quyidagi turdagi kontentlarni taqdim etadi:\n\n'
-              '• Ta\'limiy videolar — turli fanlar bo\'yicha\n'
-              '• Interaktiv o\'yinlar — aqliy rivojlanish uchun\n'
-              '• Audio ertaklar — eshitish uchun\n'
-              '• Qo\'llanmalar — ota-onalar uchun foydali maslahatlar',
-        ),
-        _FaqItem(
-          question: 'Kontent qanday tanlanadi?',
-          answer:
-              'Barcha kontentlar pedagog va psixologlar tomonidan '
-              'tekshiriladi. Faqat bolalarga mos, ta\'limiy va xavfsiz '
-              'kontentlar ilovaga joylashtiriladi.',
-        ),
-      ],
-    ),
+
+    // ═══ 6. XAVFSIZLIK ═══
     _FaqCategory(
       emoji: '🔒',
       title: 'Xavfsizlik',
@@ -140,26 +294,56 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
         _FaqItem(
           question: 'Ma\'lumotlarim xavfsizmi?',
           answer:
-              'Ha, biz xalqaro xavfsizlik standartlaridan foydalanamiz:\n\n'
-              '• TLS/HTTPS shifrlash\n'
-              '• Xavfsiz token autentifikatsiya\n'
-              '• PIN kod himoyasi\n'
-              '• Ma\'lumotlar bazasi shifrlash',
+              'Ha! Biz ko\'p bosqichli himoya tizimidan foydalanamiz:\n\n'
+              '🔐 Texnik himoya:\n'
+              '• HTTPS/TLS 1.3 shifrlangan aloqa\n'
+              '• AES-256 ma\'lumotlar bazasi shifrlash\n'
+              '• JWT token autentifikatsiya\n'
+              '• QR-kod bilan xavfsiz qurilma ulash\n\n'
+              '🛡️ Ma\'lumot himoyasi:\n'
+              '• Shaxsiy ma\'lumotlar uchinchi tomonlarga sotilmaydi\n'
+              '• Bola ma\'lumotlari faqat ota-onaga ko\'rinadi\n'
+              '• COPPA va GDPR standartlariga mos',
         ),
         _FaqItem(
-          question: 'PIN kodni unutdim, nima qilaman?',
+          question: 'PIN kodni unutdim, nima qilay?',
           answer:
-              'PIN kodni tiklash uchun:\n'
-              '1. Kirish sahifasida "PIN kodni unutdim" tugmasini bosing\n'
-              '2. Telefon raqamingizga SMS kod yuboriladi\n'
-              '3. Kodni kiritib, yangi PIN yarating',
+              'PIN kodni tiklash juda oson:\n\n'
+              '1️⃣ Kirish sahifasida \"PIN kodni unutdim\" tugmasini bosing\n'
+              '2️⃣ Telefon raqamingizni kiriting\n'
+              '3️⃣ SMS orqali tasdiqlash kodi keladi\n'
+              '4️⃣ Kodni kiritib, yangi PIN yarating\n\n'
+              '⚠️ SMS kelmasa:\n'
+              '• 60 soniya kutib, qayta yuboring\n'
+              '• Telefon raqamini to\'g\'ri kiritganingizni tekshiring\n'
+              '• Tarmoq muammosi bo\'lsa, biroz kutib qaytadan urinib ko\'ring',
         ),
         _FaqItem(
           question: 'Hisobimni qanday o\'chirsam bo\'ladi?',
           answer:
-              'Hisobni o\'chirish uchun Sozlamalar sahifasidan '
-              'support@qadamcha.uz ga murojaat qiling. Hisobingiz va '
-              'barcha ma\'lumotlaringiz 30 kun ichida butunlay o\'chiriladi.',
+              'Hisobni o\'chirish uchun:\n\n'
+              '1. Sozlamalar sahifasiga o\'ting\n'
+              '2. support@qadamcha.uz ga so\'rov yuboring\n'
+              '3. So\'rov 3 ish kuni ichida ko\'rib chiqiladi\n\n'
+              '⚠️ Ogohlantirish:\n'
+              '• Hisob o\'chirilganda BARCHA ma\'lumotlar yo\'q qilinadi\n'
+              '• Bog\'langan qurilmalar uziladi\n'
+              '• Bo\'yash rasmlari o\'chiriladi\n'
+              '• Bu jarayonni qaytarib bo\'lmaydi\n\n'
+              'Ma\'lumotlar 30 kun ichida serverlardan butunlay tozalanadi.',
+        ),
+        _FaqItem(
+          question: 'Boshqa birov bolam qurilmasini ko\'rishi mumkinmi?',
+          answer:
+              'Yo\'q! Bola ma\'lumotlari faqat BIRIKTIRILGAN ota-onaga '
+              'ko\'rinadi.\n\n'
+              '🔒 Himoya qatlamlari:\n'
+              '• PIN kod bilan kirish\n'
+              '• Telefon raqami + SMS tasdiqlash\n'
+              '• Sessiya muddati tugaganda avtomatik chiqish\n'
+              '• Bir paytda faqat bitta qurilmadan kirish\n\n'
+              'Agar hisobingizga ruxsatsiz kirish shubhasi bo\'lsa, '
+              'darhol PIN kodni o\'zgartiring va support ga xabar bering.',
         ),
       ],
     ),
