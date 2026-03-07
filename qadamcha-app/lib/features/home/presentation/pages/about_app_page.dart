@@ -178,7 +178,7 @@ class _AboutAppPageState extends State<AboutAppPage> {
           ),
           SizedBox(height: 4.h),
           Text(
-            'Ota-ona va bola uchun vaqt boshqaruv ilovasi',
+            'Bolalar nazorati va ta\'lim ilovasi',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13.sp,
@@ -233,11 +233,12 @@ class _AboutAppPageState extends State<AboutAppPage> {
       child: Text(
         'Qadamcha — farzandlaringiz uchun raqamli dunyoni xavfsiz va '
         'foydali qilish maqsadida yaratilgan. Biz ota-onalarga '
-        'bolalarining raqamli vaqtini oqilona boshqarish, ta\'limiy '
-        'kontentdan foydalanish va sog\'lom raqamli odatlarni '
-        'shakllantirishga yordam beramiz.\n\n'
+        'bolalarining raqamli vaqtini oqilona boshqarish, bo\'yash '
+        'o\'yinlari va AI yordamchi orqali ijodiy rivojlantirish, '
+        'ta\'limiy videolar va hikoyalar bilan bilim berish imkonini '
+        'yaratamiz.\n\n'
         'Har bir bola xavfsiz, ta\'limiy va qiziqarli raqamli '
-        'muhitga loyiq.',
+        'muhitga loyiq. 💙',
         style: TextStyle(
           fontSize: 13.sp,
           color: const Color(0xFF4B5563),
@@ -253,27 +254,32 @@ class _AboutAppPageState extends State<AboutAppPage> {
       _FeatureItem(
         emoji: '📊',
         title: 'Monitoring',
-        desc: 'Bolaning qurilma faoliyatini real-time kuzatish',
+        desc: 'Bola qurilmasidagi faoliyatni real-time kuzatish',
       ),
       _FeatureItem(
-        emoji: '🎬',
+        emoji: '🎨',
+        title: 'Bo\'yash o\'yini',
+        desc: '70+ rasm, 5 kategoriya — ijodiy mashq',
+      ),
+      _FeatureItem(
+        emoji: '🤖',
+        title: 'Bilimdon AI',
+        desc: 'Bolalar uchun sun\'iy intellekt yordamchisi',
+      ),
+      _FeatureItem(
+        emoji: '📚',
         title: 'Ta\'limiy kontent',
-        desc: 'Yoshi va qiziqishiga mos videolar va o\'yinlar',
+        desc: 'Video darslar va hikoyalar — yoshga mos',
       ),
       _FeatureItem(
         emoji: '⏰',
         title: 'Vaqt boshqaruvi',
-        desc: 'Qurilma vaqtini belgilash va nazorat qilish',
-      ),
-      _FeatureItem(
-        emoji: '🤖',
-        title: 'AI yordamchi',
-        desc: 'Sun\'iy intellekt orqali ota-onalar uchun maslahat',
+        desc: 'Ekran vaqtini belgilash va nazorat qilish',
       ),
       _FeatureItem(
         emoji: '🔒',
         title: 'Xavfsizlik',
-        desc: 'PIN kod va shifrlash bilan himoyalangan',
+        desc: 'PIN kod, shifrlash va COPPA standarti',
       ),
     ];
 
