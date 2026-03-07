@@ -167,8 +167,7 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
               // ─── RECENT ARTWORKS ───
               if (_recentArtworks.isNotEmpty)
                 SliverToBoxAdapter(child: _buildRecentArtworks()),
-              // ─── CATEGORY CHIPS ───
-              SliverToBoxAdapter(child: _buildCategoryChips()),
+              // ─── CATEGORY CHIPS ───  (o'chirildi — banner tanlaydi)
               // ─── SECTION TITLE ───
               SliverToBoxAdapter(child: _buildSectionTitle()),
               // ─── COLORING GRID ───
@@ -284,7 +283,10 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
             child: PageView.builder(
               controller: _bannerCtrl,
               itemCount: _categoryMeta.length,
-              onPageChanged: (i) => setState(() => _currentBanner = i),
+              onPageChanged: (i) {
+                setState(() => _currentBanner = i);
+                _selectCategory(i);
+              },
               itemBuilder: (ctx, i) {
                 final cat = _categoryMeta[i];
                 final images = ColoringImages.byCategory(cat.name);
