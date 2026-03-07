@@ -38,6 +38,15 @@ class _ColoringScreenState extends State<ColoringScreen>
   bool _wasDrag = false;
   BoxConstraints? _canvasConstraints;
 
+  // ═══ PERFORMANCE: Const decorations ═══
+  static const _bgGradient = BoxDecoration(
+    gradient: LinearGradient(
+      colors: [Color(0xFFE0E7FF), Color(0xFFFCE7F3), Color(0xFFFEF3C7)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ),
+  );
+
   @override
   void initState() {
     super.initState();
@@ -288,13 +297,7 @@ class _ColoringScreenState extends State<ColoringScreen>
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFE0E7FF), Color(0xFFFCE7F3), Color(0xFFFEF3C7)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
+        decoration: _bgGradient,
         child: SafeArea(
           child: Column(
             children: [

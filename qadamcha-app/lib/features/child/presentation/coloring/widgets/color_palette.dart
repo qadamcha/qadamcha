@@ -109,10 +109,17 @@ class ColoringPaletteWidget extends StatelessWidget {
   }
 }
 
-/// Premium 3D Qalamcha — CustomPainter
+/// Premium 3D Qalamcha — CustomPainter (Performance Optimized)
 class _CrayonPainter extends CustomPainter {
   final Color color;
   final bool isSelected;
+
+  // ═══ PERFORMANCE: Pre-computed color variants ═══
+  late final Color lightColor = Color.lerp(color, Colors.white, 0.45)!;
+  late final Color midLightColor = Color.lerp(color, Colors.white, 0.2)!;
+  late final Color darkColor = Color.lerp(color, Colors.black, 0.3)!;
+  late final Color midDarkColor = Color.lerp(color, Colors.black, 0.12)!;
+  late final bool isWhite = color.computeLuminance() > 0.85;
 
   _CrayonPainter({required this.color, required this.isSelected});
 
@@ -123,13 +130,6 @@ class _CrayonPainter extends CustomPainter {
     final tipHeight = h * 0.22;
     final bodyTop = tipHeight;
     final bodyHeight = h - tipHeight;
-    final isWhite = color.computeLuminance() > 0.85;
-
-    // Rang variantlari
-    final lightColor = Color.lerp(color, Colors.white, 0.45)!;
-    final midLightColor = Color.lerp(color, Colors.white, 0.2)!;
-    final darkColor = Color.lerp(color, Colors.black, 0.3)!;
-    final midDarkColor = Color.lerp(color, Colors.black, 0.12)!;
 
     // ═══════════════════════════════════════
     // QALAMCHA TANASI (body) — kuchli 3D

@@ -78,7 +78,11 @@ class ColoringPalette {
 
 /// 4 ta kategoriya: Hayvonlar, Mashinalar, Mevalar, Tabiat
 class ColoringImages {
-  static List<ColoringImageInfo> all() => const [
+  // ═══ PERFORMANCE: Lazy singleton cache ═══
+  static List<ColoringImageInfo>? _allCache;
+  static final Map<String, List<ColoringImageInfo>> _categoryCache = {};
+
+  static List<ColoringImageInfo> all() => _allCache ??= const [
         // ═══════════════════════════════════════
         // 🐾 HAYVONLAR (14 ta)
         // ═══════════════════════════════════════
@@ -178,8 +182,9 @@ class ColoringImages {
     return ['Hayvonlar', 'Mashinalar', 'Mevalar', 'Tabiat', 'Poliz Mevalari'];
   }
 
-  /// Kategoriya bo'yicha filter
+  /// Kategoriya bo'yicha filter — cached
   static List<ColoringImageInfo> byCategory(String category) {
-    return all().where((img) => img.category == category).toList();
+    return _categoryCache[category] ??=
+        all().where((img) => img.category == category).toList();
   }
 }

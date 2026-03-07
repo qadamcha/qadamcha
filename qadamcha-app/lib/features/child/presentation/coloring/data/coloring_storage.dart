@@ -56,6 +56,9 @@ class SavedArtwork {
 class ColoringStorage {
   static const String _artworksKey = 'saved_artworks';
 
+  // ═══ PERFORMANCE: In-memory cache ═══
+  static List<SavedArtwork>? _cachedArtworks;
+
   /// Rasmni galereyaga (app papkasiga) saqlash
   static Future<SavedArtwork?> saveImage(ui.Image image, ColoringImageInfo info) async {
     try {
@@ -87,6 +90,9 @@ class ColoringStorage {
       artworksJson.add(jsonEncode(artwork.toJson()));
       await prefs.setStringList(_artworksKey, artworksJson);
 
+      // ═══ PERFORMANCE: Cache yangilash ═══
+      _cachedArtworks = null;
+
       return artwork;
     } catch (e) {
       debugPrint('Xatolik: Rasmni saqlashda muammo: $e');
@@ -94,8 +100,10 @@ class ColoringStorage {
     }
   }
 
-  /// Barcha saqlangan rasmlarni olish
+  /// Barcha saqlangan rasmlarni olish — cached
   static Future<List<SavedArtwork>> getSavedArtworks() async {
+    if (_cachedArtworks != null) return _cachedArtworks!;
+
     try {
       final prefs = await SharedPreferences.getInstance();
       final artworksJson = prefs.getStringList(_artworksKey) ?? [];
@@ -105,6 +113,7 @@ class ColoringStorage {
       }).toList();
 
       artworks.sort((a, b) => b.date.compareTo(a.date));
+      _cachedArtworks = artworks;
       return artworks;
     } catch (e) {
       debugPrint('Xatolik saqlangan rasmlarni olishda: $e');
@@ -129,6 +138,9 @@ class ColoringStorage {
       if (await file.exists()) {
         await file.delete();
       }
+
+      // ═══ PERFORMANCE: Cache invalidate ═══
+      _cachedArtworks = null;
     } catch (e) {
       debugPrint('Xatolik rasmni o\'chirishda: $e');
     }

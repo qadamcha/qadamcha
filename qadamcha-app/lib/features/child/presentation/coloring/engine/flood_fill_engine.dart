@@ -6,13 +6,12 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/services.dart' show rootBundle;
 
-/// Flood Fill Engine v4 — Production-grade
+/// Flood Fill Engine v5 — Performance Optimized
 ///
-/// Advanced image processing pipeline:
-/// 1. Grayscale conversion
-/// 2. Otsu's automatic threshold (eng optimal qora/oq ajratish)
-/// 3. Morphological dilation (qora chiziqlarni qalinlashtirish — teshiklarni yopish)
-/// 4. Clean BFS flood fill with boundary mask
+/// Optimizatsiyalar:
+/// 1. Cached progress — har frame'da 4M piksel aylanmaydi
+/// 2. Incremental progress tracking — faqat o'zgargan piksellar hisoblanadi
+/// 3. Pre-computed paintable count — faqat bir marta hisoblanadi
 class FloodFillEngine {
   late Uint8List _pixels;
   late int _width;
@@ -25,14 +24,30 @@ class FloodFillEngine {
   /// Background mask: 1 = tashqi fon (progress hisobga kiritilmaydi)
   late Uint8List _backgroundMask;
 
-  /// Delta-based undo stack — faqat o'zgargan piksellarni saqlaydi
-  /// Xotira optimizatsiyasi: to'liq nusxa (~16MB) o'rniga delta (~200KB)
+  /// ═══ PERFORMANCE: Cached progress ═══
+  /// Har frame'da barcha piksellarni aylashning o'rniga,
+  /// faqat o'zgargan piksellarni kuzatamiz
+  int _paintableCount = 0;  // Jami bo'yash mumkin piksellar (bir marta hisoblanadi)
+  int _coloredCount = 0;    // Hozirgi bo'yalgan piksellar soni
+  double _cachedProgress = 0.0;
+
+  /// Delta-based undo stack
   final List<_FillDelta> _undoStack = [];
   static const int _maxUndoSteps = 15;
 
   bool get canUndo => _undoStack.isNotEmpty;
   int get width => _width;
   int get height => _height;
+
+  /// ═══ PERFORMANCE: Cached progress getter — O(1) ═══
+  double get progress => _cachedProgress;
+
+  bool isCompleted() => _cachedProgress >= 0.99;
+
+  /// ═══ PERFORMANCE: Progress'ni yangilash — O(1) ═══
+  void _updateProgress() {
+    _cachedProgress = _paintableCount == 0 ? 1.0 : _coloredCount / _paintableCount;
+  }
 
   /// Rasmni yuklash va advanced pre-process
   Future<ui.Image> loadImage(String assetPath) async {
@@ -49,25 +64,40 @@ class FloodFillEngine {
 
     // ═══ ADVANCED PRE-PROCESSING PIPELINE ═══
     _advancedPreProcess();
-
-    // ═══ BACKGROUND DETECTION ═══
-    // Rasm chekkasidagi oq zonalarni "fon" deb belgilash
     _detectBackground();
 
     _originalPixels = Uint8List.fromList(_pixels);
-    
-    // Dastlabki dekod qilingan original rasmni xotiradan tozalash (Memory leak oldini oladi)
+
+    // ═══ PERFORMANCE: Paintable count'ni bir marta hisoblash ═══
+    _computeInitialProgress();
+
+    // Xotira tozalash
     image.dispose();
     codec.dispose();
-    
+
     return _createImage();
+  }
+
+  /// ═══ PERFORMANCE: Initial progress — bir marta O(n), keyin O(1) ═══
+  void _computeInitialProgress() {
+    final totalPixels = _width * _height;
+    _paintableCount = 0;
+    _coloredCount = 0;
+
+    for (int i = 0; i < totalPixels; i++) {
+      if (_boundaryMask[i] == 0 && _backgroundMask[i] == 0) {
+        _paintableCount++;
+        // Boshlang'ich holatda hamma oq — colored = 0
+      }
+    }
+    _updateProgress();
   }
 
   /// Advanced pre-processing: Grayscale → Otsu → Dilation → Binary
   void _advancedPreProcess() {
     final totalPixels = _width * _height;
 
-    // ── Step 1: Grayscale ga aylantirish ──
+    // Step 1: Grayscale
     final grayscale = Uint8List(totalPixels);
     for (int i = 0; i < totalPixels; i++) {
       final offset = i * 4;
@@ -77,37 +107,33 @@ class FloodFillEngine {
       final a = _pixels[offset + 3];
 
       if (a < 128) {
-        grayscale[i] = 255; // Transparent = oq
+        grayscale[i] = 255;
       } else {
-        // Weighted grayscale (human perception)
         grayscale[i] = ((r * 299 + g * 587 + b * 114) ~/ 1000).clamp(0, 255);
       }
     }
 
-    // ── Step 2: Otsu's threshold (avtomatik eng yaxshi threshold topish) ──
+    // Step 2: Otsu threshold
     final threshold = _otsuThreshold(grayscale);
 
-    // ── Step 3: Binary mask yaratish ──
+    // Step 3: Binary mask
     _boundaryMask = Uint8List(totalPixels);
     for (int i = 0; i < totalPixels; i++) {
-      _boundaryMask[i] = grayscale[i] < threshold ? 1 : 0; // 1=qora, 0=oq
+      _boundaryMask[i] = grayscale[i] < threshold ? 1 : 0;
     }
 
-    // ── Step 4: Morphological dilation (qora chiziqlarni 1px qalinlashtirish) ──
-    // Bu kichik teshiklarni yopadi — rang boshqa tomonga o'tmaydi
+    // Step 4: Morphological dilation
     _dilateBoundary();
 
-    // ── Step 5: Piksellarni sof qora/oq ga yozish ──
+    // Step 5: Piksellarni sof qora/oq ga yozish
     for (int i = 0; i < totalPixels; i++) {
       final offset = i * 4;
       if (_boundaryMask[i] == 1) {
-        // Qora (chegara)
         _pixels[offset] = 0;
         _pixels[offset + 1] = 0;
         _pixels[offset + 2] = 0;
         _pixels[offset + 3] = 255;
       } else {
-        // Oq (bo'yash mumkin)
         _pixels[offset] = 255;
         _pixels[offset + 1] = 255;
         _pixels[offset + 2] = 255;
@@ -116,10 +142,8 @@ class FloodFillEngine {
     }
   }
 
-  /// Otsu's method — histogram-based optimal threshold
-  /// Rasmni eng yaxshi qora/oq ga ajratadigan thresholdni avtomatik topadi
+  /// Otsu's method
   int _otsuThreshold(Uint8List grayscale) {
-    // Histogram yaratish (0-255)
     final histogram = List<int>.filled(256, 0);
     for (final val in grayscale) {
       histogram[val]++;
@@ -134,7 +158,7 @@ class FloodFillEngine {
     double sumB = 0;
     int wB = 0;
     double maxVariance = 0;
-    int bestThreshold = 128; // fallback
+    int bestThreshold = 128;
 
     for (int t = 0; t < 256; t++) {
       wB += histogram[t];
@@ -156,13 +180,10 @@ class FloodFillEngine {
       }
     }
 
-    // Coloring page uchun threshold ni biroz yuqoriroq qilish
-    // (kulrang piksellarni ham qora deb olish — chegara kuchayadi)
     return math.min(bestThreshold + 30, 240);
   }
 
-  /// Morphological dilation — qora piksellarni 1px kengaytirish
-  /// Bu kichik oraliqlarni (1-2px gap) yopadi
+  /// Morphological dilation
   void _dilateBoundary() {
     final totalPixels = _width * _height;
     final dilated = Uint8List.fromList(_boundaryMask);
@@ -171,40 +192,33 @@ class FloodFillEngine {
       for (int x = 1; x < _width - 1; x++) {
         final idx = y * _width + x;
         if (_boundaryMask[idx] == 1) {
-          // Qo'shnilarni ham qora qilish (3x3 kernel, faqat 4 yo'nalishli cross)
-          dilated[idx - 1] = 1;         // chap
-          dilated[idx + 1] = 1;         // o'ng
-          dilated[idx - _width] = 1;    // yuqori
-          dilated[idx + _width] = 1;    // past
+          dilated[idx - 1] = 1;
+          dilated[idx + 1] = 1;
+          dilated[idx - _width] = 1;
+          dilated[idx + _width] = 1;
         }
       }
     }
 
-    // Dilated natijani qaytarish
     for (int i = 0; i < totalPixels; i++) {
       _boundaryMask[i] = dilated[i];
     }
   }
 
-  /// Rasm chekkasidan BFS qilib tashqi fonni aniqlash
-  /// Chekkaga tegib turgan oq piksellar va ulardan chegara (qora) kesmasdan
-  /// yetib boladigan barcha piksellar = BACKGROUND
+  /// Background detection
   void _detectBackground() {
     final totalPixels = _width * _height;
-    _backgroundMask = Uint8List(totalPixels); // 0 = ichki, 1 = fon
+    _backgroundMask = Uint8List(totalPixels);
 
     final visited = Uint8List(totalPixels);
     final queue = Queue<int>();
 
-    // Rasm 4 ta chekkasidagi barcha oq (non-boundary) piksellarni navbatga qo'shish
     for (int x = 0; x < _width; x++) {
-      // Yuqori chekka
       final topIdx = x;
       if (_boundaryMask[topIdx] == 0 && visited[topIdx] == 0) {
         visited[topIdx] = 1;
         queue.add(topIdx);
       }
-      // Pastki chekka
       final bottomIdx = (_height - 1) * _width + x;
       if (_boundaryMask[bottomIdx] == 0 && visited[bottomIdx] == 0) {
         visited[bottomIdx] = 1;
@@ -212,13 +226,11 @@ class FloodFillEngine {
       }
     }
     for (int y = 0; y < _height; y++) {
-      // Chap chekka
       final leftIdx = y * _width;
       if (_boundaryMask[leftIdx] == 0 && visited[leftIdx] == 0) {
         visited[leftIdx] = 1;
         queue.add(leftIdx);
       }
-      // O'ng chekka
       final rightIdx = y * _width + (_width - 1);
       if (_boundaryMask[rightIdx] == 0 && visited[rightIdx] == 0) {
         visited[rightIdx] = 1;
@@ -226,7 +238,6 @@ class FloodFillEngine {
       }
     }
 
-    // BFS — chekkadan chegara kesmasdan yetib bolinadigan barcha piksellar = fon
     while (queue.isNotEmpty) {
       final idx = queue.removeFirst();
       _backgroundMask[idx] = 1;
@@ -234,7 +245,6 @@ class FloodFillEngine {
       final px = idx % _width;
       final py = idx ~/ _width;
 
-      // 4 yo'nalish
       if (px > 0) {
         final n = idx - 1;
         if (visited[n] == 0 && _boundaryMask[n] == 0) {
@@ -266,31 +276,27 @@ class FloodFillEngine {
     }
   }
 
-  /// BFS Flood Fill — piksel-piksel to'ldirish (delta-based undo bilan)
+  /// BFS Flood Fill — delta-based undo bilan
+  /// ═══ PERFORMANCE: Incremental progress tracking ═══
   Future<ui.Image?> fillWithColor(int x, int y, int fillR, int fillG, int fillB) async {
     if (x < 0 || x >= _width || y < 0 || y >= _height) return null;
 
     final startIdx = y * _width + x;
-
-    // Chegaraga bosilgan bo'lsa — hech narsa qilmaymiz
     if (_boundaryMask[startIdx] == 1) return null;
 
-    // Target rangni olish
     final startOffset = startIdx * 4;
     final targetR = _pixels[startOffset];
     final targetG = _pixels[startOffset + 1];
     final targetB = _pixels[startOffset + 2];
 
-    // Agar bir xil rang bo'lsa — hech narsa qilmaymiz
     if (_colorMatch(targetR, targetG, targetB, fillR, fillG, fillB)) {
       return null;
     }
 
-    // Delta uchun o'zgargan piksellarni yig'ish
     final changedIndices = <int>[];
-    final oldColors = <int>[]; // R, G, B, A ketma-ket
+    final oldColors = <int>[];
+    int progressDelta = 0; // ═══ PERFORMANCE: faqat o'zgargan progress
 
-    // BFS — max 500K piksel (katta maydonlar uchun himoya)
     final visited = Uint8List(_width * _height);
     final queue = Queue<int>();
     const maxFillPixels = 500000;
@@ -303,7 +309,6 @@ class FloodFillEngine {
       final idx = queue.removeFirst();
       fillCount++;
 
-      // Eski rangni delta uchun saqlash
       final offset = idx * 4;
       changedIndices.add(idx);
       oldColors.add(_pixels[offset]);
@@ -311,13 +316,22 @@ class FloodFillEngine {
       oldColors.add(_pixels[offset + 2]);
       oldColors.add(_pixels[offset + 3]);
 
-      // Bo'yash
+      // ═══ PERFORMANCE: Incremental progress ═══
+      // Faqat ichki maydon piksellarni hisoblash
+      if (_backgroundMask[idx] == 0) {
+        final wasWhite = _pixels[offset] > 240 &&
+            _pixels[offset + 1] > 240 &&
+            _pixels[offset + 2] > 240;
+        if (wasWhite) {
+          progressDelta++; // Yangi bo'yalgan piksel
+        }
+      }
+
       _pixels[offset] = fillR;
       _pixels[offset + 1] = fillG;
       _pixels[offset + 2] = fillB;
       _pixels[offset + 3] = 255;
 
-      // 4 qo'shni
       final px = idx % _width;
       final py = idx ~/ _width;
 
@@ -327,7 +341,6 @@ class FloodFillEngine {
       if (py < _height - 1) _enqueue(idx + _width, targetR, targetG, targetB, queue, visited);
     }
 
-    // Delta ni undo stack ga saqlash
     if (changedIndices.isNotEmpty) {
       if (_undoStack.length >= _maxUndoSteps) {
         _undoStack.removeAt(0);
@@ -335,7 +348,12 @@ class FloodFillEngine {
       _undoStack.add(_FillDelta(
         indices: changedIndices,
         oldColors: Uint8List.fromList(oldColors),
+        progressDelta: progressDelta,
       ));
+
+      // ═══ PERFORMANCE: O(1) progress update ═══
+      _coloredCount += progressDelta;
+      _updateProgress();
     }
 
     return _createImage();
@@ -343,7 +361,7 @@ class FloodFillEngine {
 
   void _enqueue(int idx, int targetR, int targetG, int targetB,
       Queue<int> queue, Uint8List visited) {
-    if (idx < 0 || idx >= _width * _height) return; // bounds check
+    if (idx < 0 || idx >= _width * _height) return;
     if (visited[idx] == 1) return;
     if (_boundaryMask[idx] == 1) return;
 
@@ -352,29 +370,25 @@ class FloodFillEngine {
     final g = _pixels[offset + 1];
     final b = _pixels[offset + 2];
 
-    // Target rangga o'xshash bo'lsa — navbatga qo'shish
     if (_colorMatchTolerant(r, g, b, targetR, targetG, targetB)) {
       visited[idx] = 1;
       queue.add(idx);
     }
   }
 
-  /// Aniq rang solishtiruv (5 px tolerance)
   bool _colorMatch(int r1, int g1, int b1, int r2, int g2, int b2) {
     return (r1 - r2).abs() < 5 && (g1 - g2).abs() < 5 && (b1 - b2).abs() < 5;
   }
 
-  /// Tolerant rang solishtiruv (flood fill uchun)
   bool _colorMatchTolerant(int r1, int g1, int b1, int r2, int g2, int b2) {
     return (r1 - r2).abs() < 25 && (g1 - g2).abs() < 25 && (b1 - b2).abs() < 25;
   }
 
-  /// Undo — delta dan faqat o'zgargan piksellarni tiklash
+  /// ═══ PERFORMANCE: Undo bilan incremental progress ═══
   Future<ui.Image?> undo() async {
     if (_undoStack.isEmpty) return null;
     final delta = _undoStack.removeLast();
 
-    // O'zgargan piksellarning eski ranglarini qayta yozish
     for (int i = 0; i < delta.indices.length; i++) {
       final offset = delta.indices[i] * 4;
       final colorOffset = i * 4;
@@ -384,6 +398,11 @@ class FloodFillEngine {
       _pixels[offset + 3] = delta.oldColors[colorOffset + 3];
     }
 
+    // ═══ PERFORMANCE: O(1) — delta dan qaytarish ═══
+    _coloredCount -= delta.progressDelta;
+    if (_coloredCount < 0) _coloredCount = 0;
+    _updateProgress();
+
     return _createImage();
   }
 
@@ -391,43 +410,13 @@ class FloodFillEngine {
   Future<ui.Image> clearAll() async {
     _undoStack.clear();
     _pixels = Uint8List.fromList(_originalPixels);
+
+    // ═══ PERFORMANCE: Reset to 0 ═══
+    _coloredCount = 0;
+    _updateProgress();
+
     return _createImage();
   }
-
-  /// Bo'yalganlik tekshirish
-  bool isCompleted() {
-    return progress >= 0.99; // 99% ni tugagan deb hisoblaymiz
-  }
-
-  /// Bo'yash progressi (0.0 dan 1.0 gacha)
-  /// Faqat chegaralar ICHIDAGI maydonlarni hisoblaydi.
-  /// Tashqi fon (background) hisobga kiritilmaydi.
-  double get progress {
-    if (_width == 0 || _height == 0) return 0.0;
-    final totalPixels = _width * _height;
-    int paintable = 0;
-    int colored = 0;
-
-    for (int i = 0; i < totalPixels; i++) {
-      // Faqat: chegara EMAS + fon EMAS = ichki maydon
-      if (_boundaryMask[i] == 0 && _backgroundMask[i] == 0) {
-        paintable++;
-        final offset = i * 4;
-        if (_pixels[offset] > 240 &&
-            _pixels[offset + 1] > 240 &&
-            _pixels[offset + 2] > 240) {
-          // Oq piksel (bo'yalmagan)
-        } else {
-          colored++; // Bo'yalgan
-        }
-      }
-    }
-    
-    if (paintable == 0) return 1.0;
-    return colored / paintable;
-  }
-
-
 
   Future<ui.Image> _createImage() async {
     final completer = Completer<ui.Image>();
@@ -442,18 +431,15 @@ class FloodFillEngine {
   }
 }
 
-/// Delta — faqat o'zgargan piksellarni saqlash (xotira tejash)
-/// To'liq nusxa: ~16MB (2000×2000 rasm)
-/// Delta: ~200KB-2MB (5K-50K piksel)
+/// Delta — o'zgargan piksellar + progress delta
 class _FillDelta {
-  /// O'zgargan piksellarning flat indekslari
   final List<int> indices;
-
-  /// Eski ranglar: R, G, B, A ketma-ket (indices.length × 4 bayt)
   final Uint8List oldColors;
+  final int progressDelta; // ═══ PERFORMANCE: undo uchun progress qaytarish
 
   const _FillDelta({
     required this.indices,
     required this.oldColors,
+    required this.progressDelta,
   });
 }
