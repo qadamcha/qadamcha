@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,8 +12,7 @@ import 'my_artworks_screen.dart';
 
 // ═══════════════════════════════════════════════════════════
 // Material Design 3 — Coloring Browse Screen
-// Hero banner + Category chips + 2-column grid
-// ANIMATSIYALI (stagger, bounce, scale, shimmer)
+// Performance optimized — no unnecessary rebuilds
 // ═══════════════════════════════════════════════════════════
 
 class ColoringBrowseScreen extends StatefulWidget {
@@ -25,28 +23,13 @@ class ColoringBrowseScreen extends StatefulWidget {
 }
 
 class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
-    with TickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   late PageController _bannerCtrl;
-  
-  // Intro stagger animatsiya
   late AnimationController _introCtrl;
-  late Animation<double> _topBarAnim;
-  late Animation<double> _bannerAnim;
-  late Animation<double> _dotsAnim;
-  late Animation<double> _chipsAnim;
-  late Animation<double> _gridAnim;
-  
-  // Grid o'zgarish animatsiyasi
-  late AnimationController _gridChangeCtrl;
-  
-  // Shimmer effekt (banner uchun)
-  late AnimationController _shimmerCtrl;
-  
+
   int _currentBanner = 0;
   int _selectedCategoryIdx = 0;
-  final _storage = ColoringStorage();
 
-  // Kategoriya ma'lumotlari
   static const _categoryMeta = [
     _CatMeta('Mashinalar', '🚗', Color(0xFF4A90D9), Color(0xFF357ABD)),
     _CatMeta('Hayvonlar', '🐾', Color(0xFF66BB6A), Color(0xFF43A047)),
@@ -63,52 +46,16 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
     super.initState();
     SoundService().init();
     _bannerCtrl = PageController(viewportFraction: 0.92);
-    _loadRecentArtworks();
-    
-    // ═══ INTRO STAGGER ═══
+
     _introCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 800),
     );
-    
-    // Ketma-ket animatsiya intervallari
-    _topBarAnim = CurvedAnimation(
-      parent: _introCtrl,
-      curve: const Interval(0.0, 0.3, curve: Curves.easeOut),
-    );
-    _bannerAnim = CurvedAnimation(
-      parent: _introCtrl,
-      curve: const Interval(0.15, 0.5, curve: Curves.easeOutCubic),
-    );
-    _dotsAnim = CurvedAnimation(
-      parent: _introCtrl,
-      curve: const Interval(0.35, 0.6, curve: Curves.easeOut),
-    );
-    _chipsAnim = CurvedAnimation(
-      parent: _introCtrl,
-      curve: const Interval(0.4, 0.7, curve: Curves.easeOut),
-    );
-    _gridAnim = CurvedAnimation(
-      parent: _introCtrl,
-      curve: const Interval(0.5, 1.0, curve: Curves.easeOutCubic),
-    );
-    
-    // ═══ GRID CHANGE ═══
-    _gridChangeCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    )..value = 1.0;
-    
-    // ═══ SHIMMER ═══
-    _shimmerCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2500),
-    )..repeat();
-    
+
     _updateFilteredImages();
-    
-    // Intro boshlash
-    Future.delayed(const Duration(milliseconds: 100), () {
+    _loadRecentArtworks();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _introCtrl.forward();
     });
   }
@@ -121,9 +68,7 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
   Future<void> _loadRecentArtworks() async {
     final all = await ColoringStorage.getSavedArtworks();
     if (mounted) {
-      setState(() {
-        _recentArtworks = all.take(5).toList();
-      });
+      setState(() => _recentArtworks = all.take(5).toList());
     }
   }
 
@@ -131,8 +76,6 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
   void dispose() {
     _bannerCtrl.dispose();
     _introCtrl.dispose();
-    _gridChangeCtrl.dispose();
-    _shimmerCtrl.dispose();
     super.dispose();
   }
 
@@ -140,12 +83,10 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
     if (idx == _selectedCategoryIdx) return;
     HapticFeedback.selectionClick();
     SoundService().playPop();
-    _gridChangeCtrl.reset();
     setState(() {
       _selectedCategoryIdx = idx;
       _updateFilteredImages();
     });
-    _gridChangeCtrl.forward();
   }
 
   @override
@@ -153,47 +94,83 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FE),
       body: SafeArea(
-        child: AnimatedBuilder(
-          animation: Listenable.merge([_introCtrl, _shimmerCtrl]),
-          builder: (context, _) => CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              // ─── TOP BAR ───
-              SliverToBoxAdapter(child: _buildTopBar()),
-              // ─── HERO BANNER CAROUSEL ───
-              SliverToBoxAdapter(child: _buildHeroBanner()),
-              // ─── BANNER DOTS ───
-              SliverToBoxAdapter(child: _buildDots()),
-              // ─── RECENT ARTWORKS ───
-              if (_recentArtworks.isNotEmpty)
-                SliverToBoxAdapter(child: _buildRecentArtworks()),
-              // ─── CATEGORY CHIPS ───  (o'chirildi — banner tanlaydi)
-              // ─── SECTION TITLE ───
-              SliverToBoxAdapter(child: _buildSectionTitle()),
-              // ─── COLORING GRID ───
-              SliverPadding(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
-                sliver: _buildColoringGrid(),
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            // ─── TOP BAR ───
+            SliverToBoxAdapter(child: _TopBar(introCtrl: _introCtrl)),
+            // ─── HERO BANNER ───
+            SliverToBoxAdapter(
+              child: _HeroBanner(
+                ctrl: _bannerCtrl,
+                introCtrl: _introCtrl,
+                categories: _categoryMeta,
+                currentBanner: _currentBanner,
+                onPageChanged: (i) {
+                  setState(() => _currentBanner = i);
+                  _selectCategory(i);
+                },
+                onCategoryTap: _selectCategory,
               ),
-              SliverToBoxAdapter(child: SizedBox(height: 20.h)),
-            ],
-          ),
+            ),
+            // ─── DOTS ───
+            SliverToBoxAdapter(
+              child: _BannerDots(
+                count: _categoryMeta.length,
+                current: _currentBanner,
+                categories: _categoryMeta,
+              ),
+            ),
+            // ─── RECENT ARTWORKS ───
+            if (_recentArtworks.isNotEmpty)
+              SliverToBoxAdapter(
+                child: _RecentArtworks(artworks: _recentArtworks),
+              ),
+            // ─── SECTION TITLE ───
+            SliverToBoxAdapter(
+              child: _SectionTitle(
+                cat: _categoryMeta[_selectedCategoryIdx],
+                count: _filteredImages.length,
+                categoryIdx: _selectedCategoryIdx,
+              ),
+            ),
+            // ─── COLORING GRID ───
+            SliverPadding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+              sliver: _ColoringGrid(
+                key: ValueKey(_selectedCategoryIdx),
+                images: _filteredImages,
+                color: _categoryMeta[_selectedCategoryIdx].color,
+              ),
+            ),
+            SliverToBoxAdapter(child: SizedBox(height: 20.h)),
+          ],
         ),
       ),
     );
   }
+}
 
-  // ═══ TOP BAR — tepadan slide + fade ═══
-  Widget _buildTopBar() {
-    return Transform.translate(
-      offset: Offset(0, -30 * (1 - _topBarAnim.value.clamp(0.0, 1.0))),
-      child: Opacity(
-        opacity: _topBarAnim.value.clamp(0.0, 1.0),
+// ═══════════════════════════════════════════════════════════
+// TOP BAR — faqat intro animatsiya bilan
+// ═══════════════════════════════════════════════════════════
+class _TopBar extends StatelessWidget {
+  final AnimationController introCtrl;
+  const _TopBar({required this.introCtrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: CurvedAnimation(parent: introCtrl, curve: const Interval(0.0, 0.4)),
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, -0.3),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(parent: introCtrl, curve: const Interval(0.0, 0.4, curve: Curves.easeOut))),
         child: Padding(
           padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 4.h),
           child: Row(
             children: [
-              // Back button
               GestureDetector(
                 onTap: () => Navigator.pop(context),
                 child: Container(
@@ -212,16 +189,13 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
                 ),
               ),
               SizedBox(width: 12.w),
-              // Title
-              Expanded(
-                child: Text(
-                  'Color Fun',
-                  style: TextStyle(
-                    fontSize: 24.sp,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF2D2D3A),
-                    letterSpacing: -0.5,
-                  ),
+              Text(
+                'Color Fun',
+                style: TextStyle(
+                  fontSize: 24.sp,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF2D2D3A),
+                  letterSpacing: -0.5,
                 ),
               ),
             ],
@@ -230,88 +204,85 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
       ),
     );
   }
+}
 
-  Widget _buildArtworksButton() {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        SoundService().playPop();
-        Navigator.push(context, MaterialPageRoute(
-          builder: (_) => const MyArtworksScreen(),
-        ));
-      },
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF7C4DFF), Color(0xFF536DFE)],
-          ),
-          borderRadius: BorderRadius.circular(20.r),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF7C4DFF).withOpacity(0.3),
-              blurRadius: 8, offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.palette_rounded, size: 16.sp, color: Colors.white),
-            SizedBox(width: 6.w),
-            Text('Rasmlarim', style: TextStyle(
-              fontSize: 12.sp, fontWeight: FontWeight.w600, color: Colors.white,
-            )),
-          ],
-        ),
-      ),
-    );
-  }
+// ═══════════════════════════════════════════════════════════
+// HERO BANNER — PageView bilan
+// ═══════════════════════════════════════════════════════════
+class _HeroBanner extends StatelessWidget {
+  final PageController ctrl;
+  final AnimationController introCtrl;
+  final List<_CatMeta> categories;
+  final int currentBanner;
+  final ValueChanged<int> onPageChanged;
+  final ValueChanged<int> onCategoryTap;
 
-  // ═══ HERO BANNER — chapdan slide + scale ═══
-  Widget _buildHeroBanner() {
-    return Transform.translate(
-      offset: Offset(-80 * (1 - _bannerAnim.value), 0),
-      child: Opacity(
-        opacity: _bannerAnim.value,
-        child: Transform.scale(
-          scale: 0.85 + 0.15 * _bannerAnim.value,
-          child: SizedBox(
-            height: 180.h,
-            child: PageView.builder(
-              controller: _bannerCtrl,
-              itemCount: _categoryMeta.length,
-              onPageChanged: (i) {
-                setState(() => _currentBanner = i);
-                _selectCategory(i);
-              },
-              itemBuilder: (ctx, i) {
-                final cat = _categoryMeta[i];
-                final images = ColoringImages.byCategory(cat.name);
-                return AnimatedBuilder(
-                  animation: _bannerCtrl,
-                  builder: (ctx, child) {
-                    double scale = 1.0;
-                    if (_bannerCtrl.position.haveDimensions) {
-                      final page = _bannerCtrl.page ?? _currentBanner.toDouble();
-                      scale = (1 - (page - i).abs() * 0.08).clamp(0.9, 1.0);
-                    }
-                    return Transform.scale(scale: scale, child: child);
-                  },
-                  child: GestureDetector(
-                    onTap: () => _selectCategory(i),
-                    child: _buildBannerCard(cat, images),
-                  ),
-                );
-              },
-            ),
+  const _HeroBanner({
+    required this.ctrl,
+    required this.introCtrl,
+    required this.categories,
+    required this.currentBanner,
+    required this.onPageChanged,
+    required this.onCategoryTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: CurvedAnimation(parent: introCtrl, curve: const Interval(0.15, 0.5)),
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(-0.3, 0),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(parent: introCtrl, curve: const Interval(0.15, 0.5, curve: Curves.easeOut))),
+        child: SizedBox(
+          height: 180.h,
+          child: PageView.builder(
+            controller: ctrl,
+            itemCount: categories.length,
+            onPageChanged: onPageChanged,
+            itemBuilder: (ctx, i) {
+              final cat = categories[i];
+              final images = ColoringImages.byCategory(cat.name);
+              return AnimatedBuilder(
+                animation: ctrl,
+                builder: (ctx, child) {
+                  double scale = 1.0;
+                  if (ctrl.position.haveDimensions) {
+                    final page = ctrl.page ?? currentBanner.toDouble();
+                    scale = (1 - (page - i).abs() * 0.08).clamp(0.9, 1.0);
+                  }
+                  return Transform.scale(scale: scale, child: child);
+                },
+                child: GestureDetector(
+                  onTap: () => onCategoryTap(i),
+                  child: _BannerCard(cat: cat, imageCount: images.length, images: images),
+                ),
+              );
+            },
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildBannerCard(_CatMeta cat, List<ColoringImageInfo> images) {
+// ═══════════════════════════════════════════════════════════
+// BANNER CARD — stateless, clean
+// ═══════════════════════════════════════════════════════════
+class _BannerCard extends StatelessWidget {
+  final _CatMeta cat;
+  final int imageCount;
+  final List<ColoringImageInfo> images;
+
+  const _BannerCard({
+    required this.cat,
+    required this.imageCount,
+    required this.images,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w, vertical: 10.h),
       decoration: BoxDecoration(
@@ -351,32 +322,6 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
               ),
             ),
           ),
-          // Shimmer effekt
-          Positioned.fill(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20.r),
-              child: AnimatedBuilder(
-                animation: _shimmerCtrl,
-                builder: (ctx, _) {
-                  return ShaderMask(
-                    shaderCallback: (bounds) {
-                      return LinearGradient(
-                        begin: Alignment(-1 + 2 * _shimmerCtrl.value, -0.3),
-                        end: Alignment(-0.5 + 2 * _shimmerCtrl.value, 0.3),
-                        colors: [
-                          Colors.white.withOpacity(0.0),
-                          Colors.white.withOpacity(0.08),
-                          Colors.white.withOpacity(0.0),
-                        ],
-                      ).createShader(bounds);
-                    },
-                    blendMode: BlendMode.srcATop,
-                    child: Container(color: Colors.white.withOpacity(0.05)),
-                  );
-                },
-              ),
-            ),
-          ),
           // Content
           Padding(
             padding: EdgeInsets.all(20.w),
@@ -397,7 +342,7 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
                       ),
                       SizedBox(height: 6.h),
                       Text(
-                        '${images.length} ta rasm',
+                        '$imageCount ta rasm',
                         style: TextStyle(
                           fontSize: 13.sp,
                           color: Colors.white.withOpacity(0.85),
@@ -423,24 +368,25 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
                     ],
                   ),
                 ),
-                // Image preview stack
-                SizedBox(
-                  width: 110.w,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      if (images.length > 1)
+                // Image preview
+                if (images.isNotEmpty)
+                  SizedBox(
+                    width: 110.w,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        if (images.length > 1)
+                          Positioned(
+                            right: 0, top: 10.h,
+                            child: _miniPreview(images[1], 70.w, 8),
+                          ),
                         Positioned(
-                          right: 0, top: 10.h,
-                          child: _miniPreview(images[1], 70.w, 8),
+                          left: 0,
+                          child: _miniPreview(images[0], 85.w, 0),
                         ),
-                      Positioned(
-                        left: 0,
-                        child: _miniPreview(images[0], 85.w, 0),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
               ],
             ),
           ),
@@ -472,152 +418,224 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
       ),
     );
   }
+}
 
-  // ═══ DOTS — fade in ═══
-  Widget _buildDots() {
-    return Opacity(
-      opacity: _dotsAnim.value,
-      child: Padding(
-        padding: EdgeInsets.only(top: 4.h, bottom: 8.h),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(_categoryMeta.length, (i) {
-            final isActive = i == _currentBanner;
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              margin: EdgeInsets.symmetric(horizontal: 3.w),
-              width: isActive ? 20.w : 6.w,
-              height: 6.w,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(3.r),
-                color: isActive
-                    ? _categoryMeta[i].color
-                    : const Color(0xFFD0D0D0),
-              ),
-            );
-          }),
-        ),
+// ═══════════════════════════════════════════════════════════
+// BANNER DOTS
+// ═══════════════════════════════════════════════════════════
+class _BannerDots extends StatelessWidget {
+  final int count;
+  final int current;
+  final List<_CatMeta> categories;
+
+  const _BannerDots({
+    required this.count,
+    required this.current,
+    required this.categories,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(top: 4.h, bottom: 8.h),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(count, (i) {
+          final isActive = i == current;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            margin: EdgeInsets.symmetric(horizontal: 3.w),
+            width: isActive ? 20.w : 6.w,
+            height: 6.w,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(3.r),
+              color: isActive ? categories[i].color : const Color(0xFFD0D0D0),
+            ),
+          );
+        }),
       ),
     );
   }
+}
 
-  // ═══ RECENT ARTWORKS — oxirgi 5 ta bo'yalgan rasm ═══
-  Widget _buildRecentArtworks() {
-    return Opacity(
-      opacity: _dotsAnim.value.clamp(0.0, 1.0),
-      child: Padding(
-        padding: EdgeInsets.only(bottom: 8.h),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: Row(
-                children: [
-                  Text(
-                    '🎨 Oxirgi bo\'yalganlar',
+// ═══════════════════════════════════════════════════════════
+// RECENT ARTWORKS — oxirgi 5 ta bo'yalgan rasm
+// ═══════════════════════════════════════════════════════════
+class _RecentArtworks extends StatelessWidget {
+  final List<SavedArtwork> artworks;
+  const _RecentArtworks({required this.artworks});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 8.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            child: Row(
+              children: [
+                Text(
+                  '🎨 Oxirgi bo\'yalganlar',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF2D2D3A),
+                  ),
+                ),
+                const Spacer(),
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    Navigator.push(context, MaterialPageRoute(
+                      builder: (_) => const MyArtworksScreen(),
+                    ));
+                  },
+                  child: Text(
+                    'Hammasi →',
                     style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF2D2D3A),
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF7C4DFF),
                     ),
                   ),
-                  const Spacer(),
-                  GestureDetector(
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 8.h),
+          SizedBox(
+            height: 90.h,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: EdgeInsets.symmetric(horizontal: 12.w),
+              itemCount: artworks.length,
+              itemBuilder: (ctx, i) {
+                final artwork = artworks[i];
+                final file = File(artwork.savedPath);
+                return Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  child: GestureDetector(
                     onTap: () {
                       HapticFeedback.lightImpact();
                       Navigator.push(context, MaterialPageRoute(
                         builder: (_) => const MyArtworksScreen(),
                       ));
                     },
-                    child: Text(
-                      'Hammasi →',
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF7C4DFF),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 8.h),
-            SizedBox(
-              height: 90.h,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.symmetric(horizontal: 12.w),
-                itemCount: _recentArtworks.length,
-                itemBuilder: (ctx, i) {
-                  final artwork = _recentArtworks[i];
-                  final file = File(artwork.savedPath);
-                  return Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4.w),
-                    child: GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        Navigator.push(context, MaterialPageRoute(
-                          builder: (_) => const MyArtworksScreen(),
-                        ));
-                      },
-                      child: Column(
-                        children: [
-                          // Thumbnail bilan gradient border
-                          Container(
-                            width: 60.w,
-                            height: 60.w,
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 60.w, height: 60.w,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [
+                                Color(0xFFFF6B6B), Color(0xFFFFB347),
+                                Color(0xFF4ECDC4), Color(0xFF7C4DFF),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                          padding: EdgeInsets.all(2.5.w),
+                          child: Container(
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFFFF6B6B),
-                                  Color(0xFFFFB347),
-                                  Color(0xFF4ECDC4),
-                                  Color(0xFF7C4DFF),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                            ),
-                            padding: EdgeInsets.all(2.5.w),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white,
-                                image: file.existsSync() 
-                                  ? DecorationImage(
-                                      image: FileImage(file),
-                                      fit: BoxFit.cover,
-                                    )
+                              color: Colors.white,
+                              image: file.existsSync()
+                                  ? DecorationImage(image: FileImage(file), fit: BoxFit.cover)
                                   : null,
-                              ),
-                              child: !file.existsSync() 
+                            ),
+                            child: !file.existsSync()
                                 ? Center(child: Text(artwork.emoji, style: TextStyle(fontSize: 22.sp)))
                                 : null,
-                            ),
                           ),
-                          SizedBox(height: 4.h),
-                          // Name
-                          SizedBox(
-                            width: 64.w,
-                            child: Text(
-                              artwork.name,
-                              style: TextStyle(
-                                fontSize: 10.sp,
-                                fontWeight: FontWeight.w500,
-                                color: const Color(0xFF666666),
-                              ),
-                              textAlign: TextAlign.center,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
+                        ),
+                        SizedBox(height: 4.h),
+                        SizedBox(
+                          width: 64.w,
+                          child: Text(
+                            artwork.name,
+                            style: TextStyle(
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFF666666),
                             ),
+                            textAlign: TextAlign.center,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  );
-                },
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// SECTION TITLE — AnimatedSwitcher
+// ═══════════════════════════════════════════════════════════
+class _SectionTitle extends StatelessWidget {
+  final _CatMeta cat;
+  final int count;
+  final int categoryIdx;
+
+  const _SectionTitle({
+    required this.cat,
+    required this.count,
+    required this.categoryIdx,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 2.h),
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        transitionBuilder: (child, anim) => FadeTransition(
+          opacity: anim,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.1, 0),
+              end: Offset.zero,
+            ).animate(anim),
+            child: child,
+          ),
+        ),
+        child: Row(
+          key: ValueKey(categoryIdx),
+          children: [
+            Container(
+              width: 4.w, height: 20.h,
+              decoration: BoxDecoration(
+                color: cat.color,
+                borderRadius: BorderRadius.circular(2.r),
+              ),
+            ),
+            SizedBox(width: 8.w),
+            Text(
+              '${cat.emoji} ${cat.name}',
+              style: TextStyle(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF2D2D3A),
+              ),
+            ),
+            const Spacer(),
+            Text(
+              '$count ta',
+              style: TextStyle(
+                fontSize: 13.sp,
+                color: const Color(0xFF888888),
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
@@ -625,143 +643,47 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
       ),
     );
   }
+}
 
-  // ═══ CATEGORY CHIPS — bounce in + scale on select ═══
-  Widget _buildCategoryChips() {
-    return Transform.translate(
-      offset: Offset(0, 20 * (1 - _chipsAnim.value.clamp(0.0, 1.0))),
-      child: Opacity(
-        opacity: _chipsAnim.value.clamp(0.0, 1.0),
-        child: SizedBox(
-          height: 48.h,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: 14.w),
-            itemCount: _categoryMeta.length,
-            itemBuilder: (ctx, i) => _buildChip(i),
-          ),
-        ),
-      ),
-    );
+// ═══════════════════════════════════════════════════════════
+// COLORING GRID — ValueKey bilan qayta yaratiladi
+// Har bir karta o'z ichki stagger animatsiyasiga ega
+// ═══════════════════════════════════════════════════════════
+class _ColoringGrid extends StatefulWidget {
+  final List<ColoringImageInfo> images;
+  final Color color;
+
+  const _ColoringGrid({
+    super.key,
+    required this.images,
+    required this.color,
+  });
+
+  @override
+  State<_ColoringGrid> createState() => _ColoringGridState();
+}
+
+class _ColoringGridState extends State<_ColoringGrid>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _staggerCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _staggerCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    )..forward();
   }
 
-  Widget _buildChip(int i) {
-    final cat = _categoryMeta[i];
-    final isSelected = i == _selectedCategoryIdx;
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 4.w),
-      child: GestureDetector(
-        onTap: () => _selectCategory(i),
-        child: AnimatedScale(
-          scale: isSelected ? 1.08 : 1.0,
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeOutBack,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOutCubic,
-            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
-            decoration: BoxDecoration(
-              color: isSelected ? cat.color : Colors.white,
-              borderRadius: BorderRadius.circular(20.r),
-              border: Border.all(
-                color: isSelected ? cat.color : const Color(0xFFE0E0E0),
-                width: 1.5,
-              ),
-              boxShadow: isSelected ? [
-                BoxShadow(
-                  color: cat.color.withOpacity(0.35),
-                  blurRadius: 10, offset: const Offset(0, 4),
-                ),
-              ] : [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 4, offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AnimatedScale(
-                  scale: isSelected ? 1.2 : 1.0,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOutBack,
-                  child: Text(cat.emoji, style: TextStyle(fontSize: 16.sp)),
-                ),
-                SizedBox(width: 6.w),
-                Text(
-                  cat.name,
-                  style: TextStyle(
-                    fontSize: 13.sp,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                    color: isSelected ? Colors.white : const Color(0xFF555555),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+  @override
+  void dispose() {
+    _staggerCtrl.dispose();
+    super.dispose();
   }
 
-  // ═══ SECTION TITLE ═══
-  Widget _buildSectionTitle() {
-    final cat = _categoryMeta[_selectedCategoryIdx];
-    return Opacity(
-      opacity: _gridAnim.value.clamp(0.0, 1.0),
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 2.h),
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          transitionBuilder: (child, anim) => FadeTransition(
-            opacity: anim,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0.1, 0),
-                end: Offset.zero,
-              ).animate(anim),
-              child: child,
-            ),
-          ),
-          child: Row(
-            key: ValueKey(_selectedCategoryIdx),
-            children: [
-              Container(
-                width: 4.w,
-                height: 20.h,
-                decoration: BoxDecoration(
-                  color: cat.color,
-                  borderRadius: BorderRadius.circular(2.r),
-                ),
-              ),
-              SizedBox(width: 8.w),
-              Text(
-                '${cat.emoji} ${cat.name}',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF2D2D3A),
-                ),
-              ),
-              const Spacer(),
-              Text(
-                '${_filteredImages.length} ta',
-                style: TextStyle(
-                  fontSize: 13.sp,
-                  color: const Color(0xFF888888),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ═══ COLORING GRID — staggered scale + fade ═══
-  SliverGrid _buildColoringGrid() {
+  @override
+  Widget build(BuildContext context) {
     return SliverGrid.builder(
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
@@ -769,42 +691,30 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
         crossAxisSpacing: 12.w,
         mainAxisSpacing: 12.h,
       ),
-      itemCount: _filteredImages.length,
+      itemCount: widget.images.length,
       itemBuilder: (ctx, i) {
-        final img = _filteredImages[i];
-        // Staggered animatsiya — har bir karta kechikish bilan paydo bo'ladi
-        final delay = (i * 0.06).clamp(0.0, 0.5);
-        final itemAnim = CurvedAnimation(
-          parent: _gridChangeCtrl,
-          curve: Interval(delay, (delay + 0.5).clamp(0.0, 1.0), curve: Curves.easeOutCubic),
-        );
-        
+        // Stagger: har karta 30ms kechikish bilan
+        final start = (i * 0.04).clamp(0.0, 0.6);
+        final end = (start + 0.4).clamp(0.0, 1.0);
+
         return AnimatedBuilder(
-          animation: Listenable.merge([_gridAnim, itemAnim]),
+          animation: _staggerCtrl,
           builder: (ctx, child) {
-            final introP = _gridAnim.value;
-            final changeP = itemAnim.value;
-            final progress = introP * changeP;
-            
-            return Transform.scale(
-              scale: 0.7 + 0.3 * progress,
-              child: Opacity(
-                opacity: progress.clamp(0.0, 1.0),
+            final t = Curves.easeOutCubic.transform(
+              (((_staggerCtrl.value - start) / (end - start)).clamp(0.0, 1.0)),
+            );
+            return Opacity(
+              opacity: t,
+              child: Transform.scale(
+                scale: 0.85 + 0.15 * t,
                 child: child,
               ),
             );
           },
-          child: _AnimatedImageCard(
-            img: img,
+          child: _ImageCard(
+            img: widget.images[i],
             number: i + 1,
-            color: _categoryMeta[_selectedCategoryIdx].color,
-            onTap: () {
-              HapticFeedback.lightImpact();
-              SoundService().playPop();
-              Navigator.push(context, MaterialPageRoute(
-                builder: (_) => ColoringScreen(imageInfo: img),
-              ));
-            },
+            color: widget.color,
           ),
         );
       },
@@ -812,35 +722,34 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
   }
 }
 
-/// Animatsiyali rasm kartasi — bosilganda scale effekti
-class _AnimatedImageCard extends StatefulWidget {
+// ═══════════════════════════════════════════════════════════
+// IMAGE CARD — press effekti bilan
+// ═══════════════════════════════════════════════════════════
+class _ImageCard extends StatefulWidget {
   final ColoringImageInfo img;
   final int number;
   final Color color;
-  final VoidCallback onTap;
 
-  const _AnimatedImageCard({
+  const _ImageCard({
     required this.img,
     required this.number,
     required this.color,
-    required this.onTap,
   });
 
   @override
-  State<_AnimatedImageCard> createState() => _AnimatedImageCardState();
+  State<_ImageCard> createState() => _ImageCardState();
 }
 
-class _AnimatedImageCardState extends State<_AnimatedImageCard>
+class _ImageCardState extends State<_ImageCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _pressCtrl;
-  bool _isPressed = false;
 
   @override
   void initState() {
     super.initState();
     _pressCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 150),
+      duration: const Duration(milliseconds: 120),
       lowerBound: 0.95,
       upperBound: 1.0,
       value: 1.0,
@@ -853,27 +762,22 @@ class _AnimatedImageCardState extends State<_AnimatedImageCard>
     super.dispose();
   }
 
+  void _onTap() {
+    HapticFeedback.lightImpact();
+    SoundService().playPop();
+    Navigator.push(context, MaterialPageRoute(
+      builder: (_) => ColoringScreen(imageInfo: widget.img),
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown: (_) {
-        _isPressed = true;
-        _pressCtrl.reverse();
-      },
-      onTapUp: (_) {
-        _isPressed = false;
-        _pressCtrl.forward().then((_) => widget.onTap());
-      },
-      onTapCancel: () {
-        _isPressed = false;
-        _pressCtrl.forward();
-      },
-      child: AnimatedBuilder(
-        animation: _pressCtrl,
-        builder: (ctx, child) => Transform.scale(
-          scale: _pressCtrl.value,
-          child: child,
-        ),
+      onTapDown: (_) => _pressCtrl.reverse(),
+      onTapUp: (_) => _pressCtrl.forward().then((_) => _onTap()),
+      onTapCancel: () => _pressCtrl.forward(),
+      child: ScaleTransition(
+        scale: _pressCtrl,
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -881,13 +785,13 @@ class _AnimatedImageCardState extends State<_AnimatedImageCard>
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.06),
-                blurRadius: 12, offset: const Offset(0, 4),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
           child: Column(
             children: [
-              // Image
               Expanded(
                 child: Stack(
                   children: [
@@ -896,10 +800,7 @@ class _AnimatedImageCardState extends State<_AnimatedImageCard>
                         borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
                         child: Padding(
                           padding: EdgeInsets.all(12.w),
-                          child: Hero(
-                            tag: 'coloring_${widget.img.id}',
-                            child: Image.asset(widget.img.assetPath, fit: BoxFit.contain),
-                          ),
+                          child: Image.asset(widget.img.assetPath, fit: BoxFit.contain),
                         ),
                       ),
                     ),
@@ -974,7 +875,7 @@ class _AnimatedImageCardState extends State<_AnimatedImageCard>
   }
 }
 
-/// Kategoriya meta ma'lumotlari
+/// Kategoriya meta
 class _CatMeta {
   final String name;
   final String emoji;
