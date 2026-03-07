@@ -10,12 +10,8 @@ class GamesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final games = [
-      _G('🔢', 'Matematika', 'Son va hisob', const Color(0xFF4285F4)),
-      _G('🔤', 'Alifbo', 'Harflarni o\'rgan', const Color(0xFFEA4335)),
       _G('🧩', 'Pazl', 'Mantiqiy o\'yin', const Color(0xFF34A853)),
       _G('🎨', 'Ranglar', 'Ranglarni o\'rgan', const Color(0xFFFBBC05), imagePath: 'assets/images/coloring_logo.png'),
-      _G('🎵', 'Musiqa', 'Ohang va ritmlar', const Color(0xFF4285F4)),
-      _G('🌍', 'Geografiya', 'Dunyoni o\'rgan', const Color(0xFF34A853)),
     ];
 
     return Scaffold(

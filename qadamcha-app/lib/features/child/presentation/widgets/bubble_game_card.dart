@@ -31,35 +31,42 @@ class BubbleGameCard extends StatelessWidget {
           color: color.withOpacity(0.15),
           borderRadius: BorderRadius.circular(16.r),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Rasm yoki emoji
-            if (imagePath != null)
-              Image.asset(imagePath!, width: 50.w, height: 50.w, fit: BoxFit.contain)
-            else
-              Text(emoji, style: TextStyle(fontSize: 40.sp)),
-            SizedBox(height: 10.h),
-            // Title
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF0F0F0F),
+        child: imagePath != null
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(16.r),
+                child: Image.asset(
+                  imagePath!,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Katta emoji
+                  Text(emoji, style: TextStyle(fontSize: 40.sp)),
+                  SizedBox(height: 10.h),
+                  // Title
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF0F0F0F),
+                    ),
+                  ),
+                  SizedBox(height: 2.h),
+                  // Subtitle
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 11.sp,
+                      color: const Color(0xFF606060),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            SizedBox(height: 2.h),
-            // Subtitle
-            Text(
-              subtitle,
-              style: TextStyle(
-                fontSize: 11.sp,
-                color: const Color(0xFF606060),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
