@@ -224,8 +224,6 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
                   ),
                 ),
               ),
-              // My Artworks button
-              _buildArtworksButton(),
             ],
           ),
         ),
