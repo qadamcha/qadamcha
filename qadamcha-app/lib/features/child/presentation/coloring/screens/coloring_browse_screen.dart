@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -55,12 +56,14 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
   ];
 
   List<ColoringImageInfo> _filteredImages = [];
+  List<SavedArtwork> _recentArtworks = [];
 
   @override
   void initState() {
     super.initState();
     SoundService().init();
     _bannerCtrl = PageController(viewportFraction: 0.92);
+    _loadRecentArtworks();
     
     // ═══ INTRO STAGGER ═══
     _introCtrl = AnimationController(
@@ -115,6 +118,15 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
     _filteredImages = ColoringImages.byCategory(catName);
   }
 
+  Future<void> _loadRecentArtworks() async {
+    final all = await ColoringStorage.getSavedArtworks();
+    if (mounted) {
+      setState(() {
+        _recentArtworks = all.take(5).toList();
+      });
+    }
+  }
+
   @override
   void dispose() {
     _bannerCtrl.dispose();
@@ -152,6 +164,9 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
               SliverToBoxAdapter(child: _buildHeroBanner()),
               // ─── BANNER DOTS ───
               SliverToBoxAdapter(child: _buildDots()),
+              // ─── RECENT ARTWORKS ───
+              if (_recentArtworks.isNotEmpty)
+                SliverToBoxAdapter(child: _buildRecentArtworks()),
               // ─── CATEGORY CHIPS ───
               SliverToBoxAdapter(child: _buildCategoryChips()),
               // ─── SECTION TITLE ───
@@ -481,6 +496,131 @@ class _ColoringBrowseScreenState extends State<ColoringBrowseScreen>
               ),
             );
           }),
+        ),
+      ),
+    );
+  }
+
+  // ═══ RECENT ARTWORKS — oxirgi 5 ta bo'yalgan rasm ═══
+  Widget _buildRecentArtworks() {
+    return Opacity(
+      opacity: _dotsAnim.value.clamp(0.0, 1.0),
+      child: Padding(
+        padding: EdgeInsets.only(bottom: 8.h),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              child: Row(
+                children: [
+                  Text(
+                    '🎨 Oxirgi bo\'yalganlar',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF2D2D3A),
+                    ),
+                  ),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      Navigator.push(context, MaterialPageRoute(
+                        builder: (_) => const MyArtworksScreen(),
+                      ));
+                    },
+                    child: Text(
+                      'Hammasi →',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF7C4DFF),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 8.h),
+            SizedBox(
+              height: 90.h,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: EdgeInsets.symmetric(horizontal: 12.w),
+                itemCount: _recentArtworks.length,
+                itemBuilder: (ctx, i) {
+                  final artwork = _recentArtworks[i];
+                  final file = File(artwork.savedPath);
+                  return Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4.w),
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        Navigator.push(context, MaterialPageRoute(
+                          builder: (_) => const MyArtworksScreen(),
+                        ));
+                      },
+                      child: Column(
+                        children: [
+                          // Thumbnail bilan gradient border
+                          Container(
+                            width: 60.w,
+                            height: 60.w,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFFFF6B6B),
+                                  Color(0xFFFFB347),
+                                  Color(0xFF4ECDC4),
+                                  Color(0xFF7C4DFF),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                            ),
+                            padding: EdgeInsets.all(2.5.w),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white,
+                                image: file.existsSync() 
+                                  ? DecorationImage(
+                                      image: FileImage(file),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null,
+                              ),
+                              child: !file.existsSync() 
+                                ? Center(child: Text(artwork.emoji, style: TextStyle(fontSize: 22.sp)))
+                                : null,
+                            ),
+                          ),
+                          SizedBox(height: 4.h),
+                          // Name
+                          SizedBox(
+                            width: 64.w,
+                            child: Text(
+                              artwork.name,
+                              style: TextStyle(
+                                fontSize: 10.sp,
+                                fontWeight: FontWeight.w500,
+                                color: const Color(0xFF666666),
+                              ),
+                              textAlign: TextAlign.center,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
