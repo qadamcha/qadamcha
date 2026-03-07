@@ -11,27 +11,18 @@ class PrivacyPolicyPage extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
             _buildHeader(context),
-
-            // Content
             Expanded(
               child: SingleChildScrollView(
                 padding: EdgeInsets.all(16.w),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Hero card
                     _buildHeroCard(),
                     SizedBox(height: 16.h),
-
-                    // Last updated
                     _buildLastUpdated(),
                     SizedBox(height: 16.h),
-
-                    // Sections
                     ..._buildPolicySections(),
-
                     SizedBox(height: 16.h),
                     _buildContactCard(),
                     SizedBox(height: 32.h),
@@ -124,7 +115,7 @@ class PrivacyPolicyPage extends StatelessWidget {
           ),
           SizedBox(height: 14.h),
           Text(
-            'Sizning maxfiyligingiz\nbizning ustuvorligimiz',
+            'Farzandlaringiz xavfsizligi\nbizning ustuvorligimiz',
             style: TextStyle(
               fontSize: 20.sp,
               fontWeight: FontWeight.w800,
@@ -135,8 +126,9 @@ class PrivacyPolicyPage extends StatelessWidget {
           ),
           SizedBox(height: 8.h),
           Text(
-            'Qadamcha farzandlaringiz va oilangiz ma\'lumotlarini '
-            'xalqaro standartlarga muvofiq himoya qiladi.',
+            'Qadamcha ilovasi bolalaringizning raqamli hayotini himoya qilish '
+            'uchun yaratilgan. Barcha ma\'lumotlar xalqaro COPPA va GDPR '
+            'standartlariga muvofiq ishlanadi.',
             style: TextStyle(
               fontSize: 13.sp,
               color: Colors.white.withValues(alpha: 0.85),
@@ -162,7 +154,7 @@ class PrivacyPolicyPage extends StatelessWidget {
               size: 16.sp, color: const Color(0xFF2D6A9F)),
           SizedBox(width: 8.w),
           Text(
-            'Oxirgi yangilanish: 2026-yil, 15-fevral',
+            'Oxirgi yangilanish: 2026-yil, 8-mart',
             style: TextStyle(
               fontSize: 12.sp,
               color: const Color(0xFF2D6A9F),
@@ -177,101 +169,219 @@ class PrivacyPolicyPage extends StatelessWidget {
 
   List<Widget> _buildPolicySections() {
     final sections = <_PolicySection>[
+      // ═══ 1. ILOVA HAQIDA ═══
       _PolicySection(
         icon: Icons.info_outline_rounded,
         color: const Color(0xFF2D6A9F),
-        title: '1. Umumiy ma\'lumot',
+        title: '1. Ilova haqida',
         content:
-            'Qadamcha — bu ota-onalar uchun bolalarning raqamli vaqtini '
-            'boshqarish ilovasi. Biz foydalanuvchilarimizning shaxsiy '
-            'ma\'lumotlarini himoya qilishga alohida e\'tibor qaratamiz.\n\n'
-            'Ushbu siyosat ilovamiz orqali qanday ma\'lumotlar '
-            'yig\'ilishi, ular qanday ishlatilishi va qanday himoya '
-            'qilinishini tushuntiradi.',
+            'Qadamcha — bu ota-onalar uchun mo\'ljallangan bolalar nazorati '
+            'va ta\'lim ilovasi. Ilova quyidagi asosiy funksiyalarni taqdim etadi:\n\n'
+            '• 📱 Bola qurilmasini masofadan boshqarish va monitoring\n'
+            '• 🎨 Bo\'yash o\'yini — bolalar uchun ijodiy mashq\n'
+            '• 🤖 Bilimdon AI — sun\'iy intellekt yordamchisi (bolalar uchun)\n'
+            '• 📚 Ta\'limiy kontent — video darslar va hikoyalar\n'
+            '• ⏰ Ekran vaqtini cheklash va boshqarish\n'
+            '• 🔔 Bola faoliyati haqida ota-onaga bildirishnomalar\n\n'
+            'Ushbu maxfiylik siyosati ilovamiz orqali qanday ma\'lumotlar '
+            'yig\'ilishi, qanday maqsadda ishlatilishi va qanday himoya '
+            'qilinishini batafsil tushuntiradi.',
       ),
+
+      // ═══ 2. YIG'ILADIGAN MA'LUMOTLAR ═══
       _PolicySection(
         icon: Icons.data_usage_rounded,
         color: const Color(0xFF7C4DFF),
         title: '2. Yig\'iladigan ma\'lumotlar',
         content:
-            '• Telefon raqami — ro\'yxatdan o\'tish va autentifikatsiya uchun\n'
-            '• Ota-ona va bola ismlari — profil yaratish uchun\n'
-            '• Qurilma ma\'lumotlari — qurilmani ulash va boshqarish uchun\n'
-            '• Foydalanish statistikasi — ilovani yaxshilash uchun\n'
-            '• Monitoring ma\'lumotlari — bola faoliyatini kuzatish uchun\n\n'
-            'Biz kredit karta ma\'lumotlarini o\'z serverlarimizda saqlamaymiz. '
-            'To\'lovlar xavfsiz to\'lov tizimlari orqali amalga oshiriladi.',
+            'Qadamcha quyidagi ma\'lumotlarni yig\'adi:\n\n'
+            '👤 Shaxsiy ma\'lumotlar:\n'
+            '• Telefon raqami — ro\'yxatdan o\'tish va SMS tasdiqlash uchun\n'
+            '• Ota-ona ismi — profil yaratish uchun\n'
+            '• Bola ismi, tug\'ilgan yili — profil va yoshga mos kontent uchun\n\n'
+            '📱 Qurilma ma\'lumotlari:\n'
+            '• Qurilma modeli va operatsion tizim versiyasi\n'
+            '• Unikal qurilma ID — qurilmani bog\'lash uchun\n'
+            '• O\'rnatilgan ilovalar ro\'yxati (faqat bola qurilmasida)\n\n'
+            '📊 Foydalanish ma\'lumotlari:\n'
+            '• Ekran vaqti statistikasi (bola qurilmasida)\n'
+            '• Ilova foydalanish davomiyligi\n'
+            '• Bo\'yash o\'yini natijalari (saqlangan rasmlar)\n\n'
+            '🤖 AI Chat ma\'lumotlari:\n'
+            '• Bilimdon AI bilan suhbat matni (bolaga mos javob berish uchun)\n'
+            '• Chat tarixi ma\'lum muddat saqlanadi\n\n'
+            '❌ Biz yig\'MAYDIGAN ma\'lumotlar:\n'
+            '• Kredit karta raqamlari (to\'lovlar Payme/Click orqali amalga oshiriladi)\n'
+            '• Bola geojoylashuvi (GPS)\n'
+            '• Kamera yoki mikrofon yozuvlari\n'
+            '• Bola shaxsiy xabarlari yoki qo\'ng\'iroqlari',
       ),
+
+      // ═══ 3. BOLALAR MAXFIYLIGI ═══
       _PolicySection(
         icon: Icons.child_care_rounded,
         color: const Color(0xFFFF6D00),
         title: '3. Bolalar maxfiyligini himoya qilish',
         content:
-            'Qadamcha bolalar ma\'lumotlarini maxsus himoya qiladi:\n\n'
-            '• Bolalar haqidagi ma\'lumotlar faqat ota-onaga ko\'rinadi\n'
-            '• Bola profili uchinchi tomonlarga taqdim etilmaydi\n'
-            '• Monitoring ma\'lumotlari shifrlangan holda saqlanadi\n'
-            '• Bolalar reklama maqsadida targtetlanmaydi\n'
-            '• Ma\'lumotlar COPPA (Children\'s Online Privacy Protection Act) '
-            'talablariga muvofiq boshqariladi',
+            'Qadamcha bolalar ma\'lumotlariga alohida e\'tibor qaratadi:\n\n'
+            '🔒 Asosiy tamoyillar:\n'
+            '• Bola ma\'lumotlari FAQAT bog\'langan ota-onaga ko\'rinadi\n'
+            '• Bola profili hech qanday uchinchi tomonga berilmaydi\n'
+            '• Bola AI chat tarixi ota-ona tomonidan ko\'rib chiqilishi mumkin\n'
+            '• Bolalar uchun reklama ko\'rsatilmaydi va targetlanmaydi\n'
+            '• Bo\'yash o\'yinidagi saqlangan rasmlar faqat mahalliy qurilmada saqlanadi\n\n'
+            '📋 Xalqaro standartlar:\n'
+            '• COPPA (Children\'s Online Privacy Protection Act) — AQSh\n'
+            '• GDPR-K (bolalar uchun) — Yevropa Ittifoqi\n'
+            '• O\'zbekiston Respublikasi «Shaxsiy ma\'lumotlar to\'g\'risida»gi qonuni\n\n'
+            '👨‍👩‍👧 Ota-ona nazorati:\n'
+            '• Faqat ota-ona PIN-kod yoki parol orqali sozlamalarni o\'zgartira oladi\n'
+            '• Bola ilovaning monitoring sozlamalarini o\'zgartira olmaydi\n'
+            '• AI chat filtrlangan — noto\'g\'ri kontentga ruxsat berilmaydi',
       ),
+
+      // ═══ 4. XAVFSIZLIK ═══
       _PolicySection(
         icon: Icons.lock_rounded,
         color: const Color(0xFF22C55E),
         title: '4. Ma\'lumotlar xavfsizligi',
         content:
-            '• HTTPS/TLS orqali shifrlangan aloqa\n'
-            '• PIN-kod orqali ilova himoyasi\n'
-            '• JWT token asosidagi autentifikatsiya\n'
-            '• Ma\'lumotlar bazasi shifrlash bilan himoyalangan\n'
-            '• Muntazam xavfsizlik tekshiruvlari o\'tkaziladi\n'
-            '• Qurilma biriktirilishida QR-kod himoyasi',
+            'Biz ko\'p bosqichli xavfsizlik tizimidan foydalanamiz:\n\n'
+            '🔐 Shifrlash:\n'
+            '• HTTPS/TLS 1.3 orqali barcha aloqa shifrlangan\n'
+            '• Ma\'lumotlar bazasi AES-256 bilan himoyalangan\n'
+            '• JWT tokenlar asosidagi autentifikatsiya\n\n'
+            '🛡️ Kirish nazorati:\n'
+            '• Ota-ona PIN-kodi orqali ilova himoyasi\n'
+            '• QR-kod bilan qurilma ulash — xavfsiz pairing\n'
+            '• Sessiya muddati tugaganda avtomatik chiqish\n'
+            '• Bir paytda faqat bitta qurilmadan kirish imkoniyati\n\n'
+            '🔍 Doimiy monitoring:\n'
+            '• Muntazam xavfsizlik audit va pentest\n'
+            '• Serverlar xavfsiz Google Cloud infratuzilmasida joylashgan\n'
+            '• Ma\'lumotlar zaxira nusxalari avtomatik olinadi',
       ),
+
+      // ═══ 5. MA'LUMOT ULASHISH ═══
       _PolicySection(
         icon: Icons.share_rounded,
         color: const Color(0xFFF59E0B),
         title: '5. Ma\'lumotlarni ulashish',
         content:
-            'Biz shaxsiy ma\'lumotlaringizni uchinchi tomonlarga '
-            'sotmaymiz yoki almashinmaymiz.\n\n'
-            'Ma\'lumotlar faqat quyidagi holatlarda ulashilishi mumkin:\n'
-            '• Qonuniy talab bo\'lganda\n'
-            '• To\'lov provayderlari bilan (faqat to\'lov amalga oshirish uchun)\n'
-            '• Sizning aniq roziliginiz bo\'lganda',
+            'Biz shaxsiy ma\'lumotlaringizni SOTMAYMIZ va reklama maqsadida '
+            'ULASHMAYMIZ.\n\n'
+            'Ma\'lumotlar faqat quyidagi holatlarda uchinchi tomonlarga '
+            'berilishi mumkin:\n\n'
+            '• ⚖️ Qonun talab qilganda (sud qarori yoki huquqni muhofaza qilish '
+            'organlari so\'rovi)\n'
+            '• 💳 To\'lov provayderlari (Payme, Click) — faqat tranzaksiya uchun '
+            'zarur minimal ma\'lumot\n'
+            '• 🤖 AI xizmatlari — Bilimdon AI javoblarini generatsiya qilish uchun '
+            '(anonim, shaxsiy ma\'lumotlarsiz)\n'
+            '• 📲 Firebase — push bildirishnomalar yuborish uchun\n'
+            '• 📊 Anonimizatsiya qilingan umumiy statistika — ilovani '
+            'yaxshilash maqsadida\n\n'
+            '⚠️ Uchinchi tomon xizmatlariga shaxsiy ma\'lumotlar emas, '
+            'faqat texnik identifikatorlar uzatiladi.',
       ),
+
+      // ═══ 6. FOYDALANUVCHI HUQUQLARI ═══
       _PolicySection(
         icon: Icons.manage_accounts_rounded,
         color: const Color(0xFFEF4444),
         title: '6. Foydalanuvchi huquqlari',
         content:
-            'Siz quyidagi huquqlarga egasiz:\n\n'
-            '• Ma\'lumotlaringizni ko\'rish va yuklab olish\n'
-            '• Profil ma\'lumotlarini o\'zgartirish\n'
-            '• Hisobni o\'chirish va barcha ma\'lumotlarni yo\'q qilish\n'
-            '• Bildirishnomalarni o\'chirish\n'
-            '• Ma\'lumotlar yig\'ilishiga rozilikni qaytarib olish\n\n'
-            'Barcha so\'rovlar 30 kun ichida ko\'rib chiqiladi.',
+            'Siz quyidagi huquqlarga to\'liq egasiz:\n\n'
+            '📋 Ma\'lumotlarni boshqarish:\n'
+            '• Profil ma\'lumotlarini istalgan vaqtda ko\'rish va tahrirlash\n'
+            '• Bola profilini qo\'shish, o\'zgartirish yoki o\'chirish\n'
+            '• AI chat tarixini tozalash\n'
+            '• Saqlangan bo\'yash rasmlarini o\'chirish\n\n'
+            '🗑️ Hisobni o\'chirish:\n'
+            '• Hisobingizni istalgan vaqtda to\'liq o\'chirish huquqi\n'
+            '• O\'chirish so\'rovidan so\'ng 30 kun ichida barcha ma\'lumotlar '
+            'serverlardan butunlay yo\'q qilinadi\n'
+            '• Mahalliy qurilmadagi ma\'lumotlar darhol o\'chiriladi\n\n'
+            '🔕 Boshqarish:\n'
+            '• Bildirishnomalarni istalgan vaqtda o\'chirish\n'
+            '• Obunani bekor qilish\n'
+            '• Ma\'lumot yig\'ilishiga rozilikni qaytarib olish\n\n'
+            'Barcha so\'rovlar 15 ish kuni ichida ko\'rib chiqiladi.',
       ),
+
+      // ═══ 7. MA'LUMOT SAQLASH ═══
       _PolicySection(
         icon: Icons.storage_rounded,
         color: const Color(0xFF6B7280),
-        title: '7. Ma\'lumotlarni saqlash',
+        title: '7. Ma\'lumotlarni saqlash muddatlari',
         content:
-            '• Faol foydalanuvchi ma\'lumotlari obuna davomida saqlanadi\n'
-            '• Hisob o\'chirilganda ma\'lumotlar 30 kun ichida yo\'q qilinadi\n'
-            '• Monitoring tarixi 90 kun saqlanadi\n'
-            '• Anonimizatsiya qilingan statistika ilmiy maqsadlarda '
-            'saqlanishi mumkin',
+            '📅 Saqlash muddatlari:\n'
+            '• Hisob ma\'lumotlari — obuna davomida\n'
+            '• Monitoring statistikasi — oxirgi 90 kun\n'
+            '• AI chat tarixi — oxirgi 30 kun\n'
+            '• Bo\'yash o\'yini rasmlari — foydalanuvchi o\'chirishiga qadar '
+            '(faqat mahalliy qurilmada)\n'
+            '• To\'lov tarixi — qonun talabiga ko\'ra 3 yil\n\n'
+            '🧹 Avtomatik tozalash:\n'
+            '• Hisob o\'chirilganda — 30 kun ichida to\'liq tozalash\n'
+            '• 6 oy faol bo\'lmagan hisoblar — ogohlantirish yuboriladi\n'
+            '• 12 oy faol bo\'lmagan hisoblar — avtomatik o\'chiriladi\n\n'
+            '💾 Mahalliy saqlash:\n'
+            '• Bo\'yash rasmlari faqat qurilmada saqlanadi\n'
+            '• Kontent (video/hikoya) offline rejim uchun keshlanadi\n'
+            '• Kesh ilovani o\'chirganda tozalanadi',
       ),
+
+      // ═══ 8. OBUNA VA TO'LOVLAR ═══
+      _PolicySection(
+        icon: Icons.payment_rounded,
+        color: const Color(0xFF0891B2),
+        title: '8. Obuna va to\'lovlar',
+        content:
+            '💳 To\'lov xavfsizligi:\n'
+            '• To\'lovlar Payme va Click orqali amalga oshiriladi\n'
+            '• Kredit/debet karta raqamlari bizning serverlarimizda '
+            'SAQLANMAYDI\n'
+            '• Barcha tranzaksiyalar PCI DSS standartiga mos\n\n'
+            '📄 Obuna shartlari:\n'
+            '• Obuna har oyda avtomatik yangilanadi\n'
+            '• Bekor qilish istalgan vaqtda mumkin\n'
+            '• Bekor qilinganda joriy davr oxirigacha xizmat davom etadi\n'
+            '• Qaytarish siyosati — to\'lovdan 7 kun ichida',
+      ),
+
+      // ═══ 9. O'ZGARISHLAR ═══
       _PolicySection(
         icon: Icons.gavel_rounded,
         color: const Color(0xFF2D6A9F),
-        title: '8. O\'zgarishlar kiritish',
+        title: '9. Siyosatga o\'zgarishlar kiritish',
         content:
-            'Ushbu maxfiylik siyosatiga o\'zgarishlar kiritilishi mumkin. '
-            'Muhim o\'zgarishlar haqida ilova orqali xabar beramiz.\n\n'
-            'Ilovadan foydalanishni davom ettirish orqali siz '
-            'yangilangan siyosatga rozilik bildirasiz.',
+            'Ushbu maxfiylik siyosatiga vaqti-vaqti bilan o\'zgarishlar kiritilishi '
+            'mumkin.\n\n'
+            '📢 Xabardor qilish:\n'
+            '• Muhim o\'zgarishlar haqida ilova ichida bildirishnoma yuboriladi\n'
+            '• Kichik tuzatishlar ilova yangilanishi bilan kuchga kiradi\n'
+            '• O\'zgarishlar tarixi shu sahifada ko\'rsatiladi\n\n'
+            'Ilovadan foydalanishni davom ettirish orqali siz yangilangan '
+            'siyosatni qabul qilgan hisoblanasiz.\n\n'
+            '📌 Amaldagi versiya: 2.0 (2026-yil, 8-mart)',
+      ),
+
+      // ═══ 10. HUQUQIY ASOS ═══
+      _PolicySection(
+        icon: Icons.balance_rounded,
+        color: const Color(0xFF8B5CF6),
+        title: '10. Huquqiy asos',
+        content:
+            'Qadamcha ilovasi quyidagi qonunchilik asosida faoliyat yuritadi:\n\n'
+            '🇺🇿 O\'zbekiston:\n'
+            '• «Shaxsiy ma\'lumotlar to\'g\'risida»gi qonun (2019)\n'
+            '• «Axborotlashtirish to\'g\'risida»gi qonun\n'
+            '• «Bolalar huquqlarining kafolatlari to\'g\'risida»gi qonun\n\n'
+            '🌍 Xalqaro standartlar:\n'
+            '• COPPA — bolalar onlayn maxfiyligini himoya qilish (AQSh)\n'
+            '• GDPR — umumiy ma\'lumotlarni himoya qilish reglamenti (Yevropa)\n'
+            '• ISO 27001 — axborot xavfsizligi standartlari',
       ),
     ];
 
@@ -362,7 +472,7 @@ class PrivacyPolicyPage extends StatelessWidget {
           ),
           SizedBox(height: 10.h),
           Text(
-            'Savollar bormi?',
+            'Savollaringiz bormi? 💬',
             style: TextStyle(
               fontSize: 15.sp,
               fontWeight: FontWeight.w800,
@@ -372,7 +482,7 @@ class PrivacyPolicyPage extends StatelessWidget {
           ),
           SizedBox(height: 4.h),
           Text(
-            'Maxfiylik bo\'yicha savollaringiz bo\'lsa,\nbiz bilan bog\'laning',
+            'Maxfiylik yoki ma\'lumotlar himoyasi\nbo\'yicha har qanday savol uchun bog\'laning',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 12.sp,
@@ -381,13 +491,29 @@ class PrivacyPolicyPage extends StatelessWidget {
               height: 1.5,
             ),
           ),
-          SizedBox(height: 10.h),
+          SizedBox(height: 12.h),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2D6A9F).withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+            child: Text(
+              '📧 support@qadamcha.uz',
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF2D6A9F),
+                fontFamily: 'Nunito',
+              ),
+            ),
+          ),
+          SizedBox(height: 6.h),
           Text(
-            'support@qadamcha.uz',
+            'Toshkent shahri, O\'zbekiston',
             style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF2D6A9F),
+              fontSize: 11.sp,
+              color: const Color(0xFF9CA3AF),
               fontFamily: 'Nunito',
             ),
           ),
