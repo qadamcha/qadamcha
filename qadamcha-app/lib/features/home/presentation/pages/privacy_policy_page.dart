@@ -127,7 +127,7 @@ class PrivacyPolicyPage extends StatelessWidget {
           SizedBox(height: 8.h),
           Text(
             'Qadamcha ilovasi bolalaringizning raqamli hayotini himoya qilish '
-            'uchun yaratilgan. Barcha ma\'lumotlar xalqaro COPPA va GDPR '
+            'uchun yaratilgan. Barcha ma\'lumotlar xavfsizlik '
             'standartlariga muvofiq ishlanadi.',
             style: TextStyle(
               fontSize: 13.sp,
@@ -230,10 +230,9 @@ class PrivacyPolicyPage extends StatelessWidget {
             '• Bola AI chat tarixi ota-ona tomonidan ko\'rib chiqilishi mumkin\n'
             '• Bolalar uchun reklama ko\'rsatilmaydi va targetlanmaydi\n'
             '• Bo\'yash o\'yinidagi saqlangan rasmlar faqat mahalliy qurilmada saqlanadi\n\n'
-            '📋 Xalqaro standartlar:\n'
-            '• COPPA (Children\'s Online Privacy Protection Act) — AQSh\n'
-            '• GDPR-K (bolalar uchun) — Yevropa Ittifoqi\n'
-            '• O\'zbekiston Respublikasi «Shaxsiy ma\'lumotlar to\'g\'risida»gi qonuni\n\n'
+            '📋 Standartlar:\n'
+            '• O\'zbekiston Respublikasi «Shaxsiy ma\'lumotlar to\'g\'risida»gi qonuni\n'
+            '• Bolalar maxfiyligini himoya qilish tamoyillari\n\n'
             '👨‍👩‍👧 Ota-ona nazorati:\n'
             '• Faqat ota-ona PIN-kod yoki parol orqali sozlamalarni o\'zgartira oladi\n'
             '• Bola ilovaning monitoring sozlamalarini o\'zgartira olmaydi\n'
@@ -246,19 +245,18 @@ class PrivacyPolicyPage extends StatelessWidget {
         color: const Color(0xFF22C55E),
         title: '4. Ma\'lumotlar xavfsizligi',
         content:
-            'Biz ko\'p bosqichli xavfsizlik tizimidan foydalanamiz:\n\n'
+            'Biz xavfsizlik tizimidan foydalanamiz:\n\n'
             '🔐 Shifrlash:\n'
-            '• HTTPS/TLS 1.3 orqali barcha aloqa shifrlangan\n'
-            '• Ma\'lumotlar bazasi AES-256 bilan himoyalangan\n'
+            '• HTTPS/TLS orqali barcha aloqa shifrlangan\n'
+            '• Ma\'lumotlar bazasi shifrlash bilan himoyalangan\n'
             '• JWT tokenlar asosidagi autentifikatsiya\n\n'
             '🛡️ Kirish nazorati:\n'
             '• Ota-ona PIN-kodi orqali ilova himoyasi\n'
             '• QR-kod bilan qurilma ulash — xavfsiz pairing\n'
             '• Sessiya muddati tugaganda avtomatik chiqish\n'
             '• Bir paytda faqat bitta qurilmadan kirish imkoniyati\n\n'
-            '🔍 Doimiy monitoring:\n'
-            '• Muntazam xavfsizlik audit va pentest\n'
-            '• Serverlar xavfsiz Google Cloud infratuzilmasida joylashgan\n'
+            '🔍 Server himoyasi:\n'
+            '• Serverlar xavfsiz bulutli infratuzilmada joylashgan\n'
             '• Ma\'lumotlar zaxira nusxalari avtomatik olinadi',
       ),
 
@@ -323,9 +321,7 @@ class PrivacyPolicyPage extends StatelessWidget {
             '(faqat mahalliy qurilmada)\n'
             '• To\'lov tarixi — qonun talabiga ko\'ra 3 yil\n\n'
             '🧹 Avtomatik tozalash:\n'
-            '• Hisob o\'chirilganda — 30 kun ichida to\'liq tozalash\n'
-            '• 6 oy faol bo\'lmagan hisoblar — ogohlantirish yuboriladi\n'
-            '• 12 oy faol bo\'lmagan hisoblar — avtomatik o\'chiriladi\n\n'
+            '• Hisob o\'chirilganda — 30 kun ichida to\'liq tozalash\n\n'
             '💾 Mahalliy saqlash:\n'
             '• Bo\'yash rasmlari faqat qurilmada saqlanadi\n'
             '• Kontent (video/hikoya) offline rejim uchun keshlanadi\n'
@@ -341,8 +337,7 @@ class PrivacyPolicyPage extends StatelessWidget {
             '💳 To\'lov xavfsizligi:\n'
             '• To\'lovlar Payme va Click orqali amalga oshiriladi\n'
             '• Kredit/debet karta raqamlari bizning serverlarimizda '
-            'SAQLANMAYDI\n'
-            '• Barcha tranzaksiyalar PCI DSS standartiga mos\n\n'
+            'SAQLANMAYDI\n\n'
             '📄 Obuna shartlari:\n'
             '• Obuna har oyda avtomatik yangilanadi\n'
             '• Bekor qilish istalgan vaqtda mumkin\n'
@@ -364,7 +359,7 @@ class PrivacyPolicyPage extends StatelessWidget {
             '• O\'zgarishlar tarixi shu sahifada ko\'rsatiladi\n\n'
             'Ilovadan foydalanishni davom ettirish orqali siz yangilangan '
             'siyosatni qabul qilgan hisoblanasiz.\n\n'
-            '📌 Amaldagi versiya: 2.0 (2026-yil, 8-mart)',
+            '📌 Amaldagi versiya: 1.0 (2026-yil, 8-mart)',
       ),
 
       // ═══ 10. HUQUQIY ASOS ═══
@@ -377,11 +372,7 @@ class PrivacyPolicyPage extends StatelessWidget {
             '🇺🇿 O\'zbekiston:\n'
             '• «Shaxsiy ma\'lumotlar to\'g\'risida»gi qonun (2019)\n'
             '• «Axborotlashtirish to\'g\'risida»gi qonun\n'
-            '• «Bolalar huquqlarining kafolatlari to\'g\'risida»gi qonun\n\n'
-            '🌍 Xalqaro standartlar:\n'
-            '• COPPA — bolalar onlayn maxfiyligini himoya qilish (AQSh)\n'
-            '• GDPR — umumiy ma\'lumotlarni himoya qilish reglamenti (Yevropa)\n'
-            '• ISO 27001 — axborot xavfsizligi standartlari',
+            '• «Bolalar huquqlarining kafolatlari to\'g\'risida»gi qonun',
       ),
     ];
 

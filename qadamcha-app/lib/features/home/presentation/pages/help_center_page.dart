@@ -82,8 +82,7 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
               '• Ilova foydalanish vaqtlari\n\n'
               '⏰ Vaqt cheklovlari:\n'
               '• Kunlik ekran vaqtini belgilash mumkin\n'
-              '• Muddat tugaganda bola bildirishnoma oladi\n\n'
-              '💡 Ma\'lumotlar har 2 daqiqada serverga yuboriladi.',
+              '• Muddat tugaganda bola bildirishnoma oladi',
         ),
         _FaqItem(
           question: 'Bola monitoring haqida biladimi?',
@@ -145,8 +144,7 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
               '(serverga yuborilmaydi).\n\n'
               '• \"Rasmlarim\" bo\'limida barcha saqlangan rasmlarni ko\'rishingiz mumkin\n'
               '• Rasmlarni o\'chirish ham mumkin\n'
-              '• Ilovani o\'chirsangiz, rasmlar ham o\'chadi\n\n'
-              '💡 Muhim rasmlarni telefon galereyasiga eksport qilish tavsiya etiladi.',
+              '• Ilovani o\'chirsangiz, rasmlar ham o\'chadi',
         ),
         _FaqItem(
           question: 'Bilimdon AI nima?',
@@ -255,8 +253,7 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
               '💳 Payme — karta orqali\n'
               '💳 Click — karta yoki Click hamyon orqali\n\n'
               '🔒 Xavfsizlik:\n'
-              '• Karta ma\'lumotlari bizning serverlarimizda saqlanMaydi\n'
-              '• Barcha tranzaksiyalar PCI DSS standartiga mos\n'
+              '• Karta ma\'lumotlari bizning serverlarimizda saqlanmaydi\n'
               '• To\'lov tizimlari tekshirilgan va litsenziyalangan',
         ),
         _FaqItem(
@@ -296,14 +293,13 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
           answer:
               'Ha! Biz ko\'p bosqichli himoya tizimidan foydalanamiz:\n\n'
               '🔐 Texnik himoya:\n'
-              '• HTTPS/TLS 1.3 shifrlangan aloqa\n'
-              '• AES-256 ma\'lumotlar bazasi shifrlash\n'
+              '• HTTPS/TLS shifrlangan aloqa\n'
+              '• Ma\'lumotlar bazasi shifrlash bilan himoyalangan\n'
               '• JWT token autentifikatsiya\n'
               '• QR-kod bilan xavfsiz qurilma ulash\n\n'
               '🛡️ Ma\'lumot himoyasi:\n'
               '• Shaxsiy ma\'lumotlar uchinchi tomonlarga sotilmaydi\n'
-              '• Bola ma\'lumotlari faqat ota-onaga ko\'rinadi\n'
-              '• COPPA va GDPR standartlariga mos',
+              '• Bola ma\'lumotlari faqat ota-onaga ko\'rinadi',
         ),
         _FaqItem(
           question: 'PIN kodni unutdim, nima qilay?',

@@ -279,7 +279,7 @@ class _AboutAppPageState extends State<AboutAppPage> {
       _FeatureItem(
         emoji: '🔒',
         title: 'Xavfsizlik',
-        desc: 'PIN kod, shifrlash va COPPA standarti',
+        desc: 'PIN kod va shifrlash bilan himoyalangan',
       ),
     ];
 
