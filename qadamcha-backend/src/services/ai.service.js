@@ -11,15 +11,16 @@ class AiService {
         if (config.GEMINI_API_KEY && config.GEMINI_API_KEY !== 'your-gemini-api-key') {
             try {
                 const genAI = new GoogleGenerativeAI(config.GEMINI_API_KEY);
+                this.modelName = config.GEMINI_MODEL;
                 this.model = genAI.getGenerativeModel({
-                    model: 'gemini-2.0-flash',
+                    model: this.modelName,
                     generationConfig: {
-                        maxOutputTokens: 10192,
-                        temperature: 0.7,
+                        maxOutputTokens: config.GEMINI_MAX_TOKENS,
+                        temperature: config.GEMINI_TEMPERATURE,
                     }
                 });
                 this.isConfigured = true;
-                logger.info('Gemini AI initialized (gemini-2.0-flash)');
+                logger.info(`Gemini AI initialized (${this.modelName})`);
             } catch (error) {
                 logger.error({ err: error }, 'Gemini AI init error');
             }
@@ -135,7 +136,7 @@ Sening asosiy vazifang — O'zbek ota-onalariga farzand tarbiyasi, rivojlanishi 
             }
 
             // AI javob olish (45 soniya timeout bilan)
-            const AI_TIMEOUT = 45000;
+            const AI_TIMEOUT = config.GEMINI_TIMEOUT_MS;
             const timeoutPromise = new Promise((_, reject) =>
                 setTimeout(() => reject(new Error('AI_TIMEOUT')), AI_TIMEOUT)
             );
@@ -221,7 +222,7 @@ Sening asosiy vazifang — O'zbek ota-onalariga farzand tarbiyasi, rivojlanishi 
     getStatus() {
         return {
             configured: this.isConfigured,
-            model: this.isConfigured ? 'gemini-2.0-flash' : null
+            model: this.isConfigured ? this.modelName : null
         };
     }
 }

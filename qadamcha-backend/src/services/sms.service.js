@@ -80,7 +80,7 @@ class SmsService {
         const formData = new FormData();
         formData.append('mobile_phone', this.formatPhone(phone));
         formData.append('message', message);
-        formData.append('from', '4546');
+        formData.append('from', config.SMS_SENDER_ID);
 
         const response = await fetch(`${this.baseUrl}/message/sms/send`, {
             method: 'POST',

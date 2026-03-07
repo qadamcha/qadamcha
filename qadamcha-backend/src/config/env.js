@@ -83,6 +83,13 @@ module.exports = {
 
     // Gemini AI
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+    GEMINI_MODEL: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
+    GEMINI_MAX_TOKENS: parseInt(process.env.GEMINI_MAX_TOKENS) || 10192,
+    GEMINI_TEMPERATURE: parseFloat(process.env.GEMINI_TEMPERATURE) || 0.7,
+    GEMINI_TIMEOUT_MS: parseInt(process.env.GEMINI_TIMEOUT_MS) || 45000,
+
+    // SMS
+    SMS_SENDER_ID: process.env.SMS_SENDER_ID || '4546',
 
     // App Settings
     OTP_EXPIRES: 5 * 60, // 5 daqiqa (sekundlarda)
