@@ -8,6 +8,7 @@ class BubbleGameCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final Color color;
+  final String? imagePath;
   final VoidCallback? onTap;
 
   const BubbleGameCard({
@@ -16,6 +17,7 @@ class BubbleGameCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.color,
+    this.imagePath,
     this.onTap,
   });
 
@@ -32,8 +34,11 @@ class BubbleGameCard extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Katta emoji
-            Text(emoji, style: TextStyle(fontSize: 40.sp)),
+            // Rasm yoki emoji
+            if (imagePath != null)
+              Image.asset(imagePath!, width: 50.w, height: 50.w, fit: BoxFit.contain)
+            else
+              Text(emoji, style: TextStyle(fontSize: 40.sp)),
             SizedBox(height: 10.h),
             // Title
             Text(

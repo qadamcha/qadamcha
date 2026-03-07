@@ -13,7 +13,7 @@ class GamesPage extends StatelessWidget {
       _G('🔢', 'Matematika', 'Son va hisob', const Color(0xFF4285F4)),
       _G('🔤', 'Alifbo', 'Harflarni o\'rgan', const Color(0xFFEA4335)),
       _G('🧩', 'Pazl', 'Mantiqiy o\'yin', const Color(0xFF34A853)),
-      _G('🎨', 'Ranglar', 'Ranglarni o\'rgan', const Color(0xFFFBBC05)),
+      _G('🎨', 'Ranglar', 'Ranglarni o\'rgan', const Color(0xFFFBBC05), imagePath: 'assets/images/coloring_logo.png'),
       _G('🎵', 'Musiqa', 'Ohang va ritmlar', const Color(0xFF4285F4)),
       _G('🌍', 'Geografiya', 'Dunyoni o\'rgan', const Color(0xFF34A853)),
     ];
@@ -81,6 +81,7 @@ class GamesPage extends StatelessWidget {
                     title: g.title,
                     subtitle: g.subtitle,
                     color: g.color,
+                    imagePath: g.imagePath,
                     onTap: () {
                       if (g.title == 'Ranglar') {
                         Navigator.push(
@@ -121,5 +122,6 @@ class _G {
   final String title;
   final String subtitle;
   final Color color;
-  const _G(this.emoji, this.title, this.subtitle, this.color);
+  final String? imagePath;
+  const _G(this.emoji, this.title, this.subtitle, this.color, {this.imagePath});
 }
