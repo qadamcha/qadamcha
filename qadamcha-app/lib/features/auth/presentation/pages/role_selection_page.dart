@@ -17,13 +17,21 @@ class RoleSelectionPage extends StatefulWidget {
 }
 
 class _RoleSelectionPageState extends State<RoleSelectionPage> {
+  bool _didInit = false;
+
   @override
-  void initState() {
-    super.initState();
-    // Qurilma statusini tekshirish
-    final authState = context.read<AuthBloc>().state;
-    if (_isLoggedIn(authState.status)) {
-      context.read<DeviceBloc>().add(CheckDeviceStatusEvent());
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_didInit) {
+      _didInit = true;
+      try {
+        final authState = context.read<AuthBloc>().state;
+        if (_isLoggedIn(authState.status)) {
+          context.read<DeviceBloc>().add(CheckDeviceStatusEvent());
+        }
+      } catch (_) {
+        // Provider topilmasa xavfsiz o'tkazib yuborish
+      }
     }
   }
 

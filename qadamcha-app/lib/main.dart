@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'core/theme/app_theme.dart';
-import 'core/services/local_monitoring_service.dart';
-import 'injection.dart' as di;
+import 'package:qadamcha_app/core/theme/app_theme.dart';
+import 'package:qadamcha_app/core/services/local_monitoring_service.dart';
+import 'package:qadamcha_app/injection.dart' as di;
 
 // BLoCs
-import 'features/auth/presentation/bloc/auth_bloc.dart';
-import 'features/child/presentation/bloc/child_bloc.dart';
-import 'features/content/presentation/bloc/content_bloc.dart';
-import 'features/device/presentation/bloc/device_bloc.dart';
-import 'features/subscription/presentation/bloc/subscription_bloc.dart';
+import 'package:qadamcha_app/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:qadamcha_app/features/child/presentation/bloc/child_bloc.dart';
+import 'package:qadamcha_app/features/content/presentation/bloc/content_bloc.dart';
+import 'package:qadamcha_app/features/device/presentation/bloc/device_bloc.dart';
+import 'package:qadamcha_app/features/subscription/presentation/bloc/subscription_bloc.dart';
 
 // Pages
-import 'features/auth/presentation/pages/splash_page.dart';
+import 'package:qadamcha_app/features/auth/presentation/pages/splash_page.dart';
 
 /// Global navigator key — istalgan joydan navigatsiya qilish uchun
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();

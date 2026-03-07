@@ -58,7 +58,7 @@ class AiChatRemoteDataSourceImpl implements AiChatRemoteDataSource {
         return (text, tokenCount);
       }
 
-      // Backend success: false qaytarsa
+      // Backend success: false qaytarsa — aniq xabarni uzatish
       final errorText = body is Map
           ? ((body['message'] as String?) ?? 'Javob olib bo\'lmadi')
           : 'Javob olib bo\'lmadi';
@@ -68,30 +68,15 @@ class AiChatRemoteDataSourceImpl implements AiChatRemoteDataSource {
       if (CancelToken.isCancel(e)) {
         rethrow;
       }
-
-      // Timeout xatosi
-      if (e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.sendTimeout) {
-        throw Exception('timeout: AI javob berishi ko\'proq vaqt oldi');
-      }
-
-      // Internet xatosi
-      if (e.type == DioExceptionType.connectionError) {
-        throw Exception('internet: Internet aloqangiz bilan muammo bor');
-      }
-
-      // 401 — sessiya tugagan
-      if (e.response?.statusCode == 401) {
-        throw Exception('Sessiya tugadi. Iltimos, tizimga qayta kiring.');
-      }
-
-      // Boshqa server xatolari
-      final data = e.response?.data;
-      final message = data is Map 
-          ? (data['message'] as String?) ?? 'Server xatosi'
-          : e.message ?? 'Noma\'lum xatolik';
-      throw Exception(message);
+      // ApiClient DioException ni ServerException/NetworkException ga
+      // o'giradi, shuning uchun bu yerga faqat cancel keladi.
+      // Boshqa DioException lar uchun ham rethrow qilamiz.
+      rethrow;
+    } catch (e) {
+      // ApiClient dan kelgan ServerException, NetworkException
+      // yoki backend success:false Exception — hammasini qayta tashlash
+      // Bloc da aniq xabar ko'rsatiladi
+      rethrow;
     }
   }
 

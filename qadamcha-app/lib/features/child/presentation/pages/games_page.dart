@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../coloring/screens/coloring_landing_screen.dart';
 import '../widgets/bubble_game_card.dart';
 
 /// YouTube Kids 1:1 — O'yinlar sahifasi (Explore tab)
@@ -57,16 +58,21 @@ class GamesPage extends StatelessWidget {
               ),
             ),
 
-            // Game grid (2 ustun)
+            // Game grid (moslashuvchan)
             SliverPadding(
               padding: EdgeInsets.symmetric(horizontal: 16.w),
-              sliver: SliverGrid.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 1.0,
-                  crossAxisSpacing: 12.w,
-                  mainAxisSpacing: 12.h,
-                ),
+              sliver: Builder(
+                builder: (context) {
+                  final screenWidth = MediaQuery.of(context).size.width;
+                  final crossAxisCount = screenWidth > 800 ? 5 : (screenWidth > 600 ? 4 : (screenWidth > 400 ? 3 : 2));
+                  
+                  return SliverGrid.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      childAspectRatio: 1.0,
+                      crossAxisSpacing: 12.w,
+                      mainAxisSpacing: 12.h,
+                    ),
                 itemCount: games.length,
                 itemBuilder: (ctx, i) {
                   final g = games[i];
@@ -76,19 +82,30 @@ class GamesPage extends StatelessWidget {
                     subtitle: g.subtitle,
                     color: g.color,
                     onTap: () {
-                      ScaffoldMessenger.of(ctx).showSnackBar(
-                        SnackBar(
-                          content: Text('${g.title} tez orada qo\'shiladi! 🚀'),
-                          behavior: SnackBarBehavior.floating,
-                          backgroundColor: g.color,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                      );
+                      if (g.title == 'Ranglar') {
+                        Navigator.push(
+                          ctx,
+                          MaterialPageRoute(
+                            builder: (_) => const ColoringLandingScreen(),
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(ctx).showSnackBar(
+                          SnackBar(
+                            content: Text('${g.title} tez orada qo\'shiladi! 🚀'),
+                            behavior: SnackBarBehavior.floating,
+                            backgroundColor: g.color,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                        );
+                      }
                     },
                   );
                 },
-              ),
-            ),
+              );
+            },
+          ),
+        ),
 
             // Bottom spacing
             SliverToBoxAdapter(child: SizedBox(height: 20.h)),

@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/errors/exceptions.dart';
 import '../../data/datasources/chat_local_datasource.dart';
 import '../../domain/repositories/ai_chat_repository.dart';
 import 'ai_chat_event.dart';
@@ -235,18 +236,35 @@ class AiChatBloc extends Bloc<AiChatEvent, AiChatState> {
         return;
       }
 
-      // Xato turini aniqlash
+      // Xato turini aniqlash — import qilingan exception tiplardan
       String errorText;
-      final errorStr = e.toString().toLowerCase();
-      if (errorStr.contains('timeout') || errorStr.contains('receivetimeout')) {
-        errorText = 'AI javob berishi biroz ko\'proq vaqt oldi. '
-            'Qayta urinib ko\'ring yoki savolingizni qisqaroq yozing. ⏳';
-      } else if (errorStr.contains('internet') || errorStr.contains('ulanib')) {
+
+      if (e is NetworkException) {
+        // ApiClient dan — internet/timeout muammosi
         errorText = 'Internet aloqangiz bilan muammo bor. '
             'Internetni tekshiring va qayta urinib ko\'ring. 📶';
+      } else if (e is UnauthorizedException) {
+        errorText = 'Sessiya tugadi. Iltimos, tizimga qayta kiring. 🔐';
+      } else if (e is ServerException) {
+        // Server xatosi — aniq xabarni ko'rsatish
+        errorText = e.message.isNotEmpty
+            ? e.message
+            : 'Server bilan muammo yuz berdi. Qayta urinib ko\'ring.';
       } else {
-        errorText = 'Kechirasiz, hozir javob bera olmayapman. '
-            'Qayta urinib ko\'ring.';
+        // Backend success:false yoki boshqa Exception
+        // "Exception: ..." prefiksini olib tashlash
+        final raw = e.toString();
+        final cleanMsg = raw.replaceFirst(RegExp(r'^Exception:\s*'), '');
+
+        if (cleanMsg.toLowerCase().contains('timeout')) {
+          errorText = 'AI javob berishi biroz ko\'proq vaqt oldi. '
+              'Qayta urinib ko\'ring yoki savolingizni qisqaroq yozing. ⏳';
+        } else {
+          errorText = cleanMsg.isNotEmpty
+              ? cleanMsg
+              : 'Kechirasiz, hozir javob bera olmayapman. '
+                  'Qayta urinib ko\'ring.';
+        }
       }
 
       // Error xabar — faqat UI da ko'rsatiladi, DB ga saqlanMAYDI

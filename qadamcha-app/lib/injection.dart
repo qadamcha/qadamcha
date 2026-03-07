@@ -1,42 +1,42 @@
 import 'package:get_it/get_it.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'core/network/api_client.dart';
+import 'package:qadamcha_app/core/network/api_client.dart';
 
 // Auth Feature
-import 'features/auth/domain/repositories/auth_repository.dart';
-import 'features/auth/data/repositories/auth_repository_impl.dart';
-import 'features/auth/data/datasources/auth_remote_datasource.dart';
-import 'features/auth/data/datasources/auth_local_datasource.dart';
-import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:qadamcha_app/features/auth/domain/repositories/auth_repository.dart';
+import 'package:qadamcha_app/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:qadamcha_app/features/auth/data/datasources/auth_remote_datasource.dart';
+import 'package:qadamcha_app/features/auth/data/datasources/auth_local_datasource.dart';
+import 'package:qadamcha_app/features/auth/presentation/bloc/auth_bloc.dart';
 
 // Child Feature
-import 'features/child/domain/repositories/child_repository.dart';
-import 'features/child/data/repositories/child_repository_impl.dart';
-import 'features/child/presentation/bloc/child_bloc.dart';
+import 'package:qadamcha_app/features/child/domain/repositories/child_repository.dart';
+import 'package:qadamcha_app/features/child/data/repositories/child_repository_impl.dart';
+import 'package:qadamcha_app/features/child/presentation/bloc/child_bloc.dart';
 
 // Content Feature
-import 'features/content/domain/repositories/content_repository.dart';
-import 'features/content/data/repositories/content_repository_impl.dart';
-import 'features/content/data/datasources/content_remote_data_source.dart';
-import 'features/content/presentation/bloc/content_bloc.dart';
+import 'package:qadamcha_app/features/content/domain/repositories/content_repository.dart';
+import 'package:qadamcha_app/features/content/data/repositories/content_repository_impl.dart';
+import 'package:qadamcha_app/features/content/data/datasources/content_remote_data_source.dart';
+import 'package:qadamcha_app/features/content/presentation/bloc/content_bloc.dart';
 
 // Device Feature
-import 'features/device/domain/repositories/device_repository.dart';
-import 'features/device/data/repositories/device_repository_impl.dart';
-import 'features/device/presentation/bloc/device_bloc.dart';
+import 'package:qadamcha_app/features/device/domain/repositories/device_repository.dart';
+import 'package:qadamcha_app/features/device/data/repositories/device_repository_impl.dart';
+import 'package:qadamcha_app/features/device/presentation/bloc/device_bloc.dart';
 
 // Subscription Feature
-import 'features/subscription/domain/repositories/subscription_repository.dart';
-import 'features/subscription/data/repositories/subscription_repository_impl.dart';
-import 'features/subscription/presentation/bloc/subscription_bloc.dart';
+import 'package:qadamcha_app/features/subscription/domain/repositories/subscription_repository.dart';
+import 'package:qadamcha_app/features/subscription/data/repositories/subscription_repository_impl.dart';
+import 'package:qadamcha_app/features/subscription/presentation/bloc/subscription_bloc.dart';
 
 // AI Chat Feature
-import 'features/ai_chat/domain/repositories/ai_chat_repository.dart';
-import 'features/ai_chat/data/repositories/ai_chat_repository_impl.dart';
-import 'features/ai_chat/data/datasources/ai_chat_remote_datasource.dart';
-import 'features/ai_chat/data/datasources/chat_local_datasource.dart';
-import 'features/ai_chat/presentation/bloc/ai_chat_bloc.dart';
+import 'package:qadamcha_app/features/ai_chat/domain/repositories/ai_chat_repository.dart';
+import 'package:qadamcha_app/features/ai_chat/data/repositories/ai_chat_repository_impl.dart';
+import 'package:qadamcha_app/features/ai_chat/data/datasources/ai_chat_remote_datasource.dart';
+import 'package:qadamcha_app/features/ai_chat/data/datasources/chat_local_datasource.dart';
+import 'package:qadamcha_app/features/ai_chat/presentation/bloc/ai_chat_bloc.dart';
 
 final sl = GetIt.instance;
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../bloc/auth_bloc.dart';
-import 'role_selection_page.dart';
+import 'package:qadamcha_app/core/theme/app_colors.dart';
+import 'package:qadamcha_app/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:qadamcha_app/features/auth/presentation/pages/role_selection_page.dart';
 
 /// Splash Screen — Premium blue gradient design
 /// Material icons, clean professional look

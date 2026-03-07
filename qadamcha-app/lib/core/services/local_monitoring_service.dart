@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get_it/get_it.dart';
 import '../network/api_client.dart';
-import '../../../main.dart' show navigatorKey;
-import '../../../features/home/presentation/pages/time_limit_page.dart';
+import '../../main.dart' show navigatorKey;
+import '../../features/home/presentation/pages/time_limit_page.dart';
 
 /// LocalMonitoringService — Monitoring ma'lumotlarini local + backend saqlash
 /// 
