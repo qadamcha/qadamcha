@@ -963,11 +963,6 @@ class _AnimatedImageCardState extends State<_AnimatedImageCard>
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    Icon(
-                      Icons.play_circle_filled_rounded,
-                      size: 20.sp,
-                      color: widget.color,
-                    ),
                   ],
                 ),
               ),
