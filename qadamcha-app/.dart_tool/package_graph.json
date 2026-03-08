@@ -7,8 +7,10 @@
       "name": "qadamcha_app",
       "version": "1.0.0+1",
       "dependencies": [
+        "audioplayers",
         "cached_network_image",
         "chewie",
+        "confetti",
         "connectivity_plus",
         "cupertino_icons",
         "dartz",
@@ -30,9 +32,11 @@
         "http",
         "intl",
         "json_annotation",
+        "just_audio",
         "lottie",
         "mobile_scanner",
         "package_info_plus",
+        "path_provider",
         "qr_flutter",
         "retrofit",
         "share_plus",
@@ -185,6 +189,63 @@
         "stream_channel",
         "test_api",
         "vector_math"
+      ]
+    },
+    {
+      "name": "confetti",
+      "version": "0.7.0",
+      "dependencies": [
+        "flutter",
+        "vector_math"
+      ]
+    },
+    {
+      "name": "just_audio",
+      "version": "0.10.5",
+      "dependencies": [
+        "async",
+        "audio_session",
+        "crypto",
+        "flutter",
+        "just_audio_platform_interface",
+        "just_audio_web",
+        "meta",
+        "path",
+        "path_provider",
+        "rxdart",
+        "synchronized",
+        "uuid"
+      ]
+    },
+    {
+      "name": "audioplayers",
+      "version": "6.6.0",
+      "dependencies": [
+        "audioplayers_android",
+        "audioplayers_darwin",
+        "audioplayers_linux",
+        "audioplayers_platform_interface",
+        "audioplayers_web",
+        "audioplayers_windows",
+        "file",
+        "flutter",
+        "http",
+        "meta",
+        "path_provider",
+        "synchronized",
+        "uuid"
+      ]
+    },
+    {
+      "name": "path_provider",
+      "version": "2.1.5",
+      "dependencies": [
+        "flutter",
+        "path_provider_android",
+        "path_provider_foundation",
+        "path_provider_linux",
+        "path_provider_platform_interface",
+        "path_provider_windows"
       ]
     },
     {
@@ -1080,6 +1141,162 @@
       ]
     },
     {
+      "name": "synchronized",
+      "version": "3.4.0",
+      "dependencies": []
+    },
+    {
+      "name": "uuid",
+      "version": "4.5.2",
+      "dependencies": [
+        "crypto",
+        "fixnum",
+        "meta"
+      ]
+    },
+    {
+      "name": "rxdart",
+      "version": "0.28.0",
+      "dependencies": []
+    },
+    {
+      "name": "audio_session",
+      "version": "0.2.2",
+      "dependencies": [
+        "flutter",
+        "flutter_web_plugins",
+        "meta",
+        "rxdart"
+      ]
+    },
+    {
+      "name": "just_audio_web",
+      "version": "0.4.16",
+      "dependencies": [
+        "flutter",
+        "flutter_web_plugins",
+        "just_audio_platform_interface",
+        "synchronized",
+        "web"
+      ]
+    },
+    {
+      "name": "just_audio_platform_interface",
+      "version": "4.6.0",
+      "dependencies": [
+        "flutter",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "file",
+      "version": "7.0.1",
+      "dependencies": [
+        "meta",
+        "path"
+      ]
+    },
+    {
+      "name": "audioplayers_windows",
+      "version": "4.3.0",
+      "dependencies": [
+        "audioplayers_platform_interface",
+        "flutter"
+      ]
+    },
+    {
+      "name": "audioplayers_web",
+      "version": "5.2.0",
+      "dependencies": [
+        "audioplayers_platform_interface",
+        "flutter",
+        "flutter_web_plugins",
+        "web"
+      ]
+    },
+    {
+      "name": "audioplayers_platform_interface",
+      "version": "7.1.1",
+      "dependencies": [
+        "collection",
+        "flutter",
+        "meta",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "audioplayers_linux",
+      "version": "4.2.1",
+      "dependencies": [
+        "audioplayers_platform_interface",
+        "flutter"
+      ]
+    },
+    {
+      "name": "audioplayers_darwin",
+      "version": "6.4.0",
+      "dependencies": [
+        "audioplayers_platform_interface",
+        "flutter"
+      ]
+    },
+    {
+      "name": "audioplayers_android",
+      "version": "5.2.1",
+      "dependencies": [
+        "audioplayers_platform_interface",
+        "flutter"
+      ]
+    },
+    {
+      "name": "path_provider_windows",
+      "version": "2.3.0",
+      "dependencies": [
+        "ffi",
+        "flutter",
+        "path",
+        "path_provider_platform_interface"
+      ]
+    },
+    {
+      "name": "path_provider_platform_interface",
+      "version": "2.1.2",
+      "dependencies": [
+        "flutter",
+        "platform",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "path_provider_linux",
+      "version": "2.2.1",
+      "dependencies": [
+        "ffi",
+        "flutter",
+        "path",
+        "path_provider_platform_interface",
+        "xdg_directories"
+      ]
+    },
+    {
+      "name": "path_provider_foundation",
+      "version": "2.6.0",
+      "dependencies": [
+        "ffi",
+        "flutter",
+        "objective_c",
+        "path_provider_platform_interface"
+      ]
+    },
+    {
+      "name": "path_provider_android",
+      "version": "2.2.22",
+      "dependencies": [
+        "flutter",
+        "path_provider_platform_interface"
+      ]
+    },
+    {
       "name": "web",
       "version": "1.1.1",
       "dependencies": []
@@ -1288,14 +1505,6 @@
         "ffi",
         "meta",
         "win32"
-      ]
-    },
-    {
-      "name": "file",
-      "version": "7.0.1",
-      "dependencies": [
-        "meta",
-        "path"
       ]
     },
     {
@@ -1525,18 +1734,6 @@
         "flutter",
         "http",
         "vector_graphics_codec"
-      ]
-    },
-    {
-      "name": "path_provider",
-      "version": "2.1.5",
-      "dependencies": [
-        "flutter",
-        "path_provider_android",
-        "path_provider_foundation",
-        "path_provider_linux",
-        "path_provider_platform_interface",
-        "path_provider_windows"
       ]
     },
     {
@@ -1849,11 +2046,29 @@
       ]
     },
     {
+      "name": "platform",
+      "version": "3.1.6",
+      "dependencies": []
+    },
+    {
       "name": "xdg_directories",
       "version": "1.1.0",
       "dependencies": [
         "meta",
         "path"
+      ]
+    },
+    {
+      "name": "objective_c",
+      "version": "9.3.0",
+      "dependencies": [
+        "code_assets",
+        "collection",
+        "ffi",
+        "hooks",
+        "logging",
+        "native_toolchain_c",
+        "pub_semver"
       ]
     },
     {
@@ -1880,15 +2095,6 @@
       "version": "1.0.2",
       "dependencies": [
         "source_span"
-      ]
-    },
-    {
-      "name": "uuid",
-      "version": "4.5.2",
-      "dependencies": [
-        "crypto",
-        "fixnum",
-        "meta"
       ]
     },
     {
@@ -1920,64 +2126,11 @@
       ]
     },
     {
-      "name": "rxdart",
-      "version": "0.28.0",
-      "dependencies": []
-    },
-    {
       "name": "path_parsing",
       "version": "1.1.0",
       "dependencies": [
         "meta",
         "vector_math"
-      ]
-    },
-    {
-      "name": "path_provider_windows",
-      "version": "2.3.0",
-      "dependencies": [
-        "ffi",
-        "flutter",
-        "path",
-        "path_provider_platform_interface"
-      ]
-    },
-    {
-      "name": "path_provider_platform_interface",
-      "version": "2.1.2",
-      "dependencies": [
-        "flutter",
-        "platform",
-        "plugin_platform_interface"
-      ]
-    },
-    {
-      "name": "path_provider_linux",
-      "version": "2.2.1",
-      "dependencies": [
-        "ffi",
-        "flutter",
-        "path",
-        "path_provider_platform_interface",
-        "xdg_directories"
-      ]
-    },
-    {
-      "name": "path_provider_foundation",
-      "version": "2.6.0",
-      "dependencies": [
-        "ffi",
-        "flutter",
-        "objective_c",
-        "path_provider_platform_interface"
-      ]
-    },
-    {
-      "name": "path_provider_android",
-      "version": "2.2.22",
-      "dependencies": [
-        "flutter",
-        "path_provider_platform_interface"
       ]
     },
     {
@@ -2007,6 +2160,38 @@
       "dependencies": [
         "args",
         "yaml"
+      ]
+    },
+    {
+      "name": "native_toolchain_c",
+      "version": "0.17.4",
+      "dependencies": [
+        "code_assets",
+        "glob",
+        "hooks",
+        "logging",
+        "meta",
+        "pub_semver"
+      ]
+    },
+    {
+      "name": "hooks",
+      "version": "1.0.1",
+      "dependencies": [
+        "collection",
+        "crypto",
+        "logging",
+        "meta",
+        "pub_semver",
+        "yaml"
+      ]
+    },
+    {
+      "name": "code_assets",
+      "version": "1.0.0",
+      "dependencies": [
+        "collection",
+        "hooks"
       ]
     },
     {
@@ -2048,61 +2233,6 @@
         "path",
         "sqflite_common",
         "sqflite_platform_interface"
-      ]
-    },
-    {
-      "name": "platform",
-      "version": "3.1.6",
-      "dependencies": []
-    },
-    {
-      "name": "objective_c",
-      "version": "9.3.0",
-      "dependencies": [
-        "code_assets",
-        "collection",
-        "ffi",
-        "hooks",
-        "logging",
-        "native_toolchain_c",
-        "pub_semver"
-      ]
-    },
-    {
-      "name": "synchronized",
-      "version": "3.4.0",
-      "dependencies": []
-    },
-    {
-      "name": "native_toolchain_c",
-      "version": "0.17.4",
-      "dependencies": [
-        "code_assets",
-        "glob",
-        "hooks",
-        "logging",
-        "meta",
-        "pub_semver"
-      ]
-    },
-    {
-      "name": "hooks",
-      "version": "1.0.1",
-      "dependencies": [
-        "collection",
-        "crypto",
-        "logging",
-        "meta",
-        "pub_semver",
-        "yaml"
-      ]
-    },
-    {
-      "name": "code_assets",
-      "version": "1.0.0",
-      "dependencies": [
-        "collection",
-        "hooks"
       ]
     }
   ],

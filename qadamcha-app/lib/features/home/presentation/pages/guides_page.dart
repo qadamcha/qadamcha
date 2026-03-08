@@ -234,7 +234,7 @@ class _GuideCard extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 15.sp, fontWeight: FontWeight.w700,
+                      fontSize: 17.sp, fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary, fontFamily: 'Nunito',
                     ),
                   ),
@@ -250,7 +250,7 @@ class _GuideCard extends StatelessWidget {
                         child: Text(
                           guide.category,
                           style: TextStyle(
-                            fontSize: 11.sp, fontWeight: FontWeight.w600,
+                            fontSize: 13.sp, fontWeight: FontWeight.w600,
                             color: guide.color, fontFamily: 'Nunito',
                           ),
                         ),

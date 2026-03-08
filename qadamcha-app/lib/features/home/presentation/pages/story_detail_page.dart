@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/services/local_monitoring_service.dart';
 
 /// Ertak tafsilotlari sahifasi
 /// Tepada orqaga qaytish tugmasi + ertak nomi
 /// Pastda ertak matni (scrollable)
-class StoryDetailPage extends StatelessWidget {
+class StoryDetailPage extends StatefulWidget {
   final String title;
   final String storyText;
   final String type;
@@ -18,6 +19,29 @@ class StoryDetailPage extends StatelessWidget {
     required this.type,
     required this.language,
   });
+
+  @override
+  State<StoryDetailPage> createState() => _StoryDetailPageState();
+}
+
+class _StoryDetailPageState extends State<StoryDetailPage> {
+  @override
+  void initState() {
+    super.initState();
+    // Ertak ochilganda — counterni oshirish va activity log qo'shish
+    LocalMonitoringService.instance.addStoryRead();
+    LocalMonitoringService.instance.addActivityLog(
+      activityType: 'story_read',
+      contentTitle: widget.title,
+      durationMinutes: 1,
+    );
+  }
+
+  // Delegated getters from widget
+  String get title => widget.title;
+  String get storyText => widget.storyText;
+  String get type => widget.type;
+  String get language => widget.language;
 
   IconData get _typeIcon {
     switch (type) {
@@ -242,7 +266,7 @@ class StoryDetailPage extends StatelessWidget {
                           title,
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 22.sp,
+                            fontSize: 24.sp,
                             fontWeight: FontWeight.w800,
                             color: AppColors.textPrimary,
                             fontFamily: 'Nunito',
@@ -269,7 +293,7 @@ class StoryDetailPage extends StatelessWidget {
                       Text(
                         storyText,
                         style: TextStyle(
-                          fontSize: 16.sp,
+                          fontSize: 18.sp,
                           color: AppColors.textPrimary,
                           fontFamily: 'Nunito',
                           height: 1.8,

@@ -71,6 +71,7 @@ dependencies:
   path_provider: ^2.1.5
   audioplayers: ^6.6.0
   just_audio: ^0.10.5
+  confetti: ^0.7.0
 
 dev_dependencies:
   flutter_test:
@@ -95,6 +96,11 @@ flutter:
     - assets/bubble_world/
     - assets/coloring_pages/
     - assets/sounds/
+    - assets/jigsaw/webp/animals/
+    - assets/jigsaw/webp/birds/
+    - assets/jigsaw/webp/nature/
+    - assets/jigsaw/webp/fantasy/
+    - assets/jigsaw/webp/aquatic/
   
 flutter_launcher_icons:
   android: true

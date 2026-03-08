@@ -91,7 +91,7 @@ class GuideDetailPage extends StatelessWidget {
                   Text(
                     '${guide.emoji} ${guide.title}',
                     style: TextStyle(
-                      fontSize: 22.sp,
+                      fontSize: 24.sp,
                       fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary,
                       fontFamily: 'Nunito',
@@ -103,7 +103,7 @@ class GuideDetailPage extends StatelessWidget {
                   Text(
                     guide.summary,
                     style: TextStyle(
-                      fontSize: 15.sp,
+                      fontSize: 17.sp,
                       color: AppColors.textSecondary,
                       fontFamily: 'Nunito',
                       height: 1.5,
@@ -130,7 +130,7 @@ class GuideDetailPage extends StatelessWidget {
           child: Text(
             section.content ?? '',
             style: TextStyle(
-              fontSize: 15.sp,
+              fontSize: 17.sp,
               color: AppColors.textPrimary,
               fontFamily: 'Nunito',
               height: 1.6,
@@ -143,7 +143,7 @@ class GuideDetailPage extends StatelessWidget {
           child: Text(
             section.title ?? '',
             style: TextStyle(
-              fontSize: 18.sp,
+              fontSize: 20.sp,
               fontWeight: FontWeight.w800,
               color: AppColors.textPrimary,
               fontFamily: 'Nunito',
@@ -183,7 +183,7 @@ class GuideDetailPage extends StatelessWidget {
           children: (section.items ?? []).map((item) => Padding(
             padding: EdgeInsets.only(bottom: 10.h),
             child: Text(item, style: TextStyle(
-              fontSize: 14.sp, color: AppColors.textPrimary,
+              fontSize: 16.sp, color: AppColors.textPrimary,
               fontFamily: 'Nunito', height: 1.5,
             )),
           )).toList(),
@@ -292,7 +292,7 @@ class GuideDetailPage extends StatelessWidget {
                   Text(
                     section.content ?? '',
                     style: TextStyle(
-                      fontSize: 13.sp, color: AppColors.textPrimary,
+                      fontSize: 15.sp, color: AppColors.textPrimary,
                       fontFamily: 'Nunito', height: 1.5,
                     ),
                   ),

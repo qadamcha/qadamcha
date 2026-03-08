@@ -664,7 +664,7 @@ class _StoriesPageState extends State<StoriesPage> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 16.sp,
+                      fontSize: 18.sp,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
                       fontFamily: 'Nunito',
