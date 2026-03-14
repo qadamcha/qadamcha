@@ -335,14 +335,22 @@ class LocalMonitoringService {
     if (_childId != null) {
       _prefs!.setString(_keyChildId, _childId!);
     }
-    _prefs!.setString(_keyDate, _todayUzbekistan);
-    _prefs!.setString(_keyWeekNumber, _currentWeekNumber);
     
-    // Haftalik stats'da bugungi kunni yangilash (daqiqalarda)
-    final todayIndex = _nowUzbekistan.weekday - 1;
-    if (todayIndex >= 0 && todayIndex < 7) {
-      _weeklyMinutes[todayIndex] = _secondsUsed ~/ 60;
-      _saveWeeklyMinutes();
+    final today = _todayUzbekistan;
+    final currentWeek = _currentWeekNumber;
+    final savedWeek = _prefs!.getString(_keyWeekNumber);
+    
+    _prefs!.setString(_keyDate, today);
+    _prefs!.setString(_keyWeekNumber, currentWeek);
+    
+    // ⚠️ FIX: Hafta almashgan bo'lsa weeklyMinutes ni eski qiymat bilan QAYTA YOZMASLIK!
+    // Faqat joriy hafta mos kelganda bugungi kunni yangilash
+    if (savedWeek == currentWeek || savedWeek == null) {
+      final todayIndex = _nowUzbekistan.weekday - 1;
+      if (todayIndex >= 0 && todayIndex < 7) {
+        _weeklyMinutes[todayIndex] = _secondsUsed ~/ 60;
+        _saveWeeklyMinutes();
+      }
     }
   }
 

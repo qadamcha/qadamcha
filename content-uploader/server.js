@@ -358,42 +358,45 @@ app.get('/api/dashboard/usage-stats', asyncHandler(async (req, res) => {
     const { period = '30' } = req.query; // kunlar soni
     const days = parseInt(period) || 30;
 
-    // WeeklyStats dan barcha haftalik ma'lumotlarni olish
-    const allWeeklyStats = await WeeklyStats.find().lean();
+    // WeeklyStats dan barcha bolalarning ma'lumotlarini olish
+    // Yangi schema: har bir doc da weeks[] array bor
+    const allDocs = await WeeklyStats.find().lean();
 
     // dailyMinutes ni kunlarga yoyish
-    // weekNumber "2026-W11" formatda — haftaning Dushanba sanasini hisoblash
     const dailyUsage = {};
     const now = new Date();
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    for (const ws of allWeeklyStats) {
-        if (!ws.weekNumber || !ws.dailyMinutes) continue;
-        
-        // weekNumber dan hafta boshlanish sanasini olish
-        const [yearStr, weekStr] = ws.weekNumber.split('-W');
-        const year = parseInt(yearStr);
-        const weekNum = parseInt(weekStr);
-        if (!year || !weekNum) continue;
-
-        // ISO hafta → Dushanba sanasi
-        const jan1 = new Date(year, 0, 1);
-        const daysToMonday = (weekNum - 1) * 7 - (jan1.getDay() === 0 ? 6 : jan1.getDay() - 1);
-        const mondayDate = new Date(year, 0, 1 + daysToMonday);
-
-        // Har bir kun uchun (Du=0, Se=1 ... Ya=6)
-        for (let d = 0; d < 7; d++) {
-            const dayDate = new Date(mondayDate);
-            dayDate.setDate(mondayDate.getDate() + d);
+    for (const doc of allDocs) {
+        const weeks = doc.weeks || [];
+        for (const ws of weeks) {
+            if (!ws.weekNumber || !ws.dailyMinutes) continue;
             
-            if (dayDate >= startDate && dayDate <= now) {
-                const key = dayDate.toISOString().slice(0, 10);
-                const mins = (ws.dailyMinutes[d] || 0);
-                if (mins > 0) {
-                    if (!dailyUsage[key]) dailyUsage[key] = { totalMinutes: 0, sessions: 0 };
-                    dailyUsage[key].totalMinutes += mins;
-                    dailyUsage[key].sessions += 1;
+            // weekNumber dan hafta boshlanish sanasini olish
+            const [yearStr, weekStr] = ws.weekNumber.split('-W');
+            const year = parseInt(yearStr);
+            const weekNum = parseInt(weekStr);
+            if (!year || !weekNum) continue;
+
+            // ISO hafta → Dushanba sanasi
+            const jan1 = new Date(year, 0, 1);
+            const daysToMonday = (weekNum - 1) * 7 - (jan1.getDay() === 0 ? 6 : jan1.getDay() - 1);
+            const mondayDate = new Date(year, 0, 1 + daysToMonday);
+
+            // Har bir kun uchun (Du=0, Se=1 ... Ya=6)
+            for (let d = 0; d < 7; d++) {
+                const dayDate = new Date(mondayDate);
+                dayDate.setDate(mondayDate.getDate() + d);
+                
+                if (dayDate >= startDate && dayDate <= now) {
+                    const key = dayDate.toISOString().slice(0, 10);
+                    const mins = (ws.dailyMinutes[d] || 0);
+                    if (mins > 0) {
+                        if (!dailyUsage[key]) dailyUsage[key] = { totalMinutes: 0, sessions: 0 };
+                        dailyUsage[key].totalMinutes += mins;
+                        dailyUsage[key].sessions += 1;
+                    }
                 }
             }
         }

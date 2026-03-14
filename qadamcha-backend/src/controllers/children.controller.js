@@ -492,22 +492,42 @@ module.exports = {
             );
         }
 
-        // WeeklyStats ga ham joriy haftani yangilash
+        // WeeklyStats ga ham joriy haftani yangilash (bitta doc, weeks[] array)
         const week = currentWeekNumber();
         const todayDate = new Date(today + 'T12:00:00Z');
         let dayIndex = todayDate.getDay() - 1; // 0=Du, 6=Ya
         if (dayIndex < 0) dayIndex = 6;
-        const year = parseInt(week.split('-')[0]) || new Date().getFullYear();
 
-        const dailyKey = `dailyMinutes.${dayIndex}`;
-        await WeeklyStats.findOneAndUpdate(
-            { childId: child._id, weekNumber: week },
-            {
-                $max: { [dailyKey]: minutesUsed || 0 },
-                $setOnInsert: { childId: child._id, weekNumber: week, year }
-            },
-            { upsert: true }
-        );
+        let statsDoc = await WeeklyStats.findOne({ childId: child._id });
+        if (!statsDoc) {
+            // Birinchi marta — yangi doc yaratish
+            const newWeek = { weekNumber: week, dailyMinutes: [0,0,0,0,0,0,0], totalMinutes: 0, totalSessions: 0 };
+            newWeek.dailyMinutes[dayIndex] = minutesUsed || 0;
+            newWeek.totalMinutes = newWeek.dailyMinutes.reduce((a,b) => a+b, 0);
+            statsDoc = await WeeklyStats.create({ childId: child._id, weeks: [newWeek] });
+        } else {
+            // Mavjud doc — joriy haftani topish yoki qo'shish
+            const weekIdx = statsDoc.weeks.findIndex(w => w.weekNumber === week);
+            if (weekIdx >= 0) {
+                // Mavjud hafta — $max bilan yangilash
+                const current = statsDoc.weeks[weekIdx].dailyMinutes[dayIndex] || 0;
+                if ((minutesUsed || 0) > current) {
+                    statsDoc.weeks[weekIdx].dailyMinutes[dayIndex] = minutesUsed;
+                    statsDoc.weeks[weekIdx].totalMinutes = statsDoc.weeks[weekIdx].dailyMinutes.reduce((a,b) => a+b, 0);
+                    await statsDoc.save();
+                }
+            } else {
+                // Yangi hafta — qo'shish (15 tadan oshsa eskini o'chirish)
+                if (statsDoc.weeks.length >= 15) {
+                    statsDoc.weeks.shift(); // Eng eskini o'chirish (FIFO)
+                }
+                const newWeek = { weekNumber: week, dailyMinutes: [0,0,0,0,0,0,0], totalMinutes: 0, totalSessions: 0 };
+                newWeek.dailyMinutes[dayIndex] = minutesUsed || 0;
+                newWeek.totalMinutes = newWeek.dailyMinutes.reduce((a,b) => a+b, 0);
+                statsDoc.weeks.push(newWeek);
+                await statsDoc.save();
+            }
+        }
 
         return { success: true, message: 'Usage synced' };
     },
@@ -535,31 +555,28 @@ module.exports = {
         }
 
         const totalMinutes = dailyMinutes.reduce((a, b) => a + b, 0);
-        const year = parseInt(weekNumber.split('-')[0]) || new Date().getFullYear();
 
-        // Upsert — mavjud bo'lsa yangilash, yo'q bo'lsa yaratish
-        await WeeklyStats.findOneAndUpdate(
-            { childId: child._id, weekNumber },
-            {
-                $set: {
-                    dailyMinutes,
-                    totalMinutes,
-                    totalSessions: totalSessions || 0,
-                    year
-                },
-                $setOnInsert: { childId: child._id, weekNumber }
-            },
-            { upsert: true, new: true }
-        );
-
-        // 15 haftadan eski ma'lumotlarni o'chirish
-        const allWeeks = await WeeklyStats.find({ childId: child._id })
-            .sort({ weekNumber: -1 })
-            .select('_id weekNumber');
-        
-        if (allWeeks.length > 15) {
-            const toDelete = allWeeks.slice(15).map(w => w._id);
-            await WeeklyStats.deleteMany({ _id: { $in: toDelete } });
+        let statsDoc = await WeeklyStats.findOne({ childId: child._id });
+        if (!statsDoc) {
+            statsDoc = await WeeklyStats.create({
+                childId: child._id,
+                weeks: [{ weekNumber, dailyMinutes, totalMinutes, totalSessions: totalSessions || 0 }]
+            });
+        } else {
+            const weekIdx = statsDoc.weeks.findIndex(w => w.weekNumber === weekNumber);
+            if (weekIdx >= 0) {
+                // Mavjud hafta — yangilash
+                statsDoc.weeks[weekIdx].dailyMinutes = dailyMinutes;
+                statsDoc.weeks[weekIdx].totalMinutes = totalMinutes;
+                statsDoc.weeks[weekIdx].totalSessions = totalSessions || 0;
+            } else {
+                // Yangi hafta — 15 tadan oshsa eskini o'chirish
+                if (statsDoc.weeks.length >= 15) {
+                    statsDoc.weeks.shift(); // FIFO — eng eskini chiqarish
+                }
+                statsDoc.weeks.push({ weekNumber, dailyMinutes, totalMinutes, totalSessions: totalSessions || 0 });
+            }
+            await statsDoc.save();
         }
 
         return { success: true, message: 'Weekly stats synced' };
@@ -578,10 +595,8 @@ module.exports = {
             });
         }
 
-        const weeks = await WeeklyStats.find({ childId: child._id })
-            .sort({ weekNumber: -1 })
-            .limit(15)
-            .lean();
+        const statsDoc = await WeeklyStats.findOne({ childId: child._id }).lean();
+        const weeks = statsDoc ? statsDoc.weeks : [];
 
         return { success: true, weeks };
     }
