@@ -1,6 +1,6 @@
-const { Child, Activity } = require('../models');
+const { Child, Activity, WeeklyStats } = require('../models');
 const { ERRORS, SUCCESS } = require('../config/constants');
-const { todayUzbekistan } = require('../utils/dateUtils');
+const { todayUzbekistan, currentWeekNumber } = require('../utils/dateUtils');
 
 module.exports = {
 
@@ -492,6 +492,97 @@ module.exports = {
             );
         }
 
+        // WeeklyStats ga ham joriy haftani yangilash
+        const week = currentWeekNumber();
+        const todayDate = new Date(today + 'T12:00:00Z');
+        let dayIndex = todayDate.getDay() - 1; // 0=Du, 6=Ya
+        if (dayIndex < 0) dayIndex = 6;
+        const year = parseInt(week.split('-')[0]) || new Date().getFullYear();
+
+        const dailyKey = `dailyMinutes.${dayIndex}`;
+        await WeeklyStats.findOneAndUpdate(
+            { childId: child._id, weekNumber: week },
+            {
+                $max: { [dailyKey]: minutesUsed || 0 },
+                $setOnInsert: { childId: child._id, weekNumber: week, year }
+            },
+            { upsert: true }
+        );
+
         return { success: true, message: 'Usage synced' };
+    },
+
+    // POST /children/:id/sync-weekly — Haftalik stats ni MongoDB ga saqlash
+    // App hafta almashganda chaqiradi — eski hafta ma'lumotlarini yuboradi
+    async syncWeekly(request, reply) {
+        const { userId } = request.user;
+        const { id } = request.params;
+        const { weekNumber, dailyMinutes, totalSessions } = request.body;
+
+        const child = await Child.findOne({ _id: id, parentId: userId });
+        if (!child) {
+            return reply.status(404).send({
+                success: false,
+                message: ERRORS.NOT_FOUND
+            });
+        }
+
+        if (!weekNumber || !dailyMinutes || dailyMinutes.length !== 7) {
+            return reply.status(400).send({
+                success: false,
+                message: 'weekNumber va dailyMinutes (7 element) kerak'
+            });
+        }
+
+        const totalMinutes = dailyMinutes.reduce((a, b) => a + b, 0);
+        const year = parseInt(weekNumber.split('-')[0]) || new Date().getFullYear();
+
+        // Upsert — mavjud bo'lsa yangilash, yo'q bo'lsa yaratish
+        await WeeklyStats.findOneAndUpdate(
+            { childId: child._id, weekNumber },
+            {
+                $set: {
+                    dailyMinutes,
+                    totalMinutes,
+                    totalSessions: totalSessions || 0,
+                    year
+                },
+                $setOnInsert: { childId: child._id, weekNumber }
+            },
+            { upsert: true, new: true }
+        );
+
+        // 15 haftadan eski ma'lumotlarni o'chirish
+        const allWeeks = await WeeklyStats.find({ childId: child._id })
+            .sort({ weekNumber: -1 })
+            .select('_id weekNumber');
+        
+        if (allWeeks.length > 15) {
+            const toDelete = allWeeks.slice(15).map(w => w._id);
+            await WeeklyStats.deleteMany({ _id: { $in: toDelete } });
+        }
+
+        return { success: true, message: 'Weekly stats synced' };
+    },
+
+    // GET /children/:id/weekly-history — Oxirgi 15 hafta tarixi
+    async getWeeklyHistory(request, reply) {
+        const { userId } = request.user;
+        const { id } = request.params;
+
+        const child = await Child.findOne({ _id: id, parentId: userId });
+        if (!child) {
+            return reply.status(404).send({
+                success: false,
+                message: ERRORS.NOT_FOUND
+            });
+        }
+
+        const weeks = await WeeklyStats.find({ childId: child._id })
+            .sort({ weekNumber: -1 })
+            .limit(15)
+            .lean();
+
+        return { success: true, weeks };
     }
 };

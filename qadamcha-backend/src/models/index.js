@@ -11,5 +11,6 @@ module.exports = {
     ContentLike: require('./ContentLike'),
     PaymeTransaction: require('./PaymeTransaction'),
     Story: require('./Story'),
+    WeeklyStats: require('./WeeklyStats'),
 };
 

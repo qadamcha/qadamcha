@@ -90,4 +90,10 @@ module.exports = async function (fastify) {
 
     // POST /children/:id/sync-usage — Batch sync (LocalMonitoringService → DB)
     fastify.post('/:id/sync-usage', childrenController.syncUsage);
+
+    // POST /children/:id/sync-weekly — Haftalik stats ni MongoDB ga saqlash
+    fastify.post('/:id/sync-weekly', childrenController.syncWeekly);
+
+    // GET /children/:id/weekly-history — Oxirgi 15 hafta tarixi
+    fastify.get('/:id/weekly-history', childrenController.getWeeklyHistory);
 };

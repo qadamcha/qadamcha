@@ -26,4 +26,15 @@ function todayUzbekistan() {
     return nowUzbekistan().toISOString().split('T')[0];
 }
 
-module.exports = { nowUzbekistan, todayUzbekistan, UZ_OFFSET_HOURS };
+/**
+ * O'zbekiston vaqtida joriy hafta raqamini "YYYY-WNN" formatida qaytaradi
+ * @returns {string} masalan "2026-W11"
+ */
+function currentWeekNumber() {
+    const now = nowUzbekistan();
+    const firstDayOfYear = new Date(now.getFullYear(), 0, 1);
+    const weekNum = Math.ceil(((now - firstDayOfYear) / 86400000 + firstDayOfYear.getDay()) / 7);
+    return `${now.getFullYear()}-W${weekNum}`;
+}
+
+module.exports = { nowUzbekistan, todayUzbekistan, currentWeekNumber, UZ_OFFSET_HOURS };

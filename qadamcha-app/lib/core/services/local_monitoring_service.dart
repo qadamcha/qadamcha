@@ -67,7 +67,7 @@ class LocalMonitoringService {
   // Har 5 daqiqada "kun" almashadi, har 35 daqiqada "hafta" almashadi
   // Backend (dateUtils.js) da ham xuddi shu flag va formula bor
   // ═══════════════════════════════════════════════════════════════════
-  static const bool _testMode = false;
+  static const bool _testMode = true; // ⚠️ TEST: true = 5 daq = 1 kun
   static const int _testDayDurationMs = 5 * 60 * 1000; // 5 daqiqa = 1 "kun"
 
   static DateTime get _nowUzbekistan {
@@ -202,6 +202,9 @@ class LocalMonitoringService {
     
     if (savedWeek != null && savedWeek != currentWeek) {
       if (kDebugMode) print('🔄 [LocalMonitoring] Yangi hafta: $savedWeek → $currentWeek — to\'liq reset');
+      // ✅ Avval eski hafta ma'lumotlarini backend ga yuborish
+      _syncWeeklyToBackend(savedWeek, List<int>.from(_weeklyMinutes));
+      // Keyin reset
       _weeklyMinutes = [0, 0, 0, 0, 0, 0, 0];
       _saveWeeklyMinutes();
     }
@@ -353,6 +356,37 @@ class LocalMonitoringService {
       }
     });
     if (kDebugMode) print('🔄 [LocalMonitoring] Sync timer boshlandi (har 2 daqiqa)');
+  }
+
+  /// Haftalik ma'lumotni backend ga yuborish
+  /// Hafta almashganda chaqiriladi — eski hafta dailyMinutes ni saqlaydi
+  Future<void> _syncWeeklyToBackend(String weekNumber, List<int> dailyMinutes) async {
+    if (_childId == null || _childId!.isEmpty) {
+      if (kDebugMode) print('⚠️ [LocalMonitoring] syncWeekly: childId null — sync qilinmadi');
+      return;
+    }
+
+    try {
+      final apiClient = GetIt.instance<ApiClient>();
+      final totalSessions = _videosWatched + _gamesPlayed + _storiesRead;
+      if (kDebugMode) print('📊 [LocalMonitoring] syncWeekly: week=$weekNumber, days=$dailyMinutes, sessions=$totalSessions');
+      
+      final response = await apiClient.dio.post('/children/$_childId/sync-weekly', data: {
+        'weekNumber': weekNumber,
+        'dailyMinutes': dailyMinutes,
+        'totalSessions': totalSessions,
+      });
+      
+      if (kDebugMode) print('✅ [LocalMonitoring] syncWeekly: ${response.statusCode} ${response.data}');
+    } on DioException catch (e) {
+      if (kDebugMode) {
+        print('❌ [LocalMonitoring] syncWeekly DioException:');
+        print('   statusCode: ${e.response?.statusCode}');
+        print('   response: ${e.response?.data}');
+      }
+    } catch (e) {
+      if (kDebugMode) print('❌ [LocalMonitoring] syncWeekly xato: $e');
+    }
   }
 
   /// Backend'ga to'g'ridan-to'g'ri sync qilish (Dio orqali)

@@ -4,20 +4,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Qadamcha - Content Uploader</title>
+    <title>Qadamcha — Admin Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <style>
         :root {
             --primary: #6366f1;
             --primary-dark: #4f46e5;
             --bg: #0f172a;
+            --sidebar: #1a1f35;
             --card: #1e293b;
             --text: #f1f5f9;
             --text-muted: #94a3b8;
             --success: #10b981;
             --danger: #ef4444;
+            --warning: #f59e0b;
             --border: #334155;
             --orange: #f59e0b;
-            --orange-dark: #d97706;
         }
 
         * {
@@ -31,86 +33,130 @@
             background: var(--bg);
             color: var(--text);
             min-height: 100vh;
-            padding: 2rem;
+            display: flex;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 220px;
+            background: var(--sidebar);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem 0;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 10;
         }
 
-        h1 {
-            font-size: 2rem;
+        .sidebar-logo {
+            padding: 0 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
             margin-bottom: 0.5rem;
+        }
+
+        .sidebar-logo h1 {
+            font-size: 1.2rem;
             background: linear-gradient(135deg, var(--primary), #a855f7);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        .subtitle {
+        .sidebar-logo small {
             color: var(--text-muted);
-            margin-bottom: 1.5rem;
+            font-size: 0.7rem;
         }
 
-        /* ===== TAB NAVIGATION ===== */
-        .tab-nav {
-            display: flex;
-            gap: 0;
-            margin-bottom: 2rem;
-            background: var(--card);
-            border-radius: 1rem;
-            padding: 0.35rem;
-            border: 1px solid var(--border);
-        }
-
-        .tab-btn {
-            flex: 1;
-            padding: 0.85rem 1.5rem;
-            border: none;
-            border-radius: 0.75rem;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: transparent;
-            color: var(--text-muted);
+        .nav-parent {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
+            justify-content: space-between;
+            padding: 0.75rem 1.25rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            user-select: none;
         }
 
-        .tab-btn:hover {
-            color: var(--text);
+        .nav-parent:hover {
             background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
         }
 
-        .tab-btn.active-multfilm {
-            background: linear-gradient(135deg, var(--primary), #8b5cf6);
-            color: white;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        .nav-parent .arrow {
+            transition: transform 0.25s;
+            font-size: 0.7rem;
         }
 
-        .tab-btn.active-ertak {
-            background: linear-gradient(135deg, var(--orange), #ef4444);
-            color: white;
-            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+        .nav-parent.open .arrow {
+            transform: rotate(90deg);
         }
 
-        .tab-content {
+        .nav-children {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .nav-parent.open + .nav-children {
+            max-height: 300px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 1.25rem 0.6rem 2.25rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            font-size: 0.85rem;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+        }
+
+        .nav-item.active {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            border-left-color: var(--primary);
+            font-weight: 600;
+        }
+
+        .nav-item .icon {
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        /* ===== MAIN ===== */
+        .main {
+            flex: 1;
+            margin-left: 220px;
+            padding: 1.5rem 2rem;
+        }
+
+        .page {
             display: none;
         }
 
-        .tab-content.active {
+        .page.active {
             display: block;
-            animation: fadeIn 0.3s ease;
+            animation: fadeIn 0.25s ease;
         }
 
         @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(10px);
+                transform: translateY(8px);
             }
 
             to {
@@ -119,54 +165,111 @@
             }
         }
 
-        .grid {
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .page-header h2 {
+            font-size: 1.5rem;
+        }
+
+        /* ===== STATS GRID ===== */
+        .stats-grid {
             display: grid;
-            grid-template-columns: 1fr 1.5fr;
-            gap: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
         }
 
-        @media (max-width: 900px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
+        .stat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1.25rem;
         }
 
+        .stat-card .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .stat-card .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.15rem;
+        }
+
+        /* ===== CARDS ===== */
         .card {
             background: var(--card);
             border-radius: 1rem;
             padding: 1.5rem;
             border: 1px solid var(--border);
+            margin-bottom: 1.5rem;
         }
 
-        .card h2 {
-            font-size: 1.25rem;
-            margin-bottom: 1.5rem;
+        .card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 1000px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .grid-2-equal {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        /* ===== FORMS ===== */
         .form-group {
-            margin-bottom: 1rem;
+            margin-bottom: 0.85rem;
         }
 
         label {
             display: block;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.35rem;
             color: var(--text-muted);
-            font-size: 0.875rem;
+            font-size: 0.8rem;
         }
 
         input,
         select,
         textarea {
             width: 100%;
-            padding: 0.75rem 1rem;
+            padding: 0.6rem 0.85rem;
             border: 1px solid var(--border);
             border-radius: 0.5rem;
             background: var(--bg);
             color: var(--text);
-            font-size: 1rem;
+            font-size: 0.9rem;
             transition: border-color 0.2s;
         }
 
@@ -179,19 +282,18 @@
 
         textarea {
             resize: vertical;
-            min-height: 80px;
+            min-height: 70px;
         }
 
-        .story-text-area {
-            min-height: 200px;
-            font-size: 0.95rem;
+        .story-textarea {
+            min-height: 180px;
             line-height: 1.6;
         }
 
         .row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1rem;
+            gap: 0.75rem;
         }
 
         .checkbox-group {
@@ -204,11 +306,12 @@
             width: auto;
         }
 
+        /* ===== BUTTONS ===== */
         .btn {
-            padding: 0.75rem 1.5rem;
+            padding: 0.6rem 1.25rem;
             border: none;
             border-radius: 0.5rem;
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
@@ -218,11 +321,11 @@
             background: linear-gradient(135deg, var(--primary), #8b5cf6);
             color: white;
             width: 100%;
-            margin-top: 1rem;
+            margin-top: 0.75rem;
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
+            transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
         }
 
@@ -230,23 +333,62 @@
             background: linear-gradient(135deg, var(--orange), #ef4444);
             color: white;
             width: 100%;
-            margin-top: 1rem;
+            margin-top: 0.75rem;
         }
 
         .btn-orange:hover {
-            transform: translateY(-2px);
+            transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.75rem;
+            font-size: 0.8rem;
         }
 
         .btn-danger {
             background: var(--danger);
             color: white;
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
         }
 
+        .btn-edit {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-toggle {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        .btn-toggle.active {
+            background: var(--success);
+            color: white;
+            border-color: var(--success);
+        }
+
+        /* ===== SEARCH ===== */
+        .search-bar {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .search-bar input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .search-bar select {
+            width: auto;
+            min-width: 120px;
+        }
+
+        /* ===== TABLE ===== */
         .content-list {
-            max-height: 600px;
+            max-height: 550px;
             overflow-y: auto;
         }
 
@@ -254,10 +396,10 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1rem;
+            padding: 0.85rem 1rem;
             background: var(--bg);
             border-radius: 0.5rem;
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.5rem;
             border: 1px solid var(--border);
             transition: border-color 0.2s;
         }
@@ -266,68 +408,118 @@
             border-color: var(--primary);
         }
 
-        .content-info h3 {
-            font-size: 1rem;
-            margin-bottom: 0.25rem;
+        .content-info h4 {
+            font-size: 0.95rem;
+            margin-bottom: 0.2rem;
+            font-weight: 600;
         }
 
         .content-meta {
             display: flex;
-            gap: 1rem;
-            font-size: 0.75rem;
+            gap: 0.75rem;
+            font-size: 0.72rem;
             color: var(--text-muted);
             flex-wrap: wrap;
         }
 
         .badge {
-            padding: 0.25rem 0.5rem;
+            padding: 0.2rem 0.45rem;
             border-radius: 0.25rem;
-            font-size: 0.75rem;
-            background: var(--primary);
+            font-size: 0.7rem;
+            font-weight: 600;
         }
 
-        .badge.cartoon {
+        .badge.talimiy {
             background: #3b82f6;
         }
 
-        .badge.game {
+        .badge.ozbek {
             background: #10b981;
         }
 
-        .badge.story {
-            background: #f59e0b;
-        }
-
-        .badge.quest {
+        .badge.jahon {
             background: #8b5cf6;
         }
 
-        .badge.ertak {
-            background: #f59e0b;
+        .badge.islomiy {
+            background: #2e7d32;
         }
 
-        .badge.masal {
-            background: #ec4899;
+        .item-actions {
+            display: flex;
+            gap: 0.4rem;
         }
 
-        .badge.hikoya {
-            background: #14b8a6;
+        .story-preview {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.2rem;
+            max-width: 400px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        .badge.sher {
-            background: #a855f7;
+        .char-count {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-align: right;
+            margin-top: 0.2rem;
         }
 
+        /* ===== MODAL ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--card);
+            border-radius: 1rem;
+            padding: 1.75rem;
+            width: 90%;
+            max-width: 550px;
+            max-height: 85vh;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+        }
+
+        .modal h3 {
+            margin-bottom: 1.25rem;
+            font-size: 1.15rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .modal-actions .btn {
+            flex: 1;
+        }
+
+        /* ===== TOAST ===== */
         .toast {
             position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            padding: 1rem 1.5rem;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            padding: 0.85rem 1.25rem;
             border-radius: 0.5rem;
             color: white;
             font-weight: 500;
             animation: slideIn 0.3s ease;
-            z-index: 1000;
+            z-index: 200;
+            font-size: 0.9rem;
         }
 
         .toast.success {
@@ -352,99 +544,215 @@
 
         .empty {
             text-align: center;
-            padding: 3rem;
+            padding: 2.5rem;
             color: var(--text-muted);
         }
 
-        .stats {
+        /* ===== TIMELINE ===== */
+        .timeline-item {
             display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+            gap: 0.75rem;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
         }
 
-        .stat {
-            flex: 1;
-            padding: 1rem;
-            background: var(--bg);
+        .timeline-item:last-child {
+            border-bottom: none;
+        }
+
+        .timeline-icon {
+            width: 32px;
+            height: 32px;
             border-radius: 0.5rem;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            flex-shrink: 0;
         }
 
-        .stat-number {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary);
+        .timeline-info {
+            flex: 1;
         }
 
-        .stat-number.orange {
-            color: var(--orange);
+        .timeline-info .name {
+            font-weight: 600;
         }
 
-        .stat-label {
-            font-size: 0.75rem;
+        .timeline-info .time {
+            font-size: 0.72rem;
             color: var(--text-muted);
-        }
-
-        .story-preview {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-top: 0.35rem;
-            max-width: 400px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .char-count {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            text-align: right;
-            margin-top: 0.25rem;
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <h1>🎬 Qadamcha Content Uploader</h1>
-        <p class="subtitle">Video va ertak kontentlarni bazaga yuklash uchun admin panel</p>
-
-        <!-- Tab Navigation -->
-        <div class="tab-nav">
-            <button class="tab-btn active-multfilm" onclick="switchTab('multfilm')" id="tabMultfilm">
-                🎬 Multfilm Yuklash
-            </button>
-            <button class="tab-btn" onclick="switchTab('ertak')" id="tabErtak">
-                📖 Ertak Yuklash
-            </button>
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+        <div class="sidebar-logo">
+            <h1>🎬 Qadamcha</h1><small>Admin Dashboard</small>
         </div>
 
-        <!-- ==================== MULTFILM TAB ==================== -->
-        <div class="tab-content active" id="multfilmTab">
-            <div class="grid">
-                <!-- Multfilm Form -->
+        <div class="nav-parent open" onclick="toggleMenu(this)">📊 Dashboard <span class="arrow">▶</span></div>
+        <div class="nav-children">
+            <div class="nav-item active" onclick="showPage('stats')"><span class="icon">📈</span> Statistika</div>
+            <div class="nav-item" onclick="showPage('users')"><span class="icon">👥</span> Foydalanuvchilar</div>
+            <div class="nav-item" onclick="showPage('subs')"><span class="icon">💳</span> Obunalar</div>
+        </div>
+
+        <div class="nav-parent open" onclick="toggleMenu(this)">📤 Content Uploader <span class="arrow">▶</span></div>
+        <div class="nav-children">
+            <div class="nav-item" onclick="showPage('videos')"><span class="icon">🎬</span> Videolar</div>
+            <div class="nav-item" onclick="showPage('stories')"><span class="icon">📖</span> Ertaklar</div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <div class="main">
+
+        <!-- ========== 1. STATISTIKA PAGE ========== -->
+        <div class="page active" id="page-stats">
+            <div class="page-header">
+                <h2>📈 Statistika</h2>
+            </div>
+            <div class="stats-grid" id="dashboardStats">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:rgba(99,102,241,0.15)">📹</div>
+                    <div class="stat-value" id="ds-contents">-</div>
+                    <div class="stat-label">Videolar</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:rgba(245,158,11,0.15)">📖</div>
+                    <div class="stat-value" id="ds-stories">-</div>
+                    <div class="stat-label">Ertaklar</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:rgba(16,185,129,0.15)">👥</div>
+                    <div class="stat-value" id="ds-users">-</div>
+                    <div class="stat-label">Foydalanuvchilar</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:rgba(236,72,153,0.15)">👶</div>
+                    <div class="stat-value" id="ds-children">-</div>
+                    <div class="stat-label">Bolalar</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:rgba(168,85,247,0.15)">💳</div>
+                    <div class="stat-value" id="ds-subs">-</div>
+                    <div class="stat-label">Aktiv Obuna</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:rgba(34,211,238,0.15)">📈</div>
+                    <div class="stat-value" id="ds-newusers">-</div>
+                    <div class="stat-label">Yangi (7 kun)</div>
+                </div>
+            </div>
+
+            <!-- Foydalanish grafigi -->
+            <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+                    <h3 style="margin:0">📈 Kunlik Foydalanish</h3>
+                    <select id="chartPeriod" style="width:auto;min-width:130px">
+                        <option value="7">So'nggi 7 kun</option>
+                        <option value="30" selected>So'nggi 30 kun</option>
+                        <option value="90">So'nggi 3 oy</option>
+                    </select>
+                </div>
+                <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:1rem">
+                    <div class="stat-card" style="padding:0.85rem">
+                        <div class="stat-value" style="font-size:1.3rem" id="avg-daily">-</div>
+                        <div class="stat-label">O'rtacha kunlik (daq)</div>
+                    </div>
+                    <div class="stat-card" style="padding:0.85rem">
+                        <div class="stat-value" style="font-size:1.3rem" id="avg-weekly">-</div>
+                        <div class="stat-label">O'rtacha haftalik (daq)</div>
+                    </div>
+                    <div class="stat-card" style="padding:0.85rem">
+                        <div class="stat-value" style="font-size:1.3rem" id="avg-monthly">-</div>
+                        <div class="stat-label">O'rtacha oylik (daq)</div>
+                    </div>
+                </div>
+                <div style="height:350px;position:relative"><canvas id="usageChart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- ========== 2. FOYDALANUVCHILAR PAGE ========== -->
+        <div class="page" id="page-users">
+            <div class="page-header">
+                <h2>👥 Foydalanuvchilar</h2>
+            </div>
+            <div class="card">
+                <div class="search-bar"><input type="text" id="userSearch"
+                        placeholder="🔍 Telefon yoki ism bo'yicha qidirish..."></div>
+                <div style="overflow-x:auto">
+                    <table style="width:100%;border-collapse:collapse;font-size:0.85rem">
+                        <thead>
+                            <tr style="border-bottom:1px solid var(--border);text-align:left">
+                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">#</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">📱 Telefon</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">👤 Ism</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">👶 Bolalar</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">🕐 Oxirgi kirish</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">📅 Ro'yxatdan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <tr><td colspan="6" class="empty">Yuklanmoqda...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 4. OBUNALAR PAGE ========== -->
+        <div class="page" id="page-subs">
+            <div class="page-header">
+                <h2>💳 Obunalar</h2>
+            </div>
+            <div class="card">
+                <div style="overflow-x:auto">
+                    <table style="width:100%;border-collapse:collapse;font-size:0.85rem">
+                        <thead>
+                            <tr style="border-bottom:1px solid var(--border);text-align:left">
+                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">#</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">👤 Foydalanuvchi</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">📱 Telefon</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">📦 Tarif</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">📊 Holat</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">💰 Narx</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">💳 To'lov</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">📅 Boshlanish</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">⏰ Tugash</th>
+                            </tr>
+                        </thead>
+                        <tbody id="subsTableBody">
+                            <tr><td colspan="9" class="empty">Yuklanmoqda...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== VIDEOS PAGE ========== -->
+        <div class="page" id="page-videos">
+            <div class="page-header">
+                <h2>🎬 Videolar</h2>
+            </div>
+            <div class="grid-2">
                 <div class="card">
-                    <h2>➕ Yangi Video Qo'shish</h2>
+                    <h3>➕ Yangi Video Qo'shish</h3>
                     <form id="uploadForm">
                         <div class="form-group">
-                            <label>Multfilm seriyasi</label>
-                            <div style="display: flex; gap: 0.5rem;">
-                                <input type="text" name="series" id="seriesInput" list="seriesList"
-                                    placeholder="Tanlang yoki yangi yozing..." style="flex: 1;">
-                                <datalist id="seriesList"></datalist>
-                            </div>
-                            <small style="color: var(--text-muted); font-size: 0.75rem;">Mavjudlardan tanlang yoki yangi
-                                seriya nomini yozing</small>
+                            <label>Seriya</label>
+                            <input type="text" name="series" list="seriesList"
+                                placeholder="Tanlang yoki yangi yozing...">
+                            <datalist id="seriesList"></datalist>
                         </div>
-
-                        <div class="form-group">
-                            <label>Video Nomi *</label>
-                            <input type="text" name="title" required placeholder="Masalan: Alpomish ertagi">
-                        </div>
-
+                        <div class="form-group"><label>Video Nomi *</label><input type="text" name="title" required
+                                placeholder="Masalan: Alpomish ertagi"></div>
                         <div class="row">
-                            <div class="form-group">
-                                <label>Turi *</label>
+                            <div class="form-group"><label>Turi *</label>
                                 <select name="type" required>
                                     <option value="">Tanlang...</option>
                                     <option value="talimiy">📚 Ta'limiy</option>
@@ -452,86 +760,55 @@
                                     <option value="jahon">🌍 Jahon</option>
                                 </select>
                             </div>
+                            <div class="form-group"><label>Til</label>
+                                <select name="language">
+                                    <option value="uz">🇺🇿 O'zbek</option>
+                                    <option value="ru">🇷🇺 Rus</option>
+                                    <option value="en">🇬🇧 Ingliz</option>
+                                </select>
+                            </div>
                         </div>
-
-                        <div class="form-group">
-                            <label>Til</label>
-                            <select name="language">
-                                <option value="uz">🇺🇿 O'zbek tili</option>
-                                <option value="ru">🇷🇺 Rus tili</option>
-                                <option value="en">🇬🇧 Ingliz tili</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Tavsif</label>
-                            <textarea name="description" placeholder="Video haqida qisqacha..."></textarea>
-                        </div>
-
+                        <div class="form-group"><label>Tavsif</label><textarea name="description"
+                                placeholder="Video haqida..."></textarea></div>
                         <div class="row">
-                            <div class="form-group">
-                                <label>Yosh (min)</label>
-                                <input type="number" name="ageMin" min="1" max="18" value="3">
-                            </div>
-                            <div class="form-group">
-                                <label>Yosh (max)</label>
-                                <input type="number" name="ageMax" min="1" max="18" value="12">
-                            </div>
+                            <div class="form-group"><label>Yosh min</label><input type="number" name="ageMin" min="1"
+                                    max="18" value="3"></div>
+                            <div class="form-group"><label>Yosh max</label><input type="number" name="ageMax" min="1"
+                                    max="18" value="12"></div>
                         </div>
-
                         <div class="form-group">
                             <label>Bunny.net Video ID</label>
-                            <div style="display: flex; gap: 0.5rem;">
-                                <input type="text" name="videoId" id="videoIdInput"
-                                    placeholder="Masalan: 9acac5a0-4742-4f6e-..." style="flex: 1;">
-                                <button type="button" class="btn"
-                                    style="background: var(--success); color: white; padding: 0.75rem 1rem;"
-                                    onclick="fetchVideoInfo()">🔍 Olish</button>
+                            <div style="display:flex;gap:0.5rem">
+                                <input type="text" name="videoId" id="videoIdInput" placeholder="9acac5a0-4742-..."
+                                    style="flex:1">
+                                <button type="button" class="btn btn-sm" style="background:var(--success);color:white"
+                                    onclick="fetchVideoInfo()">🔍</button>
                             </div>
-                            <small id="videoStatus" style="color: var(--text-muted); font-size: 0.75rem;"></small>
+                            <small id="videoStatus" style="color:var(--text-muted);font-size:0.72rem"></small>
                         </div>
-
                         <div class="row">
-                            <div class="form-group">
-                                <label>Davomiyligi (sekund)</label>
-                                <input type="number" name="duration" min="0" placeholder="300">
-                            </div>
-                            <div class="form-group">
-                                <label>Thumbnail URL</label>
-                                <input type="url" name="thumbnail" placeholder="https://...">
-                            </div>
+                            <div class="form-group"><label>Davomiylik (s)</label><input type="number" name="duration"
+                                    min="0" placeholder="300"></div>
+                            <div class="form-group"><label>Thumbnail</label><input type="url" name="thumbnail"
+                                    placeholder="https://..."></div>
                         </div>
-
-                        <div class="form-group">
-                            <label>Teglar (vergul bilan)</label>
-                            <input type="text" name="tags" placeholder="ta'lim, matematika, bolalar">
-                        </div>
-
-                        <div class="form-group checkbox-group">
-                            <input type="checkbox" name="isFeatured" id="isFeatured">
-                            <label for="isFeatured" style="margin: 0;">⭐ Tavsiya etilganlarda ko'rsatish</label>
-                        </div>
-
+                        <div class="form-group"><label>Teglar</label><input type="text" name="tags"
+                                placeholder="ta'lim, matematika"></div>
+                        <div class="form-group checkbox-group"><input type="checkbox" name="isFeatured"
+                                id="isFeatured"><label for="isFeatured" style="margin:0">⭐ Featured</label></div>
                         <button type="submit" class="btn btn-primary">💾 Saqlash</button>
                     </form>
                 </div>
-
-                <!-- Multfilm List -->
                 <div class="card">
-                    <h2>📋 Mavjud Kontentlar</h2>
-                    <div class="stats">
-                        <div class="stat">
-                            <div class="stat-number" id="totalCount">0</div>
-                            <div class="stat-label">Jami</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-number" id="cartoonCount">0</div>
-                            <div class="stat-label">Multfilm</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-number" id="gameCount">0</div>
-                            <div class="stat-label">O'yin</div>
-                        </div>
+                    <h3>📋 Kontentlar</h3>
+                    <div class="search-bar">
+                        <input type="text" id="contentSearch" placeholder="🔍 Qidirish...">
+                        <select id="contentTypeFilter">
+                            <option value="">Barchasi</option>
+                            <option value="talimiy">Ta'limiy</option>
+                            <option value="ozbek">O'zbek</option>
+                            <option value="jahon">Jahon</option>
+                        </select>
                     </div>
                     <div class="content-list" id="contentList">
                         <div class="empty">Yuklanmoqda...</div>
@@ -540,84 +817,60 @@
             </div>
         </div>
 
-        <!-- ==================== ERTAK TAB ==================== -->
-        <div class="tab-content" id="ertakTab">
-            <div class="grid">
-                <!-- Ertak Form -->
+        <!-- ========== STORIES PAGE ========== -->
+        <div class="page" id="page-stories">
+            <div class="page-header">
+                <h2>📖 Ertaklar</h2>
+            </div>
+            <div class="grid-2">
                 <div class="card">
-                    <h2>📖 Yangi Ertak Qo'shish</h2>
+                    <h3>📝 Yangi Ertak Qo'shish</h3>
                     <form id="storyForm">
-                        <div class="form-group">
-                            <label>Ertak Nomi *</label>
-                            <input type="text" name="title" required placeholder="Masalan: Zumrad va Qimmat">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Turi *</label>
-                            <select name="type" required>
-                                <option value="ozbek">🇺🇿 O'zbek</option>
-                                <option value="jahon">🌍 Jahon</option>
-                                <option value="islomiy">☪️ Islomiy</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Til</label>
-                            <select name="language">
-                                <option value="uz">🇺🇿 O'zbek tili</option>
-                                <option value="ru">🇷🇺 Rus tili</option>
-                                <option value="en">🇬🇧 Ingliz tili</option>
-                            </select>
-                        </div>
-
+                        <div class="form-group"><label>Ertak Nomi *</label><input type="text" name="title" required
+                                placeholder="Masalan: Zumrad va Qimmat"></div>
                         <div class="row">
-                            <div class="form-group">
-                                <label>Yosh (min)</label>
-                                <input type="number" name="ageMin" min="1" max="18" value="3">
+                            <div class="form-group"><label>Turi *</label>
+                                <select name="type" required>
+                                    <option value="ozbek">🇺🇿 O'zbek</option>
+                                    <option value="jahon">🌍 Jahon</option>
+                                    <option value="islomiy">☪️ Islomiy</option>
+                                </select>
                             </div>
-                            <div class="form-group">
-                                <label>Yosh (max)</label>
-                                <input type="number" name="ageMax" min="1" max="18" value="12">
+                            <div class="form-group"><label>Til</label>
+                                <select name="language">
+                                    <option value="uz">🇺🇿 O'zbek</option>
+                                    <option value="ru">🇷🇺 Rus</option>
+                                    <option value="en">🇬🇧 Ingliz</option>
+                                </select>
                             </div>
                         </div>
-
+                        <div class="row">
+                            <div class="form-group"><label>Yosh min</label><input type="number" name="ageMin" min="1"
+                                    max="18" value="3"></div>
+                            <div class="form-group"><label>Yosh max</label><input type="number" name="ageMax" min="1"
+                                    max="18" value="12"></div>
+                        </div>
                         <div class="form-group">
                             <label>Ertak Matni *</label>
-                            <textarea name="storyText" class="story-text-area" required
+                            <textarea name="storyText" class="story-textarea" required
                                 placeholder="Bir bor ekan, bir yo'q ekan..." id="storyTextArea"></textarea>
                             <div class="char-count" id="charCount">0 belgi</div>
                         </div>
-
-                        <div class="form-group">
-                            <label>Thumbnail URL (ixtiyoriy)</label>
-                            <input type="url" name="thumbnail" placeholder="https://...">
-                        </div>
-
-                        <div class="form-group checkbox-group">
-                            <input type="checkbox" name="isFeatured" id="storyFeatured">
-                            <label for="storyFeatured" style="margin: 0;">⭐ Tavsiya etilganlarda ko'rsatish</label>
-                        </div>
-
-                        <button type="submit" class="btn btn-orange">📖 Ertakni Saqlash</button>
+                        <div class="form-group checkbox-group"><input type="checkbox" name="isFeatured"
+                                id="storyFeatured"><label for="storyFeatured" style="margin:0">⭐ Featured</label></div>
+                        <button type="submit" class="btn btn-orange">📖 Saqlash</button>
                     </form>
                 </div>
-
-                <!-- Ertak List -->
                 <div class="card">
-                    <h2>📚 Mavjud Ertaklar</h2>
-                    <div class="stats">
-                        <div class="stat">
-                            <div class="stat-number orange" id="storyTotalCount">0</div>
-                            <div class="stat-label">Jami Ertaklar</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-number orange" id="ertakCount">0</div>
-                            <div class="stat-label">O'zbek</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-number orange" id="masalCount">0</div>
-                            <div class="stat-label">Jahon</div>
-                        </div>
+                    <h3>📚 Ertaklar Ro'yxati</h3>
+                    <div class="search-bar">
+                        <input type="text" id="storySearch" placeholder="🔍 Qidirish...">
+                        <select id="storyTypeFilter">
+                            <option value="">Barchasi</option>
+                            <option value="ozbek">O'zbek</option>
+                            <option value="jahon">Jahon</option>
+                            <option value="islomiy">Islomiy</option>
+                        </select>
                     </div>
                     <div class="content-list" id="storyList">
                         <div class="empty">Yuklanmoqda...</div>
@@ -627,280 +880,519 @@
         </div>
     </div>
 
+    <!-- ===== EDIT CONTENT MODAL ===== -->
+    <div class="modal-overlay" id="editContentModal">
+        <div class="modal">
+            <h3>✏️ Kontentni Tahrirlash</h3>
+            <form id="editContentForm">
+                <input type="hidden" name="id" id="ec-id">
+                <div class="form-group"><label>Nomi</label><input type="text" name="title" id="ec-title" required></div>
+                <div class="row">
+                    <div class="form-group"><label>Turi</label><select name="type" id="ec-type">
+                            <option value="talimiy">Ta'limiy</option>
+                            <option value="ozbek">O'zbek</option>
+                            <option value="jahon">Jahon</option>
+                        </select></div>
+                    <div class="form-group"><label>Til</label><select name="language" id="ec-lang">
+                            <option value="uz">O'zbek</option>
+                            <option value="ru">Rus</option>
+                            <option value="en">Ingliz</option>
+                        </select></div>
+                </div>
+                <div class="form-group"><label>Seriya</label><input type="text" name="series" id="ec-series"></div>
+                <div class="form-group"><label>Tavsif</label><textarea name="description" id="ec-desc"></textarea></div>
+                <div class="row">
+                    <div class="form-group"><label>Yosh min</label><input type="number" name="ageMin" id="ec-agemin"
+                            min="1" max="18"></div>
+                    <div class="form-group"><label>Yosh max</label><input type="number" name="ageMax" id="ec-agemax"
+                            min="1" max="18"></div>
+                </div>
+                <div class="form-group"><label>Video ID</label><input type="text" name="videoId" id="ec-videoid"></div>
+                <div class="form-group checkbox-group"><input type="checkbox" name="isActive" id="ec-active"><label
+                        for="ec-active" style="margin:0">Faol</label></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-sm" style="background:var(--border);color:var(--text)"
+                        onclick="closeModal('editContentModal')">Bekor</button>
+                    <button type="submit" class="btn btn-sm btn-edit">💾 Saqlash</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== EDIT STORY MODAL ===== -->
+    <div class="modal-overlay" id="editStoryModal">
+        <div class="modal">
+            <h3>✏️ Ertakni Tahrirlash</h3>
+            <form id="editStoryForm">
+                <input type="hidden" name="id" id="es-id">
+                <div class="form-group"><label>Nomi</label><input type="text" name="title" id="es-title" required></div>
+                <div class="row">
+                    <div class="form-group"><label>Turi</label><select name="type" id="es-type">
+                            <option value="ozbek">O'zbek</option>
+                            <option value="jahon">Jahon</option>
+                            <option value="islomiy">Islomiy</option>
+                        </select></div>
+                    <div class="form-group"><label>Til</label><select name="language" id="es-lang">
+                            <option value="uz">O'zbek</option>
+                            <option value="ru">Rus</option>
+                            <option value="en">Ingliz</option>
+                        </select></div>
+                </div>
+                <div class="row">
+                    <div class="form-group"><label>Yosh min</label><input type="number" name="ageMin" id="es-agemin"
+                            min="1" max="18"></div>
+                    <div class="form-group"><label>Yosh max</label><input type="number" name="ageMax" id="es-agemax"
+                            min="1" max="18"></div>
+                </div>
+                <div class="form-group"><label>Ertak Matni</label><textarea name="storyText" id="es-text"
+                        class="story-textarea"></textarea></div>
+                <div class="form-group checkbox-group"><input type="checkbox" name="isActive" id="es-active"><label
+                        for="es-active" style="margin:0">Faol</label></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-sm" style="background:var(--border);color:var(--text)"
+                        onclick="closeModal('editStoryModal')">Bekor</button>
+                    <button type="submit" class="btn btn-sm" style="background:var(--orange);color:white">💾
+                        Saqlash</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== CONFIRM MODAL ===== -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal" style="max-width:380px;text-align:center">
+            <div style="font-size:2.5rem;margin-bottom:0.75rem">🗑️</div>
+            <h3 id="confirmTitle">O'chirishni tasdiqlaysizmi?</h3>
+            <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1rem" id="confirmMsg">Bu amalni qaytarib
+                bo'lmaydi.</p>
+            <div class="modal-actions">
+                <button class="btn btn-sm" style="background:var(--border);color:var(--text)"
+                    onclick="closeModal('confirmModal')">Bekor</button>
+                <button class="btn btn-sm btn-danger" id="confirmBtn">O'chirish</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // ===== TAB SWITCHING =====
-        function switchTab(tab) {
-            const multfilmTab = document.getElementById('multfilmTab');
-            const ertakTab = document.getElementById('ertakTab');
-            const tabMultfilm = document.getElementById('tabMultfilm');
-            const tabErtak = document.getElementById('tabErtak');
+        // ============ NAVIGATION ============
+        let currentPage = 'stats';
+        let dashboardLoaded = false;
 
-            tabMultfilm.className = 'tab-btn';
-            tabErtak.className = 'tab-btn';
-            multfilmTab.classList.remove('active');
-            ertakTab.classList.remove('active');
+        function toggleMenu(el) {
+            el.classList.toggle('open');
+        }
 
-            if (tab === 'multfilm') {
-                tabMultfilm.classList.add('active-multfilm');
-                multfilmTab.classList.add('active');
-            } else {
-                tabErtak.classList.add('active-ertak');
-                ertakTab.classList.add('active');
-                loadStories();
+        function showPage(page) {
+            currentPage = page;
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('page-' + page).classList.add('active');
+            // Highlight active nav item
+            document.querySelectorAll('.nav-item').forEach(n => {
+                if (n.getAttribute('onclick')?.includes("'" + page + "'")) n.classList.add('active');
+            });
+            // Load data per page
+            if (['stats', 'users', 'subs'].includes(page) && !dashboardLoaded) {
+                loadDashboard();
             }
+            if (page === 'stats') loadUsageStats();
+            if (page === 'videos') { loadContents(); loadSeries(); }
+            if (page === 'stories') loadStories();
         }
 
-        // ===== TOAST =====
-        function showToast(message, type = 'success') {
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
+        // ============ TOAST ============
+        function showToast(msg, type = 'success') {
+            const t = document.createElement('div');
+            t.className = 'toast ' + type;
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 3000);
         }
 
-        // ===========================
-        // MULTFILM (Content) Functions
-        // ===========================
-        const form = document.getElementById('uploadForm');
-        const contentList = document.getElementById('contentList');
+        // ============ MODAL ============
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
-        async function loadContents() {
+        // ============ TIME AGO ============
+        function timeAgo(dateStr) {
+            const diff = Date.now() - new Date(dateStr).getTime();
+            const m = Math.floor(diff / 60000);
+            if (m < 1) return 'Hozirgina';
+            if (m < 60) return m + ' daq oldin';
+            const h = Math.floor(m / 60);
+            if (h < 24) return h + ' soat oldin';
+            return Math.floor(h / 24) + ' kun oldin';
+        }
+
+        const typeLabel = { talimiy: "📚 Ta'limiy", ozbek: "🇺🇿 O'zbek", jahon: "🌍 Jahon", islomiy: "☪️ Islomiy" };
+        const langLabel = { uz: "O'zbek", ru: "Rus", en: "Ingliz" };
+
+        // ============ DASHBOARD ============
+        let allUsers = [];
+        let allSubscriptions = [];
+        async function loadDashboard() {
             try {
-                const res = await fetch('/api/contents');
+                const res = await fetch('/api/dashboard/stats');
                 const data = await res.json();
+                if (!data.success) return;
+                const d = data.dashboard;
+                dashboardLoaded = true;
+                document.getElementById('ds-contents').textContent = d.totalContents;
+                document.getElementById('ds-stories').textContent = d.totalStories;
+                document.getElementById('ds-users').textContent = d.totalUsers;
+                document.getElementById('ds-children').textContent = d.totalChildren;
+                document.getElementById('ds-subs').textContent = d.activeSubscriptions;
+                document.getElementById('ds-newusers').textContent = d.newUsersThisWeek;
 
-                if (data.success) {
-                    document.getElementById('totalCount').textContent = data.count;
-                    document.getElementById('cartoonCount').textContent = data.contents.filter(c => c.type === 'cartoon').length;
-                    document.getElementById('gameCount').textContent = data.contents.filter(c => c.type === 'game').length;
+                allUsers = d.users || [];
+                renderUsers();
 
-                    if (data.contents.length === 0) {
-                        contentList.innerHTML = '<div class="empty">Hali kontent yo\'q. Yuqoridagi formadan qo\'shing!</div>';
-                        return;
-                    }
-
-                    contentList.innerHTML = data.contents.map(c => `
-                        <div class="content-item">
-                            <div class="content-info">
-                                <h3>${c.series ? '<span style="color: var(--primary); font-weight: 600;">[' + c.series + ']</span> ' : ''}${c.title}</h3>
-                                <div class="content-meta">
-                                    <span class="badge ${c.type}">${c.type}</span>
-                                    ${c.series ? '<span>🎬 ' + c.series + '</span>' : ''}
-                                    <span>🌐 ${c.language === 'uz' ? "O'zbek" : c.language === 'ru' ? 'Rus' : 'Ingliz'}</span>
-                                    <span>👶 ${c.ageRange?.min || 3}-${c.ageRange?.max || 12} yosh</span>
-                                    <span>⏱ ${c.duration ? Math.floor(c.duration / 60) + ' daq' : '-'}</span>
-                                </div>
-                            </div>
-                            <button class="btn btn-danger" onclick="deleteContent('${c._id}')">🗑️</button>
-                        </div>
-                    `).join('');
-                }
-            } catch (error) {
-                contentList.innerHTML = '<div class="empty">Xato: ' + error.message + '</div>';
-            }
+                allSubscriptions = d.subscriptions || [];
+                renderSubscriptions(allSubscriptions);
+            } catch (e) { console.error(e); }
         }
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData);
-            data.isFeatured = form.isFeatured.checked;
+        function renderUsers() {
+            const search = (document.getElementById('userSearch').value || '').toLowerCase();
+            let filtered = allUsers;
+            if (search) filtered = filtered.filter(u => (u.phone || '').includes(search) || (u.name || '').toLowerCase().includes(search));
 
-            try {
-                const res = await fetch('/api/contents', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await res.json();
-
-                if (result.success) {
-                    showToast('✅ Kontent qo\'shildi!');
-                    form.reset();
-                    loadContents();
-                    loadSeries();
-                } else {
-                    showToast('❌ ' + result.message, 'error');
-                }
-            } catch (error) {
-                showToast('❌ Xato: ' + error.message, 'error');
-            }
-        });
-
-        async function deleteContent(id) {
-            if (!confirm('Rostdan o\'chirmoqchimisiz?')) return;
-
-            try {
-                const res = await fetch(`/api/contents/${id}`, { method: 'DELETE' });
-                const result = await res.json();
-
-                if (result.success) {
-                    showToast('🗑️ O\'chirildi!');
-                    loadContents();
-                }
-            } catch (error) {
-                showToast('❌ Xato: ' + error.message, 'error');
-            }
-        }
-
-        // Bunny.net dan video ma'lumotlarini olish
-        async function fetchVideoInfo() {
-            const videoId = document.getElementById('videoIdInput').value.trim();
-            const statusEl = document.getElementById('videoStatus');
-
-            if (!videoId) {
-                showToast('❌ Video ID kiriting!', 'error');
+            const tbody = document.getElementById('usersTableBody');
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="empty">Foydalanuvchi topilmadi</td></tr>';
                 return;
             }
-
-            statusEl.textContent = '⏳ Yuklanmoqda...';
-            statusEl.style.color = 'var(--text-muted)';
-
-            try {
-                const res = await fetch(`/api/bunny/${videoId}`);
-                const data = await res.json();
-
-                if (data.success) {
-                    document.querySelector('#uploadForm input[name="duration"]').value = data.video.duration || '';
-                    document.querySelector('#uploadForm input[name="thumbnail"]').value = data.video.thumbnail || '';
-
-                    const titleInput = document.querySelector('#uploadForm input[name="title"]');
-                    if (!titleInput.value && data.video.title) {
-                        titleInput.value = data.video.title;
-                    }
-
-                    statusEl.textContent = `✅ Topildi! Davomiyligi: ${Math.floor(data.video.duration / 60)} daqiqa ${data.video.duration % 60} sekund`;
-                    statusEl.style.color = 'var(--success)';
-                    showToast('✅ Video ma\'lumotlari olindi!');
-                } else {
-                    statusEl.textContent = '❌ ' + data.message;
-                    statusEl.style.color = 'var(--danger)';
-                    showToast('❌ ' + data.message, 'error');
-                }
-            } catch (error) {
-                statusEl.textContent = '❌ Xato: ' + error.message;
-                statusEl.style.color = 'var(--danger)';
-                showToast('❌ Xato: ' + error.message, 'error');
-            }
+            tbody.innerHTML = filtered.map((u, i) => {
+                const kids = (u.children || []).map(c => {
+                    const g = c.gender === 'male' ? '👦' : c.gender === 'female' ? '👧' : '👶';
+                    const usage = c.todayUsage || {};
+                    const mins = usage.minutesUsed || 0;
+                    return `<div style="display:inline-flex;align-items:center;gap:0.3rem;background:var(--bg);padding:0.2rem 0.5rem;border-radius:0.4rem;margin:0.15rem;font-size:0.78rem">${g} ${c.name} <span style="color:var(--text-muted)">${c.age}y</span> <span style="color:${mins > 0 ? 'var(--success)' : 'var(--text-muted)'}">${mins}daq</span></div>`;
+                }).join('');
+                return `<tr style="border-bottom:1px solid var(--border)">
+                    <td style="padding:0.6rem 0.5rem;color:var(--text-muted)">${i + 1}</td>
+                    <td style="padding:0.6rem 0.5rem;font-weight:600">${u.phone || '-'}</td>
+                    <td style="padding:0.6rem 0.5rem">${u.name || '<span style="color:var(--text-muted)">—</span>'}</td>
+                    <td style="padding:0.6rem 0.5rem">${kids || '<span style="color:var(--text-muted)">—</span>'}</td>
+                    <td style="padding:0.6rem 0.5rem;color:var(--text-muted);font-size:0.78rem">${u.lastLoginAt ? timeAgo(u.lastLoginAt) : '—'}</td>
+                    <td style="padding:0.6rem 0.5rem;color:var(--text-muted);font-size:0.78rem">${u.createdAt ? new Date(u.createdAt).toLocaleDateString('uz') : '—'}</td>
+                </tr>`;
+            }).join('');
         }
 
-        // ===========================
-        // ERTAK (Story) Functions
-        // ===========================
-        const storyForm = document.getElementById('storyForm');
-        const storyList = document.getElementById('storyList');
-        const storyTextArea = document.getElementById('storyTextArea');
-        const charCount = document.getElementById('charCount');
+        document.getElementById('userSearch').addEventListener('input', renderUsers);
 
-        // Character counter
-        storyTextArea.addEventListener('input', () => {
-            const len = storyTextArea.value.length;
-            charCount.textContent = `${len} belgi`;
+        // ============ USAGE CHART ============
+        let usageChart = null;
+        async function loadUsageStats() {
+            const period = document.getElementById('chartPeriod').value;
+            try {
+                const res = await fetch('/api/dashboard/usage-stats?period=' + period);
+                const data = await res.json();
+                if (!data.success) return;
+                const { chartData, summary } = data.usageStats;
+
+                document.getElementById('avg-daily').textContent = summary.avgDaily;
+                document.getElementById('avg-weekly').textContent = summary.avgWeekly;
+                document.getElementById('avg-monthly').textContent = summary.avgMonthly;
+
+                if (usageChart) usageChart.destroy();
+                const ctx = document.getElementById('usageChart').getContext('2d');
+                usageChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: chartData.map(d => d.label),
+                        datasets: [{
+                            label: 'Foydalanish (daqiqa)',
+                            data: chartData.map(d => d.minutes),
+                            borderColor: '#6366f1',
+                            backgroundColor: 'rgba(99,102,241,0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: period <= 30 ? 3 : 0,
+                            pointHoverRadius: 5,
+                            borderWidth: 2
+                        }, {
+                            label: 'Sessiyalar',
+                            data: chartData.map(d => d.sessions),
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245,158,11,0.08)',
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: period <= 30 ? 2 : 0,
+                            pointHoverRadius: 4,
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            legend: { labels: { color: '#94a3b8', font: { size: 12 } } },
+                            tooltip: { backgroundColor: '#1e293b', titleColor: '#f1f5f9', bodyColor: '#94a3b8', borderColor: '#334155', borderWidth: 1 }
+                        },
+                        scales: {
+                            x: { ticks: { color: '#94a3b8', maxTicksLimit: 15, font: { size: 10 } }, grid: { color: 'rgba(51,65,85,0.3)' } },
+                            y: { beginAtZero: true, ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: 'rgba(51,65,85,0.3)' } }
+                        }
+                    }
+                });
+            } catch (e) { console.error(e); }
+        }
+        document.getElementById('chartPeriod').addEventListener('change', loadUsageStats);
+
+        // ============ SUBSCRIPTIONS ============
+        function renderSubscriptions(subs) {
+            const planLabel = { monthly: '📅 Oylik', yearly: '📆 Yillik', lifetime: '♾️ Umrbod' };
+            const statusLabel = { active: '✅ Faol', expired: '⏰ Tugagan', cancelled: '❌ Bekor', pending: '⏳ Kutilmoqda', processing: '🔄 Jarayonda' };
+            const statusColor = { active: 'var(--success)', expired: 'var(--text-muted)', cancelled: 'var(--danger)', pending: 'var(--warning)', processing: 'var(--primary)' };
+            const payLabel = { payme: 'Payme', click: 'Click', uzum: 'Uzum', manual: 'Qo\'lda', trial: 'Sinov' };
+
+            const tbody = document.getElementById('subsTableBody');
+            if (!subs || subs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="empty">Obunalar yo\'q</td></tr>';
+                return;
+            }
+            tbody.innerHTML = subs.map((s, i) => `<tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:0.6rem 0.5rem;color:var(--text-muted)">${i + 1}</td>
+                <td style="padding:0.6rem 0.5rem;font-weight:600">${s.userName}</td>
+                <td style="padding:0.6rem 0.5rem">${s.userPhone}</td>
+                <td style="padding:0.6rem 0.5rem">${planLabel[s.plan] || s.plan}</td>
+                <td style="padding:0.6rem 0.5rem"><span style="color:${statusColor[s.status] || 'var(--text-muted)'}">${statusLabel[s.status] || s.status}</span></td>
+                <td style="padding:0.6rem 0.5rem">${s.price ? s.price.toLocaleString() + ' ' + (s.currency || 'UZS') : '-'}</td>
+                <td style="padding:0.6rem 0.5rem">${payLabel[s.paymentMethod] || s.paymentMethod || '-'}</td>
+                <td style="padding:0.6rem 0.5rem;font-size:0.78rem">${s.startDate ? new Date(s.startDate).toLocaleDateString('uz') : '-'}</td>
+                <td style="padding:0.6rem 0.5rem;font-size:0.78rem">${s.endDate ? new Date(s.endDate).toLocaleDateString('uz') : '-'}</td>
+            </tr>`).join('');
+        }
+
+        // ============ CONTENTS ============
+        let allContents = [];
+        async function loadContents() {
+            try {
+                const res = await fetch('/api/contents?limit=200');
+                const data = await res.json();
+                if (data.success) { allContents = data.contents; renderContents(); }
+            } catch (e) { document.getElementById('contentList').innerHTML = '<div class="empty">Xato: ' + e.message + '</div>'; }
+        }
+
+        function renderContents() {
+            const search = (document.getElementById('contentSearch').value || '').toLowerCase();
+            const type = document.getElementById('contentTypeFilter').value;
+            let filtered = allContents;
+            if (search) filtered = filtered.filter(c => c.title.toLowerCase().includes(search) || (c.series || '').toLowerCase().includes(search));
+            if (type) filtered = filtered.filter(c => c.type === type);
+
+            document.getElementById('contentList').innerHTML = filtered.length === 0
+                ? '<div class="empty">Kontent topilmadi</div>'
+                : filtered.map(c => `
+        <div class="content-item" style="${!c.isActive ? 'opacity:0.5' : ''}">
+            <div class="content-info">
+                <h4>${c.series ? '<span style="color:var(--primary)">[' + c.series + ']</span> ' : ''}${c.title}</h4>
+                <div class="content-meta">
+                    <span class="badge ${c.type}">${typeLabel[c.type] || c.type}</span>
+                    <span>🌐 ${langLabel[c.language] || c.language}</span>
+                    <span>👶 ${c.ageRange?.min || 3}-${c.ageRange?.max || 12}</span>
+                    <span>⏱ ${c.duration ? Math.floor(c.duration / 60) + 'daq' : '-'}</span>
+                    ${!c.isActive ? '<span style="color:var(--danger)">⛔ Nofaol</span>' : ''}
+                </div>
+            </div>
+            <div class="item-actions">
+                <button class="btn btn-sm btn-edit" onclick="openEditContent('${c._id}')">✏️</button>
+                <button class="btn btn-sm btn-danger" onclick="confirmDelete('content','${c._id}','${c.title.replace(/'/g, "\\'")}')">🗑️</button>
+            </div>
+        </div>
+    `).join('');
+        }
+
+        document.getElementById('contentSearch').addEventListener('input', renderContents);
+        document.getElementById('contentTypeFilter').addEventListener('change', renderContents);
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            const data = Object.fromEntries(fd);
+            data.isFeatured = e.target.isFeatured.checked;
+            try {
+                const res = await fetch('/api/contents', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                const r = await res.json();
+                if (r.success) { showToast('✅ Qo\'shildi!'); e.target.reset(); loadContents(); loadSeries(); }
+                else showToast('❌ ' + r.message, 'error');
+            } catch (err) { showToast('❌ ' + err.message, 'error'); }
         });
 
-        const typeLabels = {
-            ozbek: "🇺🇿 O'zbek",
-            jahon: '🌍 Jahon',
-            islomiy: '☪️ Islomiy'
-        };
+        // ============ EDIT CONTENT ============
+        function openEditContent(id) {
+            const c = allContents.find(x => x._id === id);
+            if (!c) return;
+            document.getElementById('ec-id').value = c._id;
+            document.getElementById('ec-title').value = c.title;
+            document.getElementById('ec-type').value = c.type;
+            document.getElementById('ec-lang').value = c.language || 'uz';
+            document.getElementById('ec-series').value = c.series || '';
+            document.getElementById('ec-desc').value = c.description || '';
+            document.getElementById('ec-agemin').value = c.ageRange?.min || 3;
+            document.getElementById('ec-agemax').value = c.ageRange?.max || 12;
+            document.getElementById('ec-videoid').value = c.videoId || '';
+            document.getElementById('ec-active').checked = c.isActive !== false;
+            openModal('editContentModal');
+        }
 
+        document.getElementById('editContentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            const data = Object.fromEntries(fd);
+            data.isActive = document.getElementById('ec-active').checked;
+            const id = data.id; delete data.id;
+            try {
+                const res = await fetch('/api/contents/' + id, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                const r = await res.json();
+                if (r.success) { showToast('✅ Yangilandi!'); closeModal('editContentModal'); loadContents(); }
+                else showToast('❌ ' + r.message, 'error');
+            } catch (err) { showToast('❌ ' + err.message, 'error'); }
+        });
+
+        // ============ STORIES ============
+        let allStories = [];
         async function loadStories() {
             try {
                 const res = await fetch('/api/stories');
                 const data = await res.json();
-
-                if (data.success) {
-                    document.getElementById('storyTotalCount').textContent = data.count;
-                    document.getElementById('ertakCount').textContent = data.stories.filter(s => s.type === 'ozbek').length;
-                    document.getElementById('masalCount').textContent = data.stories.filter(s => s.type === 'jahon').length;
-
-                    if (data.stories.length === 0) {
-                        storyList.innerHTML = '<div class="empty">Hali ertak yo\'q. Yuqoridagi formadan qo\'shing!</div>';
-                        return;
-                    }
-
-                    storyList.innerHTML = data.stories.map(s => `
-                        <div class="content-item">
-                            <div class="content-info">
-                                <h3>${s.title}</h3>
-                                <div class="content-meta">
-                                    <span class="badge ${s.type}">${typeLabels[s.type] || s.type}</span>
-                                    <span>🌐 ${s.language === 'uz' ? "O'zbek" : s.language === 'ru' ? 'Rus' : 'Ingliz'}</span>
-                                    <span>👶 ${s.ageRange?.min || 3}-${s.ageRange?.max || 12} yosh</span>
-                                    <span>📝 ${s.storyText ? s.storyText.length + ' belgi' : '-'}</span>
-                                </div>
-                                <div class="story-preview">${s.storyText ? s.storyText.substring(0, 100) + '...' : ''}</div>
-                            </div>
-                            <button class="btn btn-danger" onclick="deleteStory('${s._id}')">🗑️</button>
-                        </div>
-                    `).join('');
-                }
-            } catch (error) {
-                storyList.innerHTML = '<div class="empty">Xato: ' + error.message + '</div>';
-            }
+                if (data.success) { allStories = data.stories; renderStories(); }
+            } catch (e) { document.getElementById('storyList').innerHTML = '<div class="empty">Xato: ' + e.message + '</div>'; }
         }
 
-        storyForm.addEventListener('submit', async (e) => {
+        function renderStories() {
+            const search = (document.getElementById('storySearch').value || '').toLowerCase();
+            const type = document.getElementById('storyTypeFilter').value;
+            let filtered = allStories;
+            if (search) filtered = filtered.filter(s => s.title.toLowerCase().includes(search));
+            if (type) filtered = filtered.filter(s => s.type === type);
+
+            document.getElementById('storyList').innerHTML = filtered.length === 0
+                ? '<div class="empty">Ertak topilmadi</div>'
+                : filtered.map(s => `
+        <div class="content-item" style="${!s.isActive ? 'opacity:0.5' : ''}">
+            <div class="content-info">
+                <h4>${s.title}</h4>
+                <div class="content-meta">
+                    <span class="badge ${s.type}">${typeLabel[s.type] || s.type}</span>
+                    <span>🌐 ${langLabel[s.language] || s.language}</span>
+                    <span>👶 ${s.ageRange?.min || 3}-${s.ageRange?.max || 12}</span>
+                    <span>📝 ${s.storyText ? s.storyText.length + ' belgi' : '-'}</span>
+                    ${!s.isActive ? '<span style="color:var(--danger)">⛔ Nofaol</span>' : ''}
+                </div>
+                <div class="story-preview">${s.storyText ? s.storyText.substring(0, 80) + '...' : ''}</div>
+            </div>
+            <div class="item-actions">
+                <button class="btn btn-sm btn-edit" onclick="openEditStory('${s._id}')">✏️</button>
+                <button class="btn btn-sm btn-danger" onclick="confirmDelete('story','${s._id}','${s.title.replace(/'/g, "\\'")}')">🗑️</button>
+            </div>
+        </div>
+    `).join('');
+        }
+
+        document.getElementById('storySearch').addEventListener('input', renderStories);
+        document.getElementById('storyTypeFilter').addEventListener('change', renderStories);
+
+        document.getElementById('storyForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const formData = new FormData(storyForm);
-            const data = Object.fromEntries(formData);
-            data.isFeatured = storyForm.querySelector('#storyFeatured').checked;
-
+            const fd = new FormData(e.target);
+            const data = Object.fromEntries(fd);
+            data.isFeatured = e.target.querySelector('#storyFeatured').checked;
             try {
-                const res = await fetch('/api/stories', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await res.json();
-
-                if (result.success) {
-                    showToast('📖 Ertak qo\'shildi!');
-                    storyForm.reset();
-                    charCount.textContent = '0 belgi';
-                    loadStories();
-                } else {
-                    showToast('❌ ' + result.message, 'error');
-                }
-            } catch (error) {
-                showToast('❌ Xato: ' + error.message, 'error');
-            }
+                const res = await fetch('/api/stories', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                const r = await res.json();
+                if (r.success) { showToast('📖 Qo\'shildi!'); e.target.reset(); document.getElementById('charCount').textContent = '0 belgi'; loadStories(); }
+                else showToast('❌ ' + r.message, 'error');
+            } catch (err) { showToast('❌ ' + err.message, 'error'); }
         });
 
-        async function deleteStory(id) {
-            if (!confirm('Rostdan o\'chirmoqchimisiz?')) return;
+        document.getElementById('storyTextArea').addEventListener('input', function () {
+            document.getElementById('charCount').textContent = this.value.length + ' belgi';
+        });
 
-            try {
-                const res = await fetch(`/api/stories/${id}`, { method: 'DELETE' });
-                const result = await res.json();
-
-                if (result.success) {
-                    showToast('🗑️ O\'chirildi!');
-                    loadStories();
-                }
-            } catch (error) {
-                showToast('❌ Xato: ' + error.message, 'error');
-            }
+        // ============ EDIT STORY ============
+        function openEditStory(id) {
+            const s = allStories.find(x => x._id === id);
+            if (!s) return;
+            document.getElementById('es-id').value = s._id;
+            document.getElementById('es-title').value = s.title;
+            document.getElementById('es-type').value = s.type;
+            document.getElementById('es-lang').value = s.language || 'uz';
+            document.getElementById('es-agemin').value = s.ageRange?.min || 3;
+            document.getElementById('es-agemax').value = s.ageRange?.max || 12;
+            document.getElementById('es-text').value = s.storyText || '';
+            document.getElementById('es-active').checked = s.isActive !== false;
+            openModal('editStoryModal');
         }
 
-        // ===== SERIES =====
+        document.getElementById('editStoryForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            const data = Object.fromEntries(fd);
+            data.isActive = document.getElementById('es-active').checked;
+            const id = data.id; delete data.id;
+            try {
+                const res = await fetch('/api/stories/' + id, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                const r = await res.json();
+                if (r.success) { showToast('✅ Yangilandi!'); closeModal('editStoryModal'); loadStories(); }
+                else showToast('❌ ' + r.message, 'error');
+            } catch (err) { showToast('❌ ' + err.message, 'error'); }
+        });
+
+        // ============ CONFIRM DELETE ============
+        let deleteTarget = {};
+        function confirmDelete(type, id, name) {
+            deleteTarget = { type, id };
+            document.getElementById('confirmMsg').textContent = '"' + name + '" ni o\'chirmoqchimisiz?';
+            openModal('confirmModal');
+        }
+        document.getElementById('confirmBtn').onclick = async () => {
+            const url = deleteTarget.type === 'content' ? '/api/contents/' : '/api/stories/';
+            try {
+                const res = await fetch(url + deleteTarget.id, { method: 'DELETE' });
+                const r = await res.json();
+                if (r.success) {
+                    showToast('🗑️ O\'chirildi!');
+                    closeModal('confirmModal');
+                    if (deleteTarget.type === 'content') loadContents(); else loadStories();
+                }
+            } catch (err) { showToast('❌ ' + err.message, 'error'); }
+        };
+
+        // ============ BUNNY.NET ============
+        async function fetchVideoInfo() {
+            const videoId = document.getElementById('videoIdInput').value.trim();
+            const st = document.getElementById('videoStatus');
+            if (!videoId) { showToast('❌ Video ID kiriting!', 'error'); return; }
+            st.textContent = '⏳ Yuklanmoqda...'; st.style.color = 'var(--text-muted)';
+            try {
+                const res = await fetch('/api/bunny/' + videoId);
+                const data = await res.json();
+                if (data.success) {
+                    document.querySelector('#uploadForm input[name="duration"]').value = data.video.duration || '';
+                    document.querySelector('#uploadForm input[name="thumbnail"]').value = data.video.thumbnail || '';
+                    const ti = document.querySelector('#uploadForm input[name="title"]');
+                    if (!ti.value && data.video.title) ti.value = data.video.title;
+                    st.textContent = '✅ ' + Math.floor(data.video.duration / 60) + ' daq ' + data.video.duration % 60 + ' sek';
+                    st.style.color = 'var(--success)';
+                } else { st.textContent = '❌ ' + data.message; st.style.color = 'var(--danger)'; }
+            } catch (e) { st.textContent = '❌ ' + e.message; st.style.color = 'var(--danger)'; }
+        }
+
+        // ============ SERIES ============
         async function loadSeries() {
             try {
                 const res = await fetch('/api/series');
                 const data = await res.json();
-                if (data.success) {
-                    const datalist = document.getElementById('seriesList');
-                    datalist.innerHTML = data.series.map(s => `<option value="${s}">`).join('');
-                }
-            } catch (e) { /* silent */ }
+                if (data.success) document.getElementById('seriesList').innerHTML = data.series.map(s => `<option value="${s}">`).join('');
+            } catch (e) { }
         }
 
-        // ===== INIT =====
-        loadContents();
-        loadSeries();
+        // ============ INIT ============
+        loadDashboard();
     </script>
 </body>
 

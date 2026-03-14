@@ -44,7 +44,7 @@ const Content = mongoose.model('Content', contentSchema);
 // MongoDB Story Schema (Ertak)
 const storySchema = new mongoose.Schema({
     title: { type: String, required: true, trim: true, maxlength: 200 },
-    type: { type: String, enum: ['ertak', 'masal', 'hikoya', 'she\'r'], default: 'ertak' },
+    type: { type: String, enum: ['ozbek', 'jahon', 'islomiy'], default: 'ozbek' },
     storyText: { type: String, required: true },
     ageRange: {
         min: { type: Number, default: 3, min: 1 },
@@ -60,6 +60,13 @@ const storySchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const Story = mongoose.model('Story', storySchema);
+
+// Qadamcha backend bilan umumiy collectionlardan o'qish (faqat statistika uchun)
+const User = mongoose.model('User', new mongoose.Schema({}, { strict: false, collection: 'users' }));
+const ChildModel = mongoose.model('ChildDashboard', new mongoose.Schema({}, { strict: false, collection: 'children' }));
+const Subscription = mongoose.model('Subscription', new mongoose.Schema({}, { strict: false, collection: 'subscriptions' }));
+const Activity = mongoose.model('Activity', new mongoose.Schema({}, { strict: false, collection: 'activities' }));
+const WeeklyStats = mongoose.model('WeeklyStatsDashboard', new mongoose.Schema({}, { strict: false, collection: 'weeklystats' }));
 
 // Error handler middleware
 function asyncHandler(fn) {
@@ -292,18 +299,154 @@ app.delete('/api/contents/:id', asyncHandler(async (req, res) => {
 
 // GET - Statistika
 app.get('/api/stats', asyncHandler(async (req, res) => {
-    const [total, cartoons, games, stories, quests, featured] = await Promise.all([
+    const [total, talimiy, ozbek, jahon, featured] = await Promise.all([
         Content.countDocuments({ isActive: true }),
-        Content.countDocuments({ type: 'cartoon', isActive: true }),
-        Content.countDocuments({ type: 'game', isActive: true }),
-        Content.countDocuments({ type: 'story', isActive: true }),
-        Content.countDocuments({ type: 'quest', isActive: true }),
+        Content.countDocuments({ type: 'talimiy', isActive: true }),
+        Content.countDocuments({ type: 'ozbek', isActive: true }),
+        Content.countDocuments({ type: 'jahon', isActive: true }),
         Content.countDocuments({ isFeatured: true, isActive: true }),
     ]);
 
     res.json({
         success: true,
-        stats: { total, cartoons, games, stories, quests, featured }
+        stats: { total, talimiy, ozbek, jahon, featured }
+    });
+}));
+
+// GET - Dashboard statistika (User/Child/Subscription)
+app.get('/api/dashboard/stats', asyncHandler(async (req, res) => {
+    const [totalUsers, totalChildren, totalStories, totalContents, activeSubscriptions] = await Promise.all([
+        User.countDocuments(),
+        ChildModel.countDocuments(),
+        Story.countDocuments(),
+        Content.countDocuments(),
+        Subscription.countDocuments({ status: 'active' }),
+    ]);
+
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const newUsersThisWeek = await User.countDocuments({ createdAt: { $gte: weekAgo } });
+
+    // Foydalanuvchilar + bolalar
+    const users = await User.find().sort({ createdAt: -1 }).select('phone name role isActive lastLoginAt createdAt').lean();
+    const children = await ChildModel.find().select('parentId name age gender dailyLimit todayUsage lastActive createdAt').lean();
+    const usersWithChildren = users.map(u => ({
+        ...u,
+        children: children.filter(c => String(c.parentId) === String(u._id))
+    }));
+
+    // Obunalar (to'liq ma'lumot, userId populate)
+    const subscriptions = await Subscription.find().sort({ createdAt: -1 }).lean();
+    const subsWithUser = subscriptions.map(s => {
+        const user = users.find(u => String(u._id) === String(s.userId));
+        return { ...s, userName: user?.name || '-', userPhone: user?.phone || '-' };
+    });
+
+    res.json({
+        success: true,
+        dashboard: {
+            totalUsers, totalChildren, totalStories, totalContents,
+            activeSubscriptions, newUsersThisWeek,
+            users: usersWithChildren,
+            subscriptions: subsWithUser
+        }
+    });
+}));
+
+// GET - Foydalanish statistikasi (line chart uchun)
+app.get('/api/dashboard/usage-stats', asyncHandler(async (req, res) => {
+    const { period = '30' } = req.query; // kunlar soni
+    const days = parseInt(period) || 30;
+
+    // WeeklyStats dan barcha haftalik ma'lumotlarni olish
+    const allWeeklyStats = await WeeklyStats.find().lean();
+
+    // dailyMinutes ni kunlarga yoyish
+    // weekNumber "2026-W11" formatda — haftaning Dushanba sanasini hisoblash
+    const dailyUsage = {};
+    const now = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    for (const ws of allWeeklyStats) {
+        if (!ws.weekNumber || !ws.dailyMinutes) continue;
+        
+        // weekNumber dan hafta boshlanish sanasini olish
+        const [yearStr, weekStr] = ws.weekNumber.split('-W');
+        const year = parseInt(yearStr);
+        const weekNum = parseInt(weekStr);
+        if (!year || !weekNum) continue;
+
+        // ISO hafta → Dushanba sanasi
+        const jan1 = new Date(year, 0, 1);
+        const daysToMonday = (weekNum - 1) * 7 - (jan1.getDay() === 0 ? 6 : jan1.getDay() - 1);
+        const mondayDate = new Date(year, 0, 1 + daysToMonday);
+
+        // Har bir kun uchun (Du=0, Se=1 ... Ya=6)
+        for (let d = 0; d < 7; d++) {
+            const dayDate = new Date(mondayDate);
+            dayDate.setDate(mondayDate.getDate() + d);
+            
+            if (dayDate >= startDate && dayDate <= now) {
+                const key = dayDate.toISOString().slice(0, 10);
+                const mins = (ws.dailyMinutes[d] || 0);
+                if (mins > 0) {
+                    if (!dailyUsage[key]) dailyUsage[key] = { totalMinutes: 0, sessions: 0 };
+                    dailyUsage[key].totalMinutes += mins;
+                    dailyUsage[key].sessions += 1;
+                }
+            }
+        }
+    }
+
+    // Child todayUsage dan bugungi ma'lumotni ham qo'shish
+    const children = await ChildModel.find().select('todayUsage lastUsageDate').lean();
+    const today = now.toISOString().slice(0, 10);
+    for (const child of children) {
+        if (child.todayUsage && child.todayUsage.minutesUsed > 0) {
+            const key = child.lastUsageDate || today;
+            if (!dailyUsage[key]) dailyUsage[key] = { totalMinutes: 0, sessions: 0 };
+            dailyUsage[key].totalMinutes += child.todayUsage.minutesUsed || 0;
+            dailyUsage[key].sessions += 1;
+        }
+    }
+
+    // Natijani massivga aylantirib, sanalar bo'yicha tartiblash
+    const chartData = [];
+    for (let i = 0; i < days; i++) {
+        const d = new Date(startDate);
+        d.setDate(d.getDate() + i);
+        const key = d.toISOString().slice(0, 10);
+        chartData.push({
+            date: key,
+            label: d.toLocaleDateString('uz', { day: '2-digit', month: 'short' }),
+            minutes: dailyUsage[key]?.totalMinutes || 0,
+            sessions: dailyUsage[key]?.sessions || 0
+        });
+    }
+
+    // O'rtacha hisoblash
+    const totalMinutes = chartData.reduce((s, d) => s + d.minutes, 0);
+    const totalSessions = chartData.reduce((s, d) => s + d.sessions, 0);
+    const activeDays = chartData.filter(d => d.minutes > 0).length;
+
+    const last7 = chartData.slice(-7);
+    const avg7 = last7.reduce((s, d) => s + d.minutes, 0) / 7;
+
+    const last30 = chartData.slice(-30);
+    const avg30 = last30.reduce((s, d) => s + d.minutes, 0) / Math.min(30, last30.length || 1);
+
+    res.json({
+        success: true,
+        usageStats: {
+            chartData,
+            summary: {
+                totalMinutes, totalSessions, activeDays,
+                avgDaily: Math.round(totalMinutes / (activeDays || 1)),
+                avgWeekly: Math.round(avg7),
+                avgMonthly: Math.round(avg30)
+            }
+        }
     });
 }));
 
@@ -356,6 +499,35 @@ app.post('/api/stories', async (req, res) => {
         res.status(400).json({ success: false, message: error.message });
     }
 });
+
+// PUT - Ertakni tahrirlash
+app.put('/api/stories/:id', asyncHandler(async (req, res) => {
+    const { title, type, storyText, ageMin, ageMax, thumbnail, isFeatured, isActive, language } = req.body;
+
+    const updateData = {};
+    if (title !== undefined) updateData.title = title;
+    if (type !== undefined) updateData.type = type;
+    if (storyText !== undefined) updateData.storyText = storyText;
+    if (ageMin !== undefined || ageMax !== undefined) {
+        updateData.ageRange = {};
+        if (ageMin !== undefined) updateData.ageRange.min = parseInt(ageMin);
+        if (ageMax !== undefined) updateData.ageRange.max = parseInt(ageMax);
+    }
+    if (thumbnail !== undefined) updateData.thumbnail = thumbnail;
+    if (isFeatured !== undefined) updateData.isFeatured = isFeatured === 'true' || isFeatured === true;
+    if (isActive !== undefined) updateData.isActive = isActive === 'true' || isActive === true;
+    if (language !== undefined) updateData.language = language;
+
+    const story = await Story.findByIdAndUpdate(
+        req.params.id, updateData, { new: true, runValidators: true }
+    );
+
+    if (!story) {
+        return res.status(404).json({ success: false, message: 'Ertak topilmadi' });
+    }
+
+    res.json({ success: true, message: 'Ertak yangilandi!', story });
+}));
 
 // DELETE - Ertakni o'chirish
 app.delete('/api/stories/:id', async (req, res) => {
