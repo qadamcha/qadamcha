@@ -213,7 +213,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     emit(state.copyWith(paymentStatus: PaymentStatus.paying));
 
     // Backend'ga so'rov yuborish
-    final result = await repository.activateTestSubscription();
+    final result = await repository.activateTestSubscription(plan: event.plan.value);
 
     result.fold(
       (failure) {
@@ -229,10 +229,10 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
           final subscription = Subscription(
             id: 'local_${now.millisecondsSinceEpoch}',
             userId: 'local_user',
-            plan: SubscriptionPlan.monthly,
+            plan: event.plan,
             status: SubscriptionStatus.active,
             startDate: now,
-            endDate: now.add(const Duration(minutes: 5)), // ⚡ TEST: 5 daqiqa
+            endDate: now.add(Duration(minutes: event.plan.testMinutes)),
             createdAt: now,
           );
           _saveSubscriptionLocally(subscription);

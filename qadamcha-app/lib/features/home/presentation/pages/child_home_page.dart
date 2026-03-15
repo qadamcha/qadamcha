@@ -116,10 +116,21 @@ class _ChildHomePageState extends State<ChildHomePage> {
           }
         }
       },
-      child: Builder(
-        // ⚠️ TODO: Test tugagach qaytarish! SubscriptionBloc check o'chirilgan
-        // Eski kod: BlocBuilder<SubscriptionBloc, SubscriptionState>(
-        builder: (context) {
+      child: BlocBuilder<SubscriptionBloc, SubscriptionState>(
+        // ✅ Obuna tekshirish qaytarildi
+        builder: (context, subState) {
+          // Obuna yuklanmagan — loading ko'rsatish
+          if (subState.status == SubscriptionLoadStatus.loading) {
+            return const Scaffold(
+              backgroundColor: Colors.white,
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+          // Obuna faol emas — lock ekran
+          final sub = subState.currentSubscription;
+          if (sub == null || !sub.isActive) {
+            return _buildNoSubscription(context);
+          }
           LocalMonitoringService.instance.setChildSessionActive(true);
           return _buildMain(context);
         },

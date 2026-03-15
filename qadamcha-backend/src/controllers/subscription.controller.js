@@ -265,6 +265,15 @@ module.exports = {
     // POST /subscription/activate-test - Test rejimida obunani faollashtirish
     async activateTest(request, reply) {
         const { userId } = request.user;
+        const plan = request.body?.plan || 'monthly';
+
+        // Plan tekshirish
+        if (!config.PLANS[plan]) {
+            return reply.status(400).send({
+                success: false,
+                message: 'Noto\'g\'ri plan: ' + plan
+            });
+        }
 
         // Mavjud faol obunani tekshirish
         const existing = await Subscription.findOne({
@@ -298,8 +307,8 @@ module.exports = {
             { $set: { status: 'expired' } }
         );
 
-        // Yangi obuna yaratish (test rejim — 5 daqiqa)
-        const planData = config.PLANS['monthly'];
+        // Yangi obuna yaratish
+        const planData = config.PLANS[plan];
         const endDate = new Date();
         // testMinutes bo'lsa minutda, aks holda kunlarda
         if (planData.testMinutes) {
@@ -310,7 +319,7 @@ module.exports = {
 
         const subscription = await Subscription.create({
             userId,
-            plan: 'monthly',
+            plan,
             status: 'active',
             price: planData.price,
             startDate: new Date(),
@@ -322,7 +331,7 @@ module.exports = {
         // User modelini yangilash
         await User.findByIdAndUpdate(userId, {
             subscriptionStatus: 'active',
-            subscriptionPlan: 'monthly'
+            subscriptionPlan: plan
         });
 
         request.log.info(`⚡ Test obuna: ${userId} — ${planData.testMinutes || planData.days} ${planData.testMinutes ? 'daqiqa' : 'kun'}`);

@@ -124,9 +124,9 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   }
 
   @override
-  Future<Either<Failure, Subscription>> activateTestSubscription() async {
+  Future<Either<Failure, Subscription>> activateTestSubscription({String plan = 'monthly'}) async {
     try {
-      final response = await apiClient.post('/subscription/activate-test', data: {});
+      final response = await apiClient.post('/subscription/activate-test', data: {'plan': plan});
       final data = response.data;
       if (data['subscription'] != null) {
         final subscription =

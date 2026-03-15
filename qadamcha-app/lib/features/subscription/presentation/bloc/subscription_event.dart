@@ -43,7 +43,14 @@ class CancelSubscriptionEvent extends SubscriptionEvent {}
 class ResetPaymentEvent extends SubscriptionEvent {}
 
 /// To'g'ridan-to'g'ri obunani faollashtirish (to'lovsiz, hozircha)
-class ActivateSubscriptionDirectlyEvent extends SubscriptionEvent {}
+class ActivateSubscriptionDirectlyEvent extends SubscriptionEvent {
+  final SubscriptionPlan plan;
+
+  const ActivateSubscriptionDirectlyEvent({this.plan = SubscriptionPlan.monthly});
+
+  @override
+  List<Object?> get props => [plan];
+}
 
 // ============= Subscribe API Events =============
 

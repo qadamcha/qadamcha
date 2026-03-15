@@ -244,7 +244,7 @@ class _ParentHomePageState extends State<ParentHomePage> {
             state.paymentOrder != null) {
           final bloc = context.read<SubscriptionBloc>();
           final order = state.paymentOrder!;
-          final plan = SubscriptionPlan.monthly;
+          final plan = state.selectedPlan ?? SubscriptionPlan.monthly;
 
           Navigator.push(
             context,
@@ -418,7 +418,73 @@ class _ParentHomePageState extends State<ParentHomePage> {
 
               // Action button
               if (!isPremium) ...[
-                if (subState.paymentStatus == PaymentStatus.creatingOrder)
+                // === PLAN TANLASH ===
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF5F7FA),
+                    borderRadius: BorderRadius.circular(14.r),
+                  ),
+                  padding: EdgeInsets.all(4.w),
+                  child: StatefulBuilder(
+                    builder: (context, setPlanState) {
+                      final selectedPlan = subState.selectedPlan ?? SubscriptionPlan.monthly;
+                      return Row(
+                        children: SubscriptionPlan.values.map((plan) {
+                          final isSelected = plan == selectedPlan;
+                          return Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                context.read<SubscriptionBloc>().add(SelectPlanEvent(plan));
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: EdgeInsets.symmetric(vertical: 12.h),
+                                decoration: BoxDecoration(
+                                  color: isSelected ? Colors.white : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12.r),
+                                  boxShadow: isSelected ? [
+                                    BoxShadow(
+                                      color: AppColors.primary.withOpacity(0.1),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ] : null,
+                                ),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      '${plan.emoji} ${plan.label}',
+                                      style: TextStyle(
+                                        fontSize: 14.sp,
+                                        fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                        color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                                        fontFamily: 'Nunito',
+                                      ),
+                                    ),
+                                    SizedBox(height: 2.h),
+                                    Text(
+                                      '${plan.testMinutes} daqiqa (test)',
+                                      style: TextStyle(
+                                        fontSize: 10.sp,
+                                        color: isSelected ? AppColors.primary.withOpacity(0.7) : AppColors.textDisabled,
+                                        fontFamily: 'Nunito',
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      );
+                    },
+                  ),
+                ),
+
+                SizedBox(height: 14.h),
+
+                if (subState.paymentStatus == PaymentStatus.creatingOrder ||
+                    subState.paymentStatus == PaymentStatus.paying)
                   Center(
                     child: SizedBox(
                       width: 24.w,
@@ -432,8 +498,9 @@ class _ParentHomePageState extends State<ParentHomePage> {
                 else
                   GestureDetector(
                     onTap: () {
+                      final plan = subState.selectedPlan ?? SubscriptionPlan.monthly;
                       context.read<SubscriptionBloc>().add(
-                        CreateOrderEvent(plan: SubscriptionPlan.monthly),
+                        CreateOrderEvent(plan: plan),
                       );
                     },
                     child: Container(
@@ -474,7 +541,7 @@ class _ParentHomePageState extends State<ParentHomePage> {
                   ),
                 SizedBox(height: 8.h),
                 Text(
-                  '1 000 so\'m/oy (test)',
+                  '1 000 so\'m (test)',
                   style: TextStyle(
                     fontSize: 12.sp,
                     color: AppColors.textSecondary,

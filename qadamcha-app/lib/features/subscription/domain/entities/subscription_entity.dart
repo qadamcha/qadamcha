@@ -39,7 +39,8 @@ class Subscription extends Equatable {
 }
 
 enum SubscriptionPlan {
-  monthly('monthly', 'Oylik', 100000, '⭐');
+  monthly('monthly', 'Oylik', 1000, '⭐'),
+  yearly('yearly', 'Yillik', 1000, '💎');
 
   final String value;
   final String label;
@@ -49,16 +50,29 @@ enum SubscriptionPlan {
   const SubscriptionPlan(this.value, this.label, this.priceUzs, this.emoji);
 
   static SubscriptionPlan fromString(String value) {
-    return SubscriptionPlan.monthly;
+    return SubscriptionPlan.values.firstWhere(
+      (e) => e.value == value,
+      orElse: () => SubscriptionPlan.monthly,
+    );
   }
 
   String get formattedPrice {
     final thousands = (priceUzs / 1000).toStringAsFixed(0);
+    if (this == SubscriptionPlan.yearly) {
+      return '$thousands 000 so\'m/yil';
+    }
     return '$thousands 000 so\'m/oy';
   }
 
   String get periodLabel {
-     return '30 kun';
+    if (this == SubscriptionPlan.yearly) return '365 kun';
+    return '30 kun';
+  }
+
+  /// Test muddati (daqiqada)
+  int get testMinutes {
+    if (this == SubscriptionPlan.yearly) return 10;
+    return 5; // monthly
   }
 }
 

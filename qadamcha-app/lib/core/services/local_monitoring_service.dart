@@ -67,7 +67,7 @@ class LocalMonitoringService {
   // Har 5 daqiqada "kun" almashadi, har 35 daqiqada "hafta" almashadi
   // Backend (dateUtils.js) da ham xuddi shu flag va formula bor
   // ═══════════════════════════════════════════════════════════════════
-  static const bool _testMode = true; // ⚠️ TEST: true = 5 daq = 1 kun
+  static const bool _testMode = false; // ✅ Production: haqiqiy sana
   static const int _testDayDurationMs = 5 * 60 * 1000; // 5 daqiqa = 1 "kun"
 
   static DateTime get _nowUzbekistan {
