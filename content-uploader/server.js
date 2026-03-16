@@ -193,7 +193,12 @@ app.get('/api/bunny/:videoId', asyncHandler(async (req, res) => {
     });
 
     if (!response.ok) {
-        return res.status(404).json({ success: false, message: 'Video topilmadi' });
+        const errBody = await response.text().catch(() => '');
+        console.error(`Bunny API error: status=${response.status}, libraryId=${libraryId}, videoId=${videoId}, body=${errBody}`);
+        const msg = response.status === 401 ? 'API kalit noto\'g\'ri' :
+                     response.status === 404 ? 'Video topilmadi (ID noto\'g\'ri yoki library boshqa)' :
+                     `Bunny xato: ${response.status}`;
+        return res.status(response.status).json({ success: false, message: msg });
     }
 
     const video = await response.json();
