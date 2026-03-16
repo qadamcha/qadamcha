@@ -602,21 +602,56 @@
         /* ===== LIGHT THEME ===== */
         [data-theme="light"] { --bg:#f1f5f9;--sidebar:#fff;--card:#fff;--text:#1e293b;--text-muted:#64748b;--border:#e2e8f0;--card-bg:#fff; }
         [data-theme="light"] .sidebar { box-shadow:2px 0 8px rgba(0,0,0,0.06); }
-        [data-theme="light"] .stat-card { background:#f8fafc;border-color:#e2e8f0; }
+        [data-theme="light"] .stat-card { background:#fff;border-color:#e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.04); }
         [data-theme="light"] .login-overlay { background:#f1f5f9; }
         [data-theme="light"] .login-box { background:#fff;box-shadow:0 4px 24px rgba(0,0,0,0.08); }
         [data-theme="light"] .login-box input { background:#f8fafc; }
-        [data-theme="light"] .content-item { background:#f8fafc;border-color:#e2e8f0; }
+        /* Video/Ertak kartalar */
+        [data-theme="light"] .content-item { background:#fff;border-color:#e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.04); }
+        [data-theme="light"] .content-item:hover { border-color:var(--primary);box-shadow:0 2px 8px rgba(99,102,241,0.1); }
         [data-theme="light"] .content-item h4 { color:#1e293b; }
         [data-theme="light"] .content-meta { color:#64748b; }
+        [data-theme="light"] .content-meta span { color:#475569; }
         [data-theme="light"] .story-preview { color:#64748b; }
-        [data-theme="light"] .card { background:#fff;border-color:#e2e8f0; }
-        [data-theme="light"] .modal { background:#fff;border-color:#e2e8f0; }
-        [data-theme="light"] input, [data-theme="light"] select, [data-theme="light"] textarea { background:#f8fafc;color:#1e293b;border-color:#e2e8f0; }
-        [data-theme="light"] .sort-bar button { color:#64748b;border-color:#e2e8f0; }
+        /* Badge ranglar - light modeda yengilroq */
+        [data-theme="light"] .badge.talimiy { background:#dbeafe;color:#1d4ed8; }
+        [data-theme="light"] .badge.ozbek { background:#d1fae5;color:#047857; }
+        [data-theme="light"] .badge.jahon { background:#ede9fe;color:#6d28d9; }
+        [data-theme="light"] .badge.islomiy { background:#dcfce7;color:#166534; }
+        [data-theme="light"] .badge.cartoon { background:#fef3c7;color:#92400e; }
+        [data-theme="light"] .badge.game { background:#fce7f3;color:#9d174d; }
+        [data-theme="light"] .badge.story { background:#e0e7ff;color:#3730a3; }
+        [data-theme="light"] .badge.quest { background:#f3e8ff;color:#7c3aed; }
+        /* Kartalar va modallar */
+        [data-theme="light"] .card { background:#fff;border-color:#e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.04); }
+        [data-theme="light"] .modal { background:#fff;border-color:#e2e8f0;box-shadow:0 8px 32px rgba(0,0,0,0.12); }
+        [data-theme="light"] .modal-overlay { background:rgba(0,0,0,0.3); }
+        /* Formalar */
+        [data-theme="light"] input, [data-theme="light"] select, [data-theme="light"] textarea { background:#fff;color:#1e293b;border-color:#d1d5db; }
+        [data-theme="light"] input:focus, [data-theme="light"] select:focus, [data-theme="light"] textarea:focus { border-color:var(--primary);box-shadow:0 0 0 3px rgba(99,102,241,0.1); }
+        /* Sort va sidebar */
+        [data-theme="light"] .sort-bar button { color:#64748b;border-color:#e2e8f0;background:#fff; }
         [data-theme="light"] .sort-bar button.active, [data-theme="light"] .sort-bar button:hover { background:var(--primary);color:#fff;border-color:var(--primary); }
-        [data-theme="light"] .sidebar-footer button { color:#64748b;border-color:#e2e8f0; }
-        [data-theme="light"] .finance-card { background:#f8fafc;border-color:#e2e8f0; }
+        [data-theme="light"] .sidebar-footer button { color:#64748b;border-color:#e2e8f0;background:#f8fafc; }
+        [data-theme="light"] .sidebar-footer button:hover { background:var(--primary);color:#fff;border-color:var(--primary); }
+        /* Finance va jadvallar */
+        [data-theme="light"] .finance-card { background:#fff;border-color:#e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.04); }
+        [data-theme="light"] table th { background:#f8fafc; }
+        [data-theme="light"] table tr:hover { background:#f8fafc; }
+        /* Pagination */
+        [data-theme="light"] .pagination-controls button { background:#fff;border-color:#e2e8f0;color:#1e293b; }
+        [data-theme="light"] .pagination-controls button:hover:not(:disabled) { background:var(--primary);color:#fff; }
+        [data-theme="light"] .pagination-controls button.active { background:var(--primary);color:#fff; }
+        /* Search bar */
+        [data-theme="light"] .search-bar input { background:#fff;border:1px solid #d1d5db; }
+        /* Tugmalar */
+        [data-theme="light"] .btn-sm.btn-edit { background:var(--primary);color:#fff; }
+        [data-theme="light"] .btn-sm.btn-danger { background:var(--danger);color:#fff; }
+        /* Nav items */
+        [data-theme="light"] .nav-item:hover { background:rgba(99,102,241,0.05); }
+        [data-theme="light"] .nav-parent:hover { background:rgba(99,102,241,0.05);color:var(--text); }
+        /* Toast */
+        [data-theme="light"] .toast { box-shadow:0 4px 12px rgba(0,0,0,0.15); }
 
         /* ===== THEME TOGGLE ===== */
         .theme-toggle { position:absolute;top:1rem;right:1rem;background:var(--card);border:1px solid var(--border);color:var(--text);width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:0.2s;z-index:5; }
@@ -707,7 +742,6 @@
         </div>
 
         <div class="sidebar-footer">
-            <button onclick="toggleTheme()">🌓 Tema</button>
             <button onclick="logout()">Chiqish</button>
         </div>
     </nav>
