@@ -236,9 +236,8 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
           question: 'Obuna turlari qanday?',
           answer:
               'Qadamcha quyidagi obuna turlarini taklif etadi:\n\n'
-              '📅 Oylik — 1 oy muddatga\n'
-              '📅 3 oylik — tejamkor variant (oyiga arzonroq)\n'
-              '📅 Yillik — eng foydali narx (katta chegirma)\n\n'
+              '📅 Oylik — 19 000 so\'m/oy\n'
+              '📅 Yillik — 179 000 so\'m/yil (oyiga 14 917 so\'m)\n\n'
               '💎 Barcha rejalarda:\n'
               '• To\'liq monitoring\n'
               '• Bo\'yash o\'yini\n'

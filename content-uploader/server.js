@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 const cors = require('cors');
+const session = require('express-session');
 require('dotenv').config();
 
 const app = express();
@@ -10,11 +11,55 @@ const PORT = process.env.PORT || 4000;
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors({
     origin: process.env.CORS_ORIGIN || '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE']
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
 }));
+
+// Session
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'qadamcha-secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 soat
+}));
+
+// Static files (login sahifasi uchun)
+app.use(express.static(path.join(__dirname, 'public')));
+
+// ==========================================
+// AUTH API
+// ==========================================
+app.post('/api/auth/login', (req, res) => {
+    const { username, password } = req.body;
+    if (username === (process.env.ADMIN_USERNAME || 'admin') &&
+        password === (process.env.ADMIN_PASSWORD || 'qadamcha2026')) {
+        req.session.isAdmin = true;
+        req.session.loginTime = Date.now();
+        return res.json({ success: true, message: 'Kirish muvaffaqiyatli!' });
+    }
+    res.status(401).json({ success: false, message: 'Login yoki parol noto\'g\'ri' });
+});
+
+app.post('/api/auth/logout', (req, res) => {
+    req.session.destroy();
+    res.json({ success: true });
+});
+
+app.get('/api/auth/check', (req, res) => {
+    res.json({ success: true, isAuthenticated: !!req.session.isAdmin });
+});
+
+// Auth middleware — barcha /api/ so'rovlarni himoyalash (auth dan tashqari)
+function requireAuth(req, res, next) {
+    if (req.path.startsWith('/api/auth/')) return next();
+    if (!req.session.isAdmin) {
+        return res.status(401).json({ success: false, message: 'Avtorizatsiya talab qilinadi' });
+    }
+    next();
+}
+app.use('/api', requireAuth);
 
 // MongoDB Content Schema (Multfilm/Video)
 const contentSchema = new mongoose.Schema({
@@ -473,35 +518,27 @@ app.use((err, req, res, _next) => {
 // ==========================================
 
 // GET - Barcha ertaklarni olish
-app.get('/api/stories', async (req, res) => {
-    try {
-        const stories = await Story.find().sort({ createdAt: -1 });
-        res.json({ success: true, stories, count: stories.length });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
+app.get('/api/stories', asyncHandler(async (req, res) => {
+    const stories = await Story.find().sort({ createdAt: -1 });
+    res.json({ success: true, stories, count: stories.length });
+}));
 
 // POST - Yangi ertak qo'shish
-app.post('/api/stories', async (req, res) => {
-    try {
-        const { title, type, storyText, ageMin, ageMax, thumbnail, isFeatured, language } = req.body;
+app.post('/api/stories', asyncHandler(async (req, res) => {
+    const { title, type, storyText, ageMin, ageMax, thumbnail, isFeatured, language } = req.body;
 
-        const story = await Story.create({
-            title,
-            type: type || 'ertak',
-            storyText,
-            ageRange: { min: parseInt(ageMin) || 3, max: parseInt(ageMax) || 12 },
-            thumbnail,
-            isFeatured: isFeatured === 'true' || isFeatured === true,
-            language: language || 'uz'
-        });
+    const story = await Story.create({
+        title,
+        type: type || 'ertak',
+        storyText,
+        ageRange: { min: parseInt(ageMin) || 3, max: parseInt(ageMax) || 12 },
+        thumbnail,
+        isFeatured: isFeatured === 'true' || isFeatured === true,
+        language: language || 'uz'
+    });
 
-        res.json({ success: true, message: 'Ertak muvaffaqiyatli qo\'shildi!', story });
-    } catch (error) {
-        res.status(400).json({ success: false, message: error.message });
-    }
-});
+    res.json({ success: true, message: 'Ertak muvaffaqiyatli qo\'shildi!', story });
+}));
 
 // PUT - Ertakni tahrirlash
 app.put('/api/stories/:id', asyncHandler(async (req, res) => {
@@ -533,14 +570,10 @@ app.put('/api/stories/:id', asyncHandler(async (req, res) => {
 }));
 
 // DELETE - Ertakni o'chirish
-app.delete('/api/stories/:id', async (req, res) => {
-    try {
-        await Story.findByIdAndDelete(req.params.id);
-        res.json({ success: true, message: 'O\'chirildi!' });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
+app.delete('/api/stories/:id', asyncHandler(async (req, res) => {
+    await Story.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: 'O\'chirildi!' });
+}));
 
 // MongoDB ulanish va server ishga tushirish
 async function start() {

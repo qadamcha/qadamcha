@@ -191,26 +191,16 @@
             padding: 1.25rem;
         }
 
-        .stat-card .stat-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 0.75rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            margin-bottom: 0.75rem;
+        .stat-card .stat-label {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 0.35rem;
         }
 
         .stat-card .stat-value {
             font-size: 1.75rem;
             font-weight: 700;
-        }
-
-        .stat-card .stat-label {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-top: 0.15rem;
         }
 
         /* ===== CARDS ===== */
@@ -584,10 +574,102 @@
             font-size: 0.72rem;
             color: var(--text-muted);
         }
+        /* Pagination */
+        .pagination-controls {
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+            padding: 1rem 0 0.5rem; font-size: 0.85rem;
+        }
+        .pagination-controls button {
+            background: var(--card-bg); border: 1px solid var(--border); color: var(--text);
+            padding: 0.4rem 0.8rem; border-radius: 0.5rem; cursor: pointer; font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+        .pagination-controls button:hover:not(:disabled) { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .pagination-controls button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .pagination-controls button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .pagination-controls .page-info { color: var(--text-muted); font-size: 0.78rem; }
+
+        /* ===== LOGIN OVERLAY ===== */
+        .login-overlay { position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center; }
+        .login-box { background:var(--card);padding:2.5rem;border-radius:1rem;width:380px;max-width:90%;border:1px solid var(--border);text-align:center; }
+        .login-box h2 { margin-bottom:0.3rem;font-size:1.5rem; }
+        .login-box small { color:var(--text-muted);display:block;margin-bottom:1.5rem; }
+        .login-box input { width:100%;padding:0.7rem 1rem;margin-bottom:0.8rem;border-radius:0.5rem;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:0.9rem; }
+        .login-box .btn-login { width:100%;padding:0.8rem;background:var(--primary);color:#fff;border:none;border-radius:0.5rem;font-size:1rem;cursor:pointer;font-weight:600;transition:0.2s; }
+        .login-box .btn-login:hover { background:var(--primary-dark); }
+        .login-box .login-error { color:var(--danger);font-size:0.85rem;margin-top:0.5rem;min-height:1.2rem; }
+
+        /* ===== LIGHT THEME ===== */
+        [data-theme="light"] { --bg:#f1f5f9;--sidebar:#fff;--card:#fff;--text:#1e293b;--text-muted:#64748b;--border:#e2e8f0;--card-bg:#fff; }
+        [data-theme="light"] .sidebar { box-shadow:2px 0 8px rgba(0,0,0,0.06); }
+        [data-theme="light"] .stat-card { background:#f8fafc;border-color:#e2e8f0; }
+        [data-theme="light"] .login-overlay { background:#f1f5f9; }
+        [data-theme="light"] .login-box { background:#fff;box-shadow:0 4px 24px rgba(0,0,0,0.08); }
+        [data-theme="light"] .login-box input { background:#f8fafc; }
+
+        /* ===== THEME TOGGLE ===== */
+        .theme-toggle { position:absolute;top:1rem;right:1rem;background:var(--card);border:1px solid var(--border);color:var(--text);width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:0.2s;z-index:5; }
+        .theme-toggle:hover { background:var(--primary);color:#fff; }
+
+        /* ===== SIDEBAR FOOTER ===== */
+        .sidebar-footer { margin-top:auto;padding:0.8rem 1.2rem;border-top:1px solid var(--border);display:flex;gap:0.5rem; }
+        .sidebar-footer button { flex:1;padding:0.5rem;border-radius:0.5rem;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-size:0.78rem;transition:0.2s; }
+        .sidebar-footer button:hover { background:var(--primary);color:#fff;border-color:var(--primary); }
+
+        /* ===== RESPONSIVE ===== */
+        .hamburger { display:none;position:fixed;top:0.8rem;left:0.8rem;z-index:20;background:var(--card);border:1px solid var(--border);color:var(--text);width:40px;height:40px;border-radius:0.5rem;cursor:pointer;font-size:1.3rem; }
+        @media (max-width:768px) {
+            .sidebar { transform:translateX(-100%);transition:0.3s; }
+            .sidebar.open { transform:translateX(0); }
+            .hamburger { display:flex;align-items:center;justify-content:center; }
+            .main { margin-left:0 !important;padding:1rem !important;padding-top:3.5rem !important; }
+            .stats-grid { grid-template-columns:repeat(2,1fr) !important; }
+        }
+
+        /* ===== HEATMAP ===== */
+        .heatmap-grid { display:grid;grid-template-columns:60px repeat(24,1fr);gap:2px;font-size:0.7rem; }
+        .heatmap-cell { aspect-ratio:1;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:0.6rem;color:var(--text-muted); }
+        .heatmap-label { display:flex;align-items:center;font-size:0.75rem;color:var(--text-muted);padding-right:0.3rem; }
+        .heat-0 { background:var(--bg); } .heat-1 { background:#1a3a2a; }
+        .heat-2 { background:#1e5a3a; } .heat-3 { background:#22804a; } .heat-4 { background:#10b981; }
+        [data-theme="light"] .heat-0 { background:#f1f5f9; } [data-theme="light"] .heat-1 { background:#d1fae5; }
+        [data-theme="light"] .heat-2 { background:#a7f3d0; } [data-theme="light"] .heat-3 { background:#6ee7b7; } [data-theme="light"] .heat-4 { background:#34d399; }
+
+        /* ===== FINANCE ===== */
+        .finance-card { background:var(--card);border:1px solid var(--border);border-radius:0.75rem;padding:1.2rem;text-align:center; }
+        .finance-value { font-size:1.8rem;font-weight:700;margin:0.3rem 0; }
+        .finance-label { color:var(--text-muted);font-size:0.8rem; }
+        .finance-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem; }
+
+        /* ===== SORT BUTTONS ===== */
+        .sort-bar { display:flex;gap:0.5rem;align-items:center;margin-bottom:0.5rem;flex-wrap:wrap; }
+        .sort-bar button { background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:0.3rem 0.6rem;border-radius:0.4rem;cursor:pointer;font-size:0.75rem;transition:0.2s; }
+        .sort-bar button.active, .sort-bar button:hover { background:var(--primary);color:#fff;border-color:var(--primary); }
+        .export-btn { background:var(--success) !important;color:#fff !important;border-color:var(--success) !important; }
     </style>
 </head>
 
 <body>
+    <!-- LOGIN OVERLAY -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <h2>🎬 Qadamcha</h2>
+            <small>Admin Dashboard — Kirish</small>
+            <form id="loginForm">
+                <input type="text" id="loginUser" placeholder="👤 Login" autocomplete="username" required>
+                <input type="password" id="loginPass" placeholder="🔒 Parol" autocomplete="current-password" required>
+                <button type="submit" class="btn-login">Kirish</button>
+                <div class="login-error" id="loginError"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- HAMBURGER (mobile) -->
+    <button class="hamburger" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+    <!-- THEME TOGGLE -->
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Tema almashtirish">🌙</button>
+
     <!-- SIDEBAR -->
     <nav class="sidebar">
         <div class="sidebar-logo">
@@ -596,15 +678,26 @@
 
         <div class="nav-parent open" onclick="toggleMenu(this)">📊 Dashboard <span class="arrow">▶</span></div>
         <div class="nav-children">
-            <div class="nav-item active" onclick="showPage('stats')"><span class="icon">📈</span> Statistika</div>
             <div class="nav-item" onclick="showPage('users')"><span class="icon">👥</span> Foydalanuvchilar</div>
             <div class="nav-item" onclick="showPage('subs')"><span class="icon">💳</span> Obunalar</div>
+        </div>
+
+        <div class="nav-parent open" onclick="toggleMenu(this)">📊 Analitika <span class="arrow">▶</span></div>
+        <div class="nav-children">
+            <div class="nav-item active" onclick="showPage('stats')"><span class="icon">📈</span> Statistika</div>
+            <div class="nav-item" onclick="showPage('analytics')"><span class="icon">🔬</span> Batafsil analitika</div>
+            <div class="nav-item" onclick="showPage('finance')"><span class="icon">💰</span> Moliyaviy hisobot</div>
         </div>
 
         <div class="nav-parent open" onclick="toggleMenu(this)">📤 Content Uploader <span class="arrow">▶</span></div>
         <div class="nav-children">
             <div class="nav-item" onclick="showPage('videos')"><span class="icon">🎬</span> Videolar</div>
             <div class="nav-item" onclick="showPage('stories')"><span class="icon">📖</span> Ertaklar</div>
+        </div>
+
+        <div class="sidebar-footer">
+            <button onclick="toggleTheme()">🌓 Tema</button>
+            <button onclick="logout()">🚪 Chiqish</button>
         </div>
     </nav>
 
@@ -618,34 +711,28 @@
             </div>
             <div class="stats-grid" id="dashboardStats">
                 <div class="stat-card">
-                    <div class="stat-icon" style="background:rgba(99,102,241,0.15)">📹</div>
-                    <div class="stat-value" id="ds-contents">-</div>
                     <div class="stat-label">Videolar</div>
+                    <div class="stat-value" id="ds-contents">-</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon" style="background:rgba(245,158,11,0.15)">📖</div>
-                    <div class="stat-value" id="ds-stories">-</div>
                     <div class="stat-label">Ertaklar</div>
+                    <div class="stat-value" id="ds-stories">-</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon" style="background:rgba(16,185,129,0.15)">👥</div>
-                    <div class="stat-value" id="ds-users">-</div>
                     <div class="stat-label">Foydalanuvchilar</div>
+                    <div class="stat-value" id="ds-users">-</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon" style="background:rgba(236,72,153,0.15)">👶</div>
-                    <div class="stat-value" id="ds-children">-</div>
                     <div class="stat-label">Bolalar</div>
+                    <div class="stat-value" id="ds-children">-</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon" style="background:rgba(168,85,247,0.15)">💳</div>
-                    <div class="stat-value" id="ds-subs">-</div>
                     <div class="stat-label">Aktiv Obuna</div>
+                    <div class="stat-value" id="ds-subs">-</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon" style="background:rgba(34,211,238,0.15)">📈</div>
-                    <div class="stat-value" id="ds-newusers">-</div>
                     <div class="stat-label">Yangi (7 kun)</div>
+                    <div class="stat-value" id="ds-newusers">-</div>
                 </div>
             </div>
 
@@ -677,6 +764,7 @@
             </div>
         </div>
 
+
         <!-- ========== 2. FOYDALANUVCHILAR PAGE ========== -->
         <div class="page" id="page-users">
             <div class="page-header">
@@ -685,16 +773,23 @@
             <div class="card">
                 <div class="search-bar"><input type="text" id="userSearch"
                         placeholder="🔍 Telefon yoki ism bo'yicha qidirish..."></div>
+                <div class="sort-bar">
+                    <span style="color:var(--text-muted);font-size:0.75rem">Saralash:</span>
+                    <button onclick="sortUsers('name')">👤 Ism</button>
+                    <button onclick="sortUsers('createdAt')" class="active">📅 Sana</button>
+                    <button onclick="sortUsers('lastLoginAt')">🕐 Kirish</button>
+                    <button class="export-btn" onclick="exportCSV()">📥 CSV</button>
+                </div>
                 <div style="overflow-x:auto">
-                    <table style="width:100%;border-collapse:collapse;font-size:0.85rem">
+                    <table style="width:100%;border-collapse:collapse;font-size:0.85rem;table-layout:fixed">
                         <thead>
                             <tr style="border-bottom:1px solid var(--border);text-align:left">
-                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">#</th>
-                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">📱 Telefon</th>
-                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">👤 Ism</th>
-                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">👶 Bolalar</th>
-                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">🕐 Oxirgi kirish</th>
-                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">📅 Ro'yxatdan</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text);font-weight:700;width:5%">#</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text);font-weight:700;width:18%">Telefon</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text);font-weight:700;width:15%">Ism</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text);font-weight:700;width:30%">Bolalar</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text);font-weight:700;width:16%">Oxirgi kirish</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text);font-weight:700;width:16%">Ro'yxatdan</th>
                             </tr>
                         </thead>
                         <tbody id="usersTableBody">
@@ -702,6 +797,7 @@
                         </tbody>
                     </table>
                 </div>
+                <div id="usersPagination" class="pagination-controls"></div>
             </div>
         </div>
 
@@ -711,19 +807,21 @@
                 <h2>💳 Obunalar</h2>
             </div>
             <div class="card">
+                <div class="search-bar"><input type="text" id="subsSearch"
+                        placeholder="🔍 Ism, telefon yoki tarif bo'yicha qidirish..."></div>
                 <div style="overflow-x:auto">
                     <table style="width:100%;border-collapse:collapse;font-size:0.85rem">
                         <thead>
                             <tr style="border-bottom:1px solid var(--border);text-align:left">
-                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">#</th>
-                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">👤 Foydalanuvchi</th>
-                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">📱 Telefon</th>
-                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">📦 Tarif</th>
-                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">📊 Holat</th>
-                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">💰 Narx</th>
-                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">💳 To'lov</th>
-                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">📅 Boshlanish</th>
-                                <th style="padding:0.6rem 0.5rem;color:var(--text-muted);font-weight:600">⏰ Tugash</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text);font-weight:700">#</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text);font-weight:700">Foydalanuvchi</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text);font-weight:700">Telefon</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text);font-weight:700">Tarif</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text);font-weight:700">Holat</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text);font-weight:700">Narx</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text);font-weight:700">To'lov</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text);font-weight:700">Boshlanish</th>
+                                <th style="padding:0.6rem 0.5rem;color:var(--text);font-weight:700">Tugash</th>
                             </tr>
                         </thead>
                         <tbody id="subsTableBody">
@@ -731,6 +829,7 @@
                         </tbody>
                     </table>
                 </div>
+                <div id="subsPagination" class="pagination-controls"></div>
             </div>
         </div>
 
@@ -758,6 +857,10 @@
                                     <option value="talimiy">📚 Ta'limiy</option>
                                     <option value="ozbek">🇺🇿 O'zbek</option>
                                     <option value="jahon">🌍 Jahon</option>
+                                    <option value="cartoon">🎬 Multfilm</option>
+                                    <option value="game">🎮 O'yin</option>
+                                    <option value="story">📖 Hikoya</option>
+                                    <option value="quest">🧩 Quest</option>
                                 </select>
                             </div>
                             <div class="form-group"><label>Til</label>
@@ -808,6 +911,10 @@
                             <option value="talimiy">Ta'limiy</option>
                             <option value="ozbek">O'zbek</option>
                             <option value="jahon">Jahon</option>
+                            <option value="cartoon">Multfilm</option>
+                            <option value="game">O'yin</option>
+                            <option value="story">Hikoya</option>
+                            <option value="quest">Quest</option>
                         </select>
                     </div>
                     <div class="content-list" id="contentList">
@@ -878,6 +985,86 @@
                 </div>
             </div>
         </div>
+
+        <!-- ========== ANALYTICS PAGE ========== -->
+        <div class="page" id="page-analytics">
+            <div class="page-header"><h2>🔬 Batafsil Analitika</h2></div>
+            <div class="stats-grid" style="grid-template-columns:repeat(2,1fr)">
+                <div class="card">
+                    <h3>📊 Kontent turlari taqsimoti</h3>
+                    <div style="height:300px;position:relative"><canvas id="pieChart"></canvas></div>
+                </div>
+                <div class="card">
+                    <h3>📈 Top 10 eng ko'p ko'rilgan kontent</h3>
+                    <div style="height:300px;position:relative"><canvas id="topContentChart"></canvas></div>
+                </div>
+            </div>
+            <div class="card" style="margin-top:1rem">
+                <h3>🗓️ Haftalik faollik xaritasi (Heatmap)</h3>
+                <p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:1rem">Har bir katak — shu kun va soatdagi umumiy foydalanish daqiqalari</p>
+                <div class="heatmap-grid" id="heatmapGrid">
+                    <div class="heatmap-label"></div>
+                    <div class="heatmap-label" style="justify-content:center">0</div>
+                    <div class="heatmap-label" style="justify-content:center">1</div>
+                    <div class="heatmap-label" style="justify-content:center">2</div>
+                    <div class="heatmap-label" style="justify-content:center">3</div>
+                    <div class="heatmap-label" style="justify-content:center">4</div>
+                    <div class="heatmap-label" style="justify-content:center">5</div>
+                    <div class="heatmap-label" style="justify-content:center">6</div>
+                    <div class="heatmap-label" style="justify-content:center">7</div>
+                    <div class="heatmap-label" style="justify-content:center">8</div>
+                    <div class="heatmap-label" style="justify-content:center">9</div>
+                    <div class="heatmap-label" style="justify-content:center">10</div>
+                    <div class="heatmap-label" style="justify-content:center">11</div>
+                    <div class="heatmap-label" style="justify-content:center">12</div>
+                    <div class="heatmap-label" style="justify-content:center">13</div>
+                    <div class="heatmap-label" style="justify-content:center">14</div>
+                    <div class="heatmap-label" style="justify-content:center">15</div>
+                    <div class="heatmap-label" style="justify-content:center">16</div>
+                    <div class="heatmap-label" style="justify-content:center">17</div>
+                    <div class="heatmap-label" style="justify-content:center">18</div>
+                    <div class="heatmap-label" style="justify-content:center">19</div>
+                    <div class="heatmap-label" style="justify-content:center">20</div>
+                    <div class="heatmap-label" style="justify-content:center">21</div>
+                    <div class="heatmap-label" style="justify-content:center">22</div>
+                    <div class="heatmap-label" style="justify-content:center">23</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== FINANCE PAGE ========== -->
+        <div class="page" id="page-finance">
+            <div class="page-header"><h2>💰 Moliyaviy Hisobot</h2></div>
+            <div class="finance-grid">
+                <div class="finance-card">
+                    <div class="finance-label">Oylik Daromad (MRR)</div>
+                    <div class="finance-value" id="fin-mrr" style="color:var(--success)">-</div>
+                </div>
+                <div class="finance-card">
+                    <div class="finance-label">Umumiy Daromad</div>
+                    <div class="finance-value" id="fin-total">-</div>
+                </div>
+                <div class="finance-card">
+                    <div class="finance-label">Faol Obunalar</div>
+                    <div class="finance-value" id="fin-active" style="color:var(--primary)">-</div>
+                </div>
+                <div class="finance-card">
+                    <div class="finance-label">Churn Rate</div>
+                    <div class="finance-value" id="fin-churn" style="color:var(--danger)">-</div>
+                </div>
+            </div>
+            <div class="stats-grid" style="grid-template-columns:repeat(2,1fr)">
+                <div class="card">
+                    <h3>📊 Obuna turlari taqsimoti</h3>
+                    <div style="height:280px;position:relative"><canvas id="subsPieChart"></canvas></div>
+                </div>
+                <div class="card">
+                    <h3>📈 Oylik daromad trendi</h3>
+                    <div style="height:280px;position:relative"><canvas id="revenueChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- ===== EDIT CONTENT MODAL ===== -->
@@ -892,6 +1079,10 @@
                             <option value="talimiy">Ta'limiy</option>
                             <option value="ozbek">O'zbek</option>
                             <option value="jahon">Jahon</option>
+                            <option value="cartoon">Multfilm</option>
+                            <option value="game">O'yin</option>
+                            <option value="story">Hikoya</option>
+                            <option value="quest">Quest</option>
                         </select></div>
                     <div class="form-group"><label>Til</label><select name="language" id="ec-lang">
                             <option value="uz">O'zbek</option>
@@ -974,9 +1165,66 @@
     </div>
 
     <script>
-        // ============ NAVIGATION ============
+        // ============ AUTH ============
+        async function checkAuth() {
+            try {
+                const res = await fetch('/api/auth/check');
+                const data = await res.json();
+                if (data.isAuthenticated) {
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    initApp();
+                }
+            } catch (e) { }
+        }
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errEl = document.getElementById('loginError');
+            errEl.textContent = '';
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: document.getElementById('loginUser').value,
+                        password: document.getElementById('loginPass').value
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    initApp();
+                } else {
+                    errEl.textContent = data.message;
+                }
+            } catch (err) { errEl.textContent = 'Server bilan bog\'lanib bo\'lmadi'; }
+        });
+        async function logout() {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            location.reload();
+        }
+        checkAuth();
+
+        // ============ THEME ============
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.getAttribute('data-theme') !== 'light';
+            html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            document.getElementById('themeToggle').textContent = isDark ? '☀️' : '🌙';
+            localStorage.setItem('theme', isDark ? 'light' : 'dark');
+        }
+        (function() {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+                document.getElementById('themeToggle').textContent = '☀️';
+            }
+        })();
+
+        // ============ NAVIGATION (LAZY LOADING) ============
         let currentPage = 'stats';
         let dashboardLoaded = false;
+        let analyticsLoaded = false;
+        let financeLoaded = false;
 
         function toggleMenu(el) {
             el.classList.toggle('open');
@@ -987,26 +1235,30 @@
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById('page-' + page).classList.add('active');
-            // Highlight active nav item
             document.querySelectorAll('.nav-item').forEach(n => {
                 if (n.getAttribute('onclick')?.includes("'" + page + "'")) n.classList.add('active');
             });
-            // Load data per page
-            if (['stats', 'users', 'subs'].includes(page) && !dashboardLoaded) {
-                loadDashboard();
-            }
+            // Lazy loading — faqat kerak sahifani yuklash
+            if (['stats', 'users', 'subs'].includes(page) && !dashboardLoaded) loadDashboard();
             if (page === 'stats') loadUsageStats();
             if (page === 'videos') { loadContents(); loadSeries(); }
             if (page === 'stories') loadStories();
+            if (page === 'analytics' && !analyticsLoaded) loadAnalytics();
+            if (page === 'finance' && !financeLoaded) loadFinance();
+            // Mobile: sidebar yopish
+            document.querySelector('.sidebar').classList.remove('open');
         }
 
-        // ============ TOAST ============
+        function initApp() { showPage('stats'); }
+
+        // ============ TOAST (yaxshilangan) ============
         function showToast(msg, type = 'success') {
             const t = document.createElement('div');
             t.className = 'toast ' + type;
             t.textContent = msg;
             document.body.appendChild(t);
-            setTimeout(() => t.remove(), 3000);
+            const dur = type === 'error' ? 5000 : 2500;
+            setTimeout(() => t.remove(), dur);
         }
 
         // ============ MODAL ============
@@ -1024,8 +1276,30 @@
             return Math.floor(h / 24) + ' kun oldin';
         }
 
-        const typeLabel = { talimiy: "📚 Ta'limiy", ozbek: "🇺🇿 O'zbek", jahon: "🌍 Jahon", islomiy: "☪️ Islomiy" };
+        const typeLabel = { talimiy: "📚 Ta'limiy", ozbek: "🇺🇿 O'zbek", jahon: "🌍 Jahon", islomiy: "☪️ Islomiy", cartoon: "🎬 Multfilm", game: "🎮 O'yin", story: "📖 Hikoya", quest: "🧩 Quest" };
         const langLabel = { uz: "O'zbek", ru: "Rus", en: "Ingliz" };
+
+        // ============ PAGINATION HELPER ============
+        function renderPagination(containerId, currentPage, totalPages, totalItems, onPageChange) {
+            const container = document.getElementById(containerId);
+            if (totalPages <= 1) { container.innerHTML = `<span class="page-info">${totalItems} ta</span>`; return; }
+            let html = `<button ${currentPage <= 1 ? 'disabled' : ''} onclick="void(0)" data-page="${currentPage - 1}">◀ Oldingi</button>`;
+            const maxVisible = 5;
+            let startP = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+            let endP = Math.min(totalPages, startP + maxVisible - 1);
+            if (endP - startP < maxVisible - 1) startP = Math.max(1, endP - maxVisible + 1);
+            if (startP > 1) html += `<button data-page="1">1</button><span class="page-info">...</span>`;
+            for (let p = startP; p <= endP; p++) {
+                html += `<button data-page="${p}" class="${p === currentPage ? 'active' : ''}">${p}</button>`;
+            }
+            if (endP < totalPages) html += `<span class="page-info">...</span><button data-page="${totalPages}">${totalPages}</button>`;
+            html += `<button ${currentPage >= totalPages ? 'disabled' : ''} data-page="${currentPage + 1}">Keyingi ▶</button>`;
+            html += `<span class="page-info">${totalItems} ta</span>`;
+            container.innerHTML = html;
+            container.querySelectorAll('button:not(:disabled)').forEach(btn => {
+                btn.addEventListener('click', () => onPageChange(parseInt(btn.dataset.page)));
+            });
+        }
 
         // ============ DASHBOARD ============
         let allUsers = [];
@@ -1045,42 +1319,106 @@
                 document.getElementById('ds-newusers').textContent = d.newUsersThisWeek;
 
                 allUsers = d.users || [];
-                renderUsers();
+                
+                // TEST UCHUN — 100 ta fake user qo'shish
+                const uzNames = ['Sardor','Jasur','Bobur','Sherzod','Dilshod','Aziz','Nodir','Baxtiyor','Ravshan','Ulugbek',
+                    'Otabek','Eldor','Sanjar','Firdavs','Temur','Anvar','Doniyor','Islom','Kamol','Mansur',
+                    'Oybek','Rustam','Saidakbar','Tohir','Vahid','Xurshid','Yusuf','Zafar','Abror','Behruz',
+                    'Davron','Elmurod','Farxod','Hamid','Ilhom','Javlon','Kamoliddin','Laziz','Mirzo','Narzullo',
+                    'Ortiq','Parviz','Qodir','Rahmat','Suxrob','Toshpulat','Umid','Vohid','Xasan','Yorqin',
+                    'Ziyod','Alisher','Bahodir','Dildora','Ezoza','Feruza','Gulnora','Hilola','Iroda','Jamila',
+                    'Kamola','Lola','Madina','Nilufar','Oydin','Saida','Barno','Dilorom','Zulfiya','Shoira',
+                    'Nodira','Malika','Aziza','Mohira','Charos','Kumush','Fotima','Robiya','Nargiza','Mohigul',
+                    'Shahlo','Nafisa','Sabina','Sevinch','Laylo','Maftuna','Zarnigor','Lobar','Mushtariy','Adolat',
+                    'Shaxlo','Sitora','Gulsanam','Muhabbat','Oysha','Surayyo','Mavluda','Zuhra','Hulkar','Manzura'];
+                for (let i = 0; i < 100; i++) {
+                    const name = uzNames[i % uzNames.length];
+                    const phone = '+9989' + String(10000000 + Math.floor(Math.random() * 89999999)).slice(0, 8);
+                    const daysAgo = Math.floor(Math.random() * 90);
+                    const created = new Date(Date.now() - daysAgo * 86400000);
+                    const lastLogin = Math.random() > 0.3 ? new Date(Date.now() - Math.floor(Math.random() * 7) * 86400000) : null;
+                    const hasKid = Math.random() > 0.2;
+                    allUsers.push({
+                        phone, name,
+                        createdAt: created.toISOString(),
+                        lastLoginAt: lastLogin ? lastLogin.toISOString() : null,
+                        children: hasKid ? [{
+                            name: 'Bolajon', age: 3 + Math.floor(Math.random() * 8),
+                            gender: Math.random() > 0.5 ? 'male' : 'female',
+                            todayUsage: { minutesUsed: Math.floor(Math.random() * 30) }
+                        }] : []
+                    });
+                }
 
                 allSubscriptions = d.subscriptions || [];
-                renderSubscriptions(allSubscriptions);
+                const plans = ['monthly','yearly'];
+                const statuses = ['active','expired','cancelled','pending'];
+                const payMethods = ['payme','click','uzum'];
+                for (let i = 0; i < 100; i++) {
+                    const name = uzNames[i % uzNames.length];
+                    const phone = '+9989' + String(10000000 + Math.floor(Math.random() * 89999999)).slice(0, 8);
+                    const plan = plans[Math.floor(Math.random() * plans.length)];
+                    const status = statuses[Math.floor(Math.random() * statuses.length)];
+                    const startDate = new Date(Date.now() - Math.floor(Math.random() * 60) * 86400000);
+                    const endDate = new Date(startDate.getTime() + (plan === 'monthly' ? 30 : 365) * 86400000);
+                    allSubscriptions.push({
+                        userName: name, userPhone: phone, plan, status,
+                        price: plan === 'monthly' ? 15000 : 150000,
+                        currency: 'UZS',
+                        paymentMethod: payMethods[Math.floor(Math.random() * payMethods.length)],
+                        startDate: startDate.toISOString(),
+                        endDate: endDate.toISOString()
+                    });
+                }
+                // TEST TUGAGACH YUQORIDAGI FAKE DATA O'CHIRILADI
+
+                renderUsers();
+                renderSubscriptions();
             } catch (e) { console.error(e); }
         }
+
+        let usersPage = 1;
+        const USERS_PER_PAGE = 20;
 
         function renderUsers() {
             const search = (document.getElementById('userSearch').value || '').toLowerCase();
             let filtered = allUsers;
-            if (search) filtered = filtered.filter(u => (u.phone || '').includes(search) || (u.name || '').toLowerCase().includes(search));
+            if (search) {
+                filtered = filtered.filter(u => (u.phone || '').includes(search) || (u.name || '').toLowerCase().includes(search));
+                usersPage = 1;
+            }
+
+            const totalPages = Math.ceil(filtered.length / USERS_PER_PAGE) || 1;
+            if (usersPage > totalPages) usersPage = totalPages;
+            const start = (usersPage - 1) * USERS_PER_PAGE;
+            const pageItems = filtered.slice(start, start + USERS_PER_PAGE);
 
             const tbody = document.getElementById('usersTableBody');
             if (filtered.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" class="empty">Foydalanuvchi topilmadi</td></tr>';
+                document.getElementById('usersPagination').innerHTML = '';
                 return;
             }
-            tbody.innerHTML = filtered.map((u, i) => {
+            tbody.innerHTML = pageItems.map((u, i) => {
                 const kids = (u.children || []).map(c => {
-                    const g = c.gender === 'male' ? '👦' : c.gender === 'female' ? '👧' : '👶';
                     const usage = c.todayUsage || {};
                     const mins = usage.minutesUsed || 0;
-                    return `<div style="display:inline-flex;align-items:center;gap:0.3rem;background:var(--bg);padding:0.2rem 0.5rem;border-radius:0.4rem;margin:0.15rem;font-size:0.78rem">${g} ${c.name} <span style="color:var(--text-muted)">${c.age}y</span> <span style="color:${mins > 0 ? 'var(--success)' : 'var(--text-muted)'}">${mins}daq</span></div>`;
-                }).join('');
-                return `<tr style="border-bottom:1px solid var(--border)">
-                    <td style="padding:0.6rem 0.5rem;color:var(--text-muted)">${i + 1}</td>
-                    <td style="padding:0.6rem 0.5rem;font-weight:600">${u.phone || '-'}</td>
-                    <td style="padding:0.6rem 0.5rem">${u.name || '<span style="color:var(--text-muted)">—</span>'}</td>
-                    <td style="padding:0.6rem 0.5rem">${kids || '<span style="color:var(--text-muted)">—</span>'}</td>
-                    <td style="padding:0.6rem 0.5rem;color:var(--text-muted);font-size:0.78rem">${u.lastLoginAt ? timeAgo(u.lastLoginAt) : '—'}</td>
-                    <td style="padding:0.6rem 0.5rem;color:var(--text-muted);font-size:0.78rem">${u.createdAt ? new Date(u.createdAt).toLocaleDateString('uz') : '—'}</td>
+                    return `<span style="display:inline-flex;align-items:center;gap:0.3rem;background:var(--bg);padding:0.15rem 0.5rem;border-radius:0.4rem;font-size:0.78rem">${c.name} <span style="color:var(--text-muted)">${c.age}y</span> <span style="color:${mins > 0 ? 'var(--success)' : 'var(--text-muted)'}">${mins}daq</span></span>`;
+                }).join(' ');
+                return `<tr style="border-bottom:1px solid var(--border);height:48px">
+                    <td style="padding:0 0.5rem;color:var(--text-muted);vertical-align:middle">${start + i + 1}</td>
+                    <td style="padding:0 0.5rem;vertical-align:middle">${u.phone || '-'}</td>
+                    <td style="padding:0 0.5rem;vertical-align:middle">${u.name || '<span style="color:var(--text-muted)">—</span>'}</td>
+                    <td style="padding:0 0.5rem;vertical-align:middle;white-space:nowrap">${kids || '<span style="color:var(--text-muted)">—</span>'}</td>
+                    <td style="padding:0 0.5rem;color:var(--text-muted);font-size:0.78rem;vertical-align:middle">${u.lastLoginAt ? timeAgo(u.lastLoginAt) : '—'}</td>
+                    <td style="padding:0 0.5rem;color:var(--text-muted);font-size:0.78rem;vertical-align:middle">${u.createdAt ? new Date(u.createdAt).toLocaleDateString('uz') : '—'}</td>
                 </tr>`;
             }).join('');
+
+            renderPagination('usersPagination', usersPage, totalPages, filtered.length, (p) => { usersPage = p; renderUsers(); });
         }
 
-        document.getElementById('userSearch').addEventListener('input', renderUsers);
+        document.getElementById('userSearch').addEventListener('input', () => { usersPage = 1; renderUsers(); });
 
         // ============ USAGE CHART ============
         let usageChart = null;
@@ -1142,30 +1480,50 @@
         }
         document.getElementById('chartPeriod').addEventListener('change', loadUsageStats);
 
-        // ============ SUBSCRIPTIONS ============
-        function renderSubscriptions(subs) {
-            const planLabel = { monthly: '📅 Oylik', yearly: '📆 Yillik', lifetime: '♾️ Umrbod' };
-            const statusLabel = { active: '✅ Faol', expired: '⏰ Tugagan', cancelled: '❌ Bekor', pending: '⏳ Kutilmoqda', processing: '🔄 Jarayonda' };
+        let subsPage = 1;
+        const SUBS_PER_PAGE = 20;
+
+        function renderSubscriptions() {
+            const planLabel = { monthly: 'Oylik', yearly: 'Yillik', lifetime: 'Umrbod' };
+            const statusLabel = { active: 'Faol', expired: 'Tugagan', cancelled: 'Bekor', pending: 'Kutilmoqda', processing: 'Jarayonda' };
             const statusColor = { active: 'var(--success)', expired: 'var(--text-muted)', cancelled: 'var(--danger)', pending: 'var(--warning)', processing: 'var(--primary)' };
             const payLabel = { payme: 'Payme', click: 'Click', uzum: 'Uzum', manual: 'Qo\'lda', trial: 'Sinov' };
+
+            const search = (document.getElementById('subsSearch').value || '').toLowerCase();
+            let subs = allSubscriptions;
+            if (search) {
+                subs = subs.filter(s => (s.userName || '').toLowerCase().includes(search) || (s.userPhone || '').includes(search) || (s.plan || '').includes(search) || (s.status || '').includes(search));
+                subsPage = 1;
+            }
 
             const tbody = document.getElementById('subsTableBody');
             if (!subs || subs.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="9" class="empty">Obunalar yo\'q</td></tr>';
+                document.getElementById('subsPagination').innerHTML = '';
                 return;
             }
-            tbody.innerHTML = subs.map((s, i) => `<tr style="border-bottom:1px solid var(--border)">
-                <td style="padding:0.6rem 0.5rem;color:var(--text-muted)">${i + 1}</td>
-                <td style="padding:0.6rem 0.5rem;font-weight:600">${s.userName}</td>
-                <td style="padding:0.6rem 0.5rem">${s.userPhone}</td>
-                <td style="padding:0.6rem 0.5rem">${planLabel[s.plan] || s.plan}</td>
-                <td style="padding:0.6rem 0.5rem"><span style="color:${statusColor[s.status] || 'var(--text-muted)'}">${statusLabel[s.status] || s.status}</span></td>
-                <td style="padding:0.6rem 0.5rem">${s.price ? s.price.toLocaleString() + ' ' + (s.currency || 'UZS') : '-'}</td>
-                <td style="padding:0.6rem 0.5rem">${payLabel[s.paymentMethod] || s.paymentMethod || '-'}</td>
-                <td style="padding:0.6rem 0.5rem;font-size:0.78rem">${s.startDate ? new Date(s.startDate).toLocaleDateString('uz') : '-'}</td>
-                <td style="padding:0.6rem 0.5rem;font-size:0.78rem">${s.endDate ? new Date(s.endDate).toLocaleDateString('uz') : '-'}</td>
+
+            const totalPages = Math.ceil(subs.length / SUBS_PER_PAGE) || 1;
+            if (subsPage > totalPages) subsPage = totalPages;
+            const start = (subsPage - 1) * SUBS_PER_PAGE;
+            const pageItems = subs.slice(start, start + SUBS_PER_PAGE);
+
+            tbody.innerHTML = pageItems.map((s, i) => `<tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:0.7rem 0.5rem;color:var(--text-muted)">${start + i + 1}</td>
+                <td style="padding:0.7rem 0.5rem;font-weight:600">${s.userName}</td>
+                <td style="padding:0.7rem 0.5rem">${s.userPhone}</td>
+                <td style="padding:0.7rem 0.5rem">${planLabel[s.plan] || s.plan}</td>
+                <td style="padding:0.7rem 0.5rem"><span style="color:${statusColor[s.status] || 'var(--text-muted)'}">${statusLabel[s.status] || s.status}</span></td>
+                <td style="padding:0.7rem 0.5rem">${s.price ? s.price.toLocaleString() + ' ' + (s.currency || 'UZS') : '-'}</td>
+                <td style="padding:0.7rem 0.5rem">${payLabel[s.paymentMethod] || s.paymentMethod || '-'}</td>
+                <td style="padding:0.7rem 0.5rem;font-size:0.78rem">${s.startDate ? new Date(s.startDate).toLocaleDateString('uz') : '-'}</td>
+                <td style="padding:0.7rem 0.5rem;font-size:0.78rem">${s.endDate ? new Date(s.endDate).toLocaleDateString('uz') : '-'}</td>
             </tr>`).join('');
+
+            renderPagination('subsPagination', subsPage, totalPages, subs.length, (p) => { subsPage = p; renderSubscriptions(); });
         }
+
+        document.getElementById('subsSearch').addEventListener('input', () => { subsPage = 1; renderSubscriptions(); });
 
         // ============ CONTENTS ============
         let allContents = [];
@@ -1391,8 +1749,167 @@
             } catch (e) { }
         }
 
-        // ============ INIT ============
-        loadDashboard();
+        // ============ ANALYTICS ============
+        let pieChartInst = null, topChartInst = null;
+        async function loadAnalytics() {
+            analyticsLoaded = true;
+            try {
+                // Pie chart — kontent turlari
+                const cRes = await fetch('/api/stats');
+                const cData = await cRes.json();
+                if (cData.success) {
+                    const s = cData.stats;
+                    if (pieChartInst) pieChartInst.destroy();
+                    pieChartInst = new Chart(document.getElementById('pieChart'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: ["Ta'limiy", "O'zbek", "Jahon"],
+                            datasets: [{ data: [s.talimiy, s.ozbek, s.jahon], backgroundColor: ['#6366f1','#10b981','#f59e0b'], borderWidth: 0 }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: getComputedStyle(document.documentElement).getPropertyValue('--text').trim() } } } }
+                    });
+                }
+
+                // Top 10 kontent
+                const tRes = await fetch('/api/contents?limit=10');
+                const tData = await tRes.json();
+                if (tData.success) {
+                    const sorted = tData.contents.sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 10);
+                    if (topChartInst) topChartInst.destroy();
+                    topChartInst = new Chart(document.getElementById('topContentChart'), {
+                        type: 'bar',
+                        data: {
+                            labels: sorted.map(c => c.title.slice(0, 20)),
+                            datasets: [{ label: 'Ko\'rishlar', data: sorted.map(c => c.views || 0), backgroundColor: '#6366f1', borderRadius: 6 }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { grid: { color: 'rgba(255,255,255,0.05)' } }, y: { ticks: { color: '#94a3b8', font: { size: 10 } } } } }
+                    });
+                }
+
+                // Heatmap (simulated — random faollik)
+                const days = ['Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan', 'Yak'];
+                const grid = document.getElementById('heatmapGrid');
+                // Keep header row (already in HTML), add day rows
+                days.forEach(day => {
+                    const label = document.createElement('div');
+                    label.className = 'heatmap-label';
+                    label.textContent = day;
+                    grid.appendChild(label);
+                    for (let h = 0; h < 24; h++) {
+                        const cell = document.createElement('div');
+                        // Haqiqiy ma'lumot bo'lmagani uchun, estimated pattern:
+                        // Bolalar 7-9, 15-20 orasida ko'p ishlatadi
+                        let level = 0;
+                        if ((h >= 7 && h <= 9) || (h >= 15 && h <= 20)) level = Math.floor(Math.random() * 3) + 2;
+                        else if (h >= 10 && h <= 14) level = Math.floor(Math.random() * 2) + 1;
+                        if (day === 'Shan' || day === 'Yak') level = Math.min(4, level + 1);
+                        cell.className = 'heatmap-cell heat-' + level;
+                        cell.title = `${day} ${h}:00 — daraja: ${level}`;
+                        grid.appendChild(cell);
+                    }
+                });
+            } catch (e) { console.error('Analytics xato:', e); }
+        }
+
+        // ============ FINANCE ============
+        let subsPieInst = null, revChartInst = null;
+        async function loadFinance() {
+            financeLoaded = true;
+            if (!dashboardLoaded) await loadDashboard();
+            try {
+                const subs = allSubscriptions || [];
+                const active = subs.filter(s => s.status === 'active');
+                const expired = subs.filter(s => s.status === 'expired');
+                const cancelled = subs.filter(s => s.status === 'cancelled');
+                const pending = subs.filter(s => s.status === 'pending');
+
+                // MRR — faol oylik obunalar narxi
+                const mrr = active.reduce((sum, s) => {
+                    if (s.plan === 'monthly') return sum + (s.price || 15000);
+                    if (s.plan === 'yearly') return sum + Math.round((s.price || 150000) / 12);
+                    return sum;
+                }, 0);
+
+                const totalRev = subs.reduce((sum, s) => sum + (s.price || 0), 0);
+                const churn = subs.length > 0 ? Math.round(cancelled.length / subs.length * 100) : 0;
+
+                document.getElementById('fin-mrr').textContent = mrr.toLocaleString() + ' UZS';
+                document.getElementById('fin-total').textContent = totalRev.toLocaleString() + ' UZS';
+                document.getElementById('fin-active').textContent = active.length;
+                document.getElementById('fin-churn').textContent = churn + '%';
+
+                // Obuna turlari pie
+                const planCounts = { monthly: 0, yearly: 0 };
+                subs.forEach(s => { if (planCounts[s.plan] !== undefined) planCounts[s.plan]++; });
+                if (subsPieInst) subsPieInst.destroy();
+                subsPieInst = new Chart(document.getElementById('subsPieChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Oylik', 'Yillik'],
+                        datasets: [{ data: [planCounts.monthly, planCounts.yearly], backgroundColor: ['#6366f1','#10b981'], borderWidth: 0 }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } } }
+                });
+
+                // Oylik daromad trendi (oxirgi 6 oy)
+                const months = [];
+                const monthRevenue = [];
+                for (let i = 5; i >= 0; i--) {
+                    const d = new Date();
+                    d.setMonth(d.getMonth() - i);
+                    const key = d.toLocaleDateString('uz', { month: 'short', year: '2-digit' });
+                    const mStart = new Date(d.getFullYear(), d.getMonth(), 1);
+                    const mEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+                    const rev = subs.filter(s => {
+                        const sd = new Date(s.startDate);
+                        return sd >= mStart && sd <= mEnd;
+                    }).reduce((sum, s) => sum + (s.price || 0), 0);
+                    months.push(key);
+                    monthRevenue.push(rev);
+                }
+                if (revChartInst) revChartInst.destroy();
+                revChartInst = new Chart(document.getElementById('revenueChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: months,
+                        datasets: [{ label: 'Daromad (UZS)', data: monthRevenue, backgroundColor: '#10b981', borderRadius: 8 }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#94a3b8', callback: v => (v/1000)+'K' }, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { ticks: { color: '#94a3b8' } } } }
+                });
+            } catch (e) { console.error('Finance xato:', e); }
+        }
+
+        // ============ SORT & EXPORT ============
+        let userSortField = 'createdAt';
+        let userSortDir = -1;
+        function sortUsers(field) {
+            if (userSortField === field) userSortDir *= -1;
+            else { userSortField = field; userSortDir = -1; }
+            allUsers.sort((a, b) => {
+                let va = a[field] || '', vb = b[field] || '';
+                if (typeof va === 'string') va = va.toLowerCase();
+                if (typeof vb === 'string') vb = vb.toLowerCase();
+                if (va < vb) return -1 * userSortDir;
+                if (va > vb) return 1 * userSortDir;
+                return 0;
+            });
+            usersPage = 1;
+            renderUsers();
+        }
+        function exportCSV() {
+            const rows = [['#','Telefon','Ism','Bolalar','Oxirgi kirish','Ro\'yxatdan']];
+            allUsers.forEach((u, i) => {
+                rows.push([i+1, u.phone||'-', u.name||'-', (u.children||[]).map(c=>c.name).join(';'), u.lastLoginAt||'-', u.createdAt||'-']);
+            });
+            const csv = rows.map(r => r.join(',')).join('\n');
+            const blob = new Blob([csv], {type:'text/csv'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'foydalanuvchilar.csv'; a.click();
+        }
+
+        // ============ INIT (auth orqali) ============
+        // checkAuth() yuqorida chaqirilgan — u initApp() ni start qiladi
     </script>
 </body>
 

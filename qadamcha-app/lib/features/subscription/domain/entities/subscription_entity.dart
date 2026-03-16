@@ -57,11 +57,11 @@ enum SubscriptionPlan {
   }
 
   String get formattedPrice {
-    final thousands = (priceUzs / 1000).toStringAsFixed(0);
+    // Foydalanuvchiga ko'rinadigan narx (haqiqiy narx)
     if (this == SubscriptionPlan.yearly) {
-      return '$thousands 000 so\'m/yil';
+      return '179 000 so\'m/yil';
     }
-    return '$thousands 000 so\'m/oy';
+    return '19 000 so\'m/oy';
   }
 
   String get periodLabel {

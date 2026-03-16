@@ -463,7 +463,7 @@ class _ParentHomePageState extends State<ParentHomePage> {
                                     ),
                                     SizedBox(height: 2.h),
                                     Text(
-                                      '${plan.testMinutes} daqiqa (test)',
+                                      plan.formattedPrice,
                                       style: TextStyle(
                                         fontSize: 10.sp,
                                         color: isSelected ? AppColors.primary.withOpacity(0.7) : AppColors.textDisabled,
@@ -541,7 +541,7 @@ class _ParentHomePageState extends State<ParentHomePage> {
                   ),
                 SizedBox(height: 8.h),
                 Text(
-                  '1 000 so\'m (test)',
+                  '${(subState.selectedPlan ?? SubscriptionPlan.monthly).formattedPrice}',
                   style: TextStyle(
                     fontSize: 12.sp,
                     color: AppColors.textSecondary,
