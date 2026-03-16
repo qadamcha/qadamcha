@@ -34,6 +34,10 @@ module.exports = {
         const otpKey = `${REDIS_KEYS.OTP}${phone}`;
         await redis.setex(otpKey, config.OTP_EXPIRES, code);
 
+        // DEBUG: Redis yozish tekshirish
+        const checkSaved = await redis.get(otpKey);
+        request.log.info(`📝 OTP STORED: key=${otpKey}, code=${code}, readBack=${checkSaved}, match=${code === checkSaved}`);
+
         // Increment attempts
         await redis.incr(attemptsKey);
         await redis.expire(attemptsKey, 600); // 10 min block
@@ -71,6 +75,9 @@ module.exports = {
 
         const otpKey = `${REDIS_KEYS.OTP}${phone}`;
         const savedCode = await redis.get(otpKey);
+
+        // DEBUG: Redis o'qish tekshirish
+        request.log.info(`🔍 OTP VERIFY: key=${otpKey}, savedCode=${savedCode}, inputCode=${code}, match=${savedCode === code}`);
 
         if (!savedCode || savedCode !== code) {
             return reply.status(400).send({
