@@ -72,6 +72,9 @@ module.exports = {
         const otpKey = `${REDIS_KEYS.OTP}${phone}`;
         const savedCode = await redis.get(otpKey);
 
+        // DEBUG: OTP tekshirish
+        request.log.info(`🔍 OTP DEBUG: phone=${phone}, otpKey=${otpKey}, savedCode=${savedCode ? 'exists(' + savedCode.length + ' chars)' : 'NULL'}, receivedCode=${code}(${typeof code}), match=${savedCode === code}`);
+
         if (!savedCode || savedCode !== code) {
             return reply.status(400).send({
                 success: false,
