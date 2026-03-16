@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/back_button_box.dart';
 import '../../../../core/widgets/gradient_button.dart';
+import '../../../../core/services/sms_auto_fill_service.dart';
 import '../bloc/auth_bloc.dart';
 import 'otp_page.dart';
 
@@ -19,6 +20,7 @@ class PhonePage extends StatefulWidget {
 class _PhonePageState extends State<PhonePage> {
   final _phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  SmsAutoFillService? _smsService;
 
   String get _formattedPhone =>
       '+998${_phoneController.text.replaceAll(' ', '')}';
@@ -26,11 +28,20 @@ class _PhonePageState extends State<PhonePage> {
   @override
   void dispose() {
     _phoneController.dispose();
+    _smsService?.dispose();
     super.dispose();
   }
 
   void _sendOtp() {
     if (_formKey.currentState?.validate() ?? false) {
+      // SMS listener'ni OLDIN boshlash (race condition oldini olish)
+      _smsService = SmsAutoFillService();
+      _smsService!.listenForSms(
+        onCodeReceived: (code) {
+          // OtpPage ga o'tgandan keyin callback ishlaydi
+        },
+      );
+
       context.read<AuthBloc>().add(SendOtpEvent(_formattedPhone));
     }
   }
@@ -47,7 +58,10 @@ class _PhonePageState extends State<PhonePage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => OtpPage(phone: _formattedPhone),
+              builder: (_) => OtpPage(
+                phone: _formattedPhone,
+                smsService: _smsService,
+              ),
             ),
           );
         } else if (state.status == AuthStatus.error) {

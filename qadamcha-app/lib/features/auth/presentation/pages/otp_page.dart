@@ -12,8 +12,9 @@ import 'login_page.dart';
 /// Gradient header, glassmorphism inputs, smooth animations
 class OtpPage extends StatefulWidget {
   final String phone;
+  final SmsAutoFillService? smsService;
 
-  const OtpPage({super.key, required this.phone});
+  const OtpPage({super.key, required this.phone, this.smsService});
 
   @override
   State<OtpPage> createState() => _OtpPageState();
@@ -61,7 +62,14 @@ class _OtpPageState extends State<OtpPage> with SingleTickerProviderStateMixin {
   }
 
   void _initSmsAutoFill() {
-    _smsService = SmsAutoFillService();
+    if (widget.smsService != null) {
+      // PhonePage dan kelgan service — callback'ni qayta ulash
+      _smsService = widget.smsService!;
+      _smsService.dispose(); // eski listenerni tozalash
+    } else {
+      _smsService = SmsAutoFillService();
+    }
+    // Yangi listener boshlash
     _smsService.listenForSms(
       onCodeReceived: (code) {
         if (!mounted || _autoFilled) return;
