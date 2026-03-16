@@ -1364,58 +1364,8 @@
                 document.getElementById('ds-newusers').textContent = d.newUsersThisWeek;
 
                 allUsers = d.users || [];
-                
-                // TEST UCHUN — 100 ta fake user qo'shish
-                const uzNames = ['Sardor','Jasur','Bobur','Sherzod','Dilshod','Aziz','Nodir','Baxtiyor','Ravshan','Ulugbek',
-                    'Otabek','Eldor','Sanjar','Firdavs','Temur','Anvar','Doniyor','Islom','Kamol','Mansur',
-                    'Oybek','Rustam','Saidakbar','Tohir','Vahid','Xurshid','Yusuf','Zafar','Abror','Behruz',
-                    'Davron','Elmurod','Farxod','Hamid','Ilhom','Javlon','Kamoliddin','Laziz','Mirzo','Narzullo',
-                    'Ortiq','Parviz','Qodir','Rahmat','Suxrob','Toshpulat','Umid','Vohid','Xasan','Yorqin',
-                    'Ziyod','Alisher','Bahodir','Dildora','Ezoza','Feruza','Gulnora','Hilola','Iroda','Jamila',
-                    'Kamola','Lola','Madina','Nilufar','Oydin','Saida','Barno','Dilorom','Zulfiya','Shoira',
-                    'Nodira','Malika','Aziza','Mohira','Charos','Kumush','Fotima','Robiya','Nargiza','Mohigul',
-                    'Shahlo','Nafisa','Sabina','Sevinch','Laylo','Maftuna','Zarnigor','Lobar','Mushtariy','Adolat',
-                    'Shaxlo','Sitora','Gulsanam','Muhabbat','Oysha','Surayyo','Mavluda','Zuhra','Hulkar','Manzura'];
-                for (let i = 0; i < 100; i++) {
-                    const name = uzNames[i % uzNames.length];
-                    const phone = '+9989' + String(10000000 + Math.floor(Math.random() * 89999999)).slice(0, 8);
-                    const daysAgo = Math.floor(Math.random() * 90);
-                    const created = new Date(Date.now() - daysAgo * 86400000);
-                    const lastLogin = Math.random() > 0.3 ? new Date(Date.now() - Math.floor(Math.random() * 7) * 86400000) : null;
-                    const hasKid = Math.random() > 0.2;
-                    allUsers.push({
-                        phone, name,
-                        createdAt: created.toISOString(),
-                        lastLoginAt: lastLogin ? lastLogin.toISOString() : null,
-                        children: hasKid ? [{
-                            name: 'Bolajon', age: 3 + Math.floor(Math.random() * 8),
-                            gender: Math.random() > 0.5 ? 'male' : 'female',
-                            todayUsage: { minutesUsed: Math.floor(Math.random() * 30) }
-                        }] : []
-                    });
-                }
 
                 allSubscriptions = d.subscriptions || [];
-                const plans = ['monthly','yearly'];
-                const statuses = ['active','expired','cancelled','pending'];
-                const payMethods = ['payme','click','uzum'];
-                for (let i = 0; i < 100; i++) {
-                    const name = uzNames[i % uzNames.length];
-                    const phone = '+9989' + String(10000000 + Math.floor(Math.random() * 89999999)).slice(0, 8);
-                    const plan = plans[Math.floor(Math.random() * plans.length)];
-                    const status = statuses[Math.floor(Math.random() * statuses.length)];
-                    const startDate = new Date(Date.now() - Math.floor(Math.random() * 60) * 86400000);
-                    const endDate = new Date(startDate.getTime() + (plan === 'monthly' ? 30 : 365) * 86400000);
-                    allSubscriptions.push({
-                        userName: name, userPhone: phone, plan, status,
-                        price: plan === 'monthly' ? 15000 : 150000,
-                        currency: 'UZS',
-                        paymentMethod: payMethods[Math.floor(Math.random() * payMethods.length)],
-                        startDate: startDate.toISOString(),
-                        endDate: endDate.toISOString()
-                    });
-                }
-                // TEST TUGAGACH YUQORIDAGI FAKE DATA O'CHIRILADI
 
                 renderUsers();
                 renderSubscriptions();
