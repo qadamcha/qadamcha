@@ -17,12 +17,21 @@ app.use(cors({
     credentials: true
 }));
 
+// Trust proxy (Railway reverse proxy uchun)
+app.set('trust proxy', 1);
+
 // Session
+const isProduction = process.env.NODE_ENV === 'production';
 app.use(session({
     secret: process.env.SESSION_SECRET || 'qadamcha-secret',
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 soat
+    cookie: {
+        maxAge: 24 * 60 * 60 * 1000, // 24 soat
+        secure: isProduction,          // HTTPS da secure cookie
+        sameSite: isProduction ? 'none' : 'lax',
+        httpOnly: true
+    }
 }));
 
 // Static files (login sahifasi uchun)
