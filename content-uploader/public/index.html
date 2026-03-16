@@ -606,6 +606,17 @@
         [data-theme="light"] .login-overlay { background:#f1f5f9; }
         [data-theme="light"] .login-box { background:#fff;box-shadow:0 4px 24px rgba(0,0,0,0.08); }
         [data-theme="light"] .login-box input { background:#f8fafc; }
+        [data-theme="light"] .content-item { background:#f8fafc;border-color:#e2e8f0; }
+        [data-theme="light"] .content-item h4 { color:#1e293b; }
+        [data-theme="light"] .content-meta { color:#64748b; }
+        [data-theme="light"] .story-preview { color:#64748b; }
+        [data-theme="light"] .card { background:#fff;border-color:#e2e8f0; }
+        [data-theme="light"] .modal { background:#fff;border-color:#e2e8f0; }
+        [data-theme="light"] input, [data-theme="light"] select, [data-theme="light"] textarea { background:#f8fafc;color:#1e293b;border-color:#e2e8f0; }
+        [data-theme="light"] .sort-bar button { color:#64748b;border-color:#e2e8f0; }
+        [data-theme="light"] .sort-bar button.active, [data-theme="light"] .sort-bar button:hover { background:var(--primary);color:#fff;border-color:var(--primary); }
+        [data-theme="light"] .sidebar-footer button { color:#64748b;border-color:#e2e8f0; }
+        [data-theme="light"] .finance-card { background:#f8fafc;border-color:#e2e8f0; }
 
         /* ===== THEME TOGGLE ===== */
         .theme-toggle { position:absolute;top:1rem;right:1rem;background:var(--card);border:1px solid var(--border);color:var(--text);width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:0.2s;z-index:5; }
@@ -697,7 +708,7 @@
 
         <div class="sidebar-footer">
             <button onclick="toggleTheme()">🌓 Tema</button>
-            <button onclick="logout()">🚪 Chiqish</button>
+            <button onclick="logout()">Chiqish</button>
         </div>
     </nav>
 
@@ -1892,6 +1903,13 @@
                 if (va < vb) return -1 * userSortDir;
                 if (va > vb) return 1 * userSortDir;
                 return 0;
+            });
+            // Tanlangan sort tugmasini rangli qilish
+            document.querySelectorAll('.sort-bar button:not(.export-btn)').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('onclick')?.includes("'" + field + "'")) {
+                    btn.classList.add('active');
+                }
             });
             usersPage = 1;
             renderUsers();
