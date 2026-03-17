@@ -69,11 +69,6 @@ enum SubscriptionPlan {
     return '30 kun';
   }
 
-  /// Test muddati (daqiqada)
-  int get testMinutes {
-    if (this == SubscriptionPlan.yearly) return 10;
-    return 5; // monthly
-  }
 }
 
 enum SubscriptionStatus {

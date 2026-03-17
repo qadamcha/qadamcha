@@ -97,10 +97,9 @@ module.exports = {
     TEST_PHONE: process.env.TEST_PHONE || null, // Faqat development uchun
 
     // Subscription Plans (so'mda — Payme uchun controller da × 100 = tiyin)
-    // ⚡ TEST MODE: monthly = 5 minut (testMinutes bor bo'lsa minutda hisoblaydi)
     PLANS: {
-        monthly: { price: 1000, days: 30, name: 'Oylik', testMinutes: 5 },
-        yearly: { price: 1000, days: 365, name: 'Yillik', testMinutes: 10 },
+        monthly: { price: 1000, days: 30, name: 'Oylik' },
+        yearly: { price: 1000, days: 365, name: 'Yillik' },
         lifetime: { price: 990000, days: 36500, name: 'Umrbod' }
     }
 };

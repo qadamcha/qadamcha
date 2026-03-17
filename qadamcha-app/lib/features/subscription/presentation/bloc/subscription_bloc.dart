@@ -232,7 +232,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
             plan: event.plan,
             status: SubscriptionStatus.active,
             startDate: now,
-            endDate: now.add(Duration(minutes: event.plan.testMinutes)),
+            endDate: now.add(Duration(days: event.plan == SubscriptionPlan.yearly ? 365 : 30)),
             createdAt: now,
           );
           _saveSubscriptionLocally(subscription);
