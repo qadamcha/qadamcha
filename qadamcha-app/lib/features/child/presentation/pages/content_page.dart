@@ -16,7 +16,9 @@ import 'video_library_page.dart';
 /// KidsTube 1:1 — Bosh sahifa
 /// Qizil header bar, to'liq kenglikda video kartochkalar
 class ContentPage extends StatefulWidget {
-  const ContentPage({super.key});
+  final bool isActive;
+
+  const ContentPage({super.key, this.isActive = true});
 
   @override
   State<ContentPage> createState() => _ContentPageState();
@@ -72,6 +74,15 @@ class _ContentPageState extends State<ContentPage> {
     context.read<ContentBloc>().add(const LoadContentEvent(refresh: true));
     _scrollController.addListener(_onScroll);
     _loadLastWatched();
+  }
+
+  @override
+  void didUpdateWidget(covariant ContentPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Tab o'zgarganda — video pause/close qilish
+    if (oldWidget.isActive && !widget.isActive && _inlineContent != null) {
+      _closeInlinePlayer();
+    }
   }
 
   void _loadLastWatched() {

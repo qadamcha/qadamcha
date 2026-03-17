@@ -60,10 +60,12 @@ class JigsawSoundService with WidgetsBindingObserver {
   /// Handle app lifecycle — pause BG when backgrounded, resume when foregrounded
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && _bgMusicStarted && _soundEnabled) {
+    if (state == AppLifecycleState.resumed && _bgMusicStarted && _bgMusicPlaying && _soundEnabled) {
       _bgPlayer.resume();
     } else if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
-      _bgPlayer.pause();
+      if (_bgMusicPlaying) {
+        _bgPlayer.pause();
+      }
     }
   }
 
@@ -100,6 +102,7 @@ class JigsawSoundService with WidgetsBindingObserver {
   /// Stop background music
   Future<void> stopBackgroundMusic() async {
     _bgMusicPlaying = false;
+    _bgMusicStarted = false;
     await _bgPlayer.stop();
   }
 

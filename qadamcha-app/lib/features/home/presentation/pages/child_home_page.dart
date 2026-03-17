@@ -187,9 +187,9 @@ class _ChildHomePageState extends State<ChildHomePage> {
       backgroundColor: Colors.white,
       body: IndexedStack(
         index: _currentIndex,
-        children: const [
-          ContentPage(),
-          GamesPage(),
+        children: [
+          ContentPage(isActive: _currentIndex == 0),
+          const GamesPage(),
         ],
       ),
       bottomNavigationBar: YTKidsNavBar(
