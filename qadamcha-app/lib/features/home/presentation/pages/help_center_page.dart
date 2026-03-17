@@ -528,8 +528,6 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(category.emoji, style: TextStyle(fontSize: 14.sp)),
-                  SizedBox(width: 6.w),
                   Text(
                     category.title,
                     style: TextStyle(

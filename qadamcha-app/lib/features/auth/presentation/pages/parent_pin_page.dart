@@ -118,24 +118,6 @@ class _ParentPinPageState extends State<ParentPinPage> {
                       children: [
                         SizedBox(height: 20.h),
 
-                        // Icon
-                        Container(
-                          width: 64.w,
-                          height: 64.w,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Text(
-                              '\u{1F44B}',
-                              style: TextStyle(fontSize: 32.sp),
-                            ),
-                          ),
-                        ),
-
-                        SizedBox(height: 16.h),
-
                         // Title
                         Text(
                           'Salom, Ota-ona!',

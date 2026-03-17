@@ -301,14 +301,12 @@ class _AboutAppPageState extends State<AboutAppPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  width: 36.w,
-                  height: 36.w,
+                  width: 6.w,
+                  height: 6.w,
+                  margin: EdgeInsets.only(top: 6.h),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8F9FA),
-                    borderRadius: BorderRadius.circular(10.r),
-                  ),
-                  child: Center(
-                    child: Icon(f.icon, color: f.color, size: 18.sp),
+                    color: f.color,
+                    shape: BoxShape.circle,
                   ),
                 ),
                 SizedBox(width: 12.w),
@@ -584,28 +582,14 @@ class _AboutAppPageState extends State<AboutAppPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 36.w,
-                height: 36.w,
-                decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10.r),
-                ),
-                child: Icon(icon, color: iconColor, size: 20.sp),
-              ),
-              SizedBox(width: 12.w),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 15.sp,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF1A1A2E),
-                  fontFamily: 'Nunito',
-                ),
-              ),
-            ],
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 15.sp,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF1A1A2E),
+              fontFamily: 'Nunito',
+            ),
           ),
           SizedBox(height: 14.h),
           child,
