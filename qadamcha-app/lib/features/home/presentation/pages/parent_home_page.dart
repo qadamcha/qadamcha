@@ -455,7 +455,7 @@ class _ParentHomePageState extends State<ParentHomePage> {
                                     Text(
                                       '${plan.emoji} ${plan.label}',
                                       style: TextStyle(
-                                        fontSize: 14.sp,
+                                        fontSize: 15.sp,
                                         fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                                         color: isSelected ? AppColors.primary : AppColors.textSecondary,
                                         fontFamily: 'Nunito',
@@ -465,7 +465,8 @@ class _ParentHomePageState extends State<ParentHomePage> {
                                     Text(
                                       plan.formattedPrice,
                                       style: TextStyle(
-                                        fontSize: 10.sp,
+                                        fontSize: 13.sp,
+                                        fontWeight: FontWeight.w600,
                                         color: isSelected ? AppColors.primary.withOpacity(0.7) : AppColors.textDisabled,
                                         fontFamily: 'Nunito',
                                       ),
@@ -543,7 +544,8 @@ class _ParentHomePageState extends State<ParentHomePage> {
                 Text(
                   '${(subState.selectedPlan ?? SubscriptionPlan.monthly).formattedPrice}',
                   style: TextStyle(
-                    fontSize: 12.sp,
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.textSecondary,
                     fontFamily: 'Nunito',
                   ),
