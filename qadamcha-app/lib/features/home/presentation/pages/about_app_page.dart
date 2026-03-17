@@ -238,7 +238,7 @@ class _AboutAppPageState extends State<AboutAppPage> {
         'ta\'limiy videolar va hikoyalar bilan bilim berish imkonini '
         'yaratamiz.\n\n'
         'Har bir bola xavfsiz, ta\'limiy va qiziqarli raqamli '
-        'muhitga loyiq. 💙',
+        'muhitga loyiq.',
         style: TextStyle(
           fontSize: 13.sp,
           color: const Color(0xFF4B5563),
@@ -252,32 +252,38 @@ class _AboutAppPageState extends State<AboutAppPage> {
   Widget _buildFeaturesCard() {
     final features = [
       _FeatureItem(
-        emoji: '📊',
+        icon: Icons.bar_chart_rounded,
+        color: const Color(0xFF2D6A9F),
         title: 'Monitoring',
         desc: 'Bola qurilmasidagi faoliyatni real-time kuzatish',
       ),
       _FeatureItem(
-        emoji: '🎨',
+        icon: Icons.palette_rounded,
+        color: const Color(0xFFFF6D00),
         title: 'Bo\'yash o\'yini',
         desc: '70+ rasm, 5 kategoriya — ijodiy mashq',
       ),
       _FeatureItem(
-        emoji: '🤖',
+        icon: Icons.smart_toy_rounded,
+        color: const Color(0xFF7C4DFF),
         title: 'Bilimdon AI',
         desc: 'Bolalar uchun sun\'iy intellekt yordamchisi',
       ),
       _FeatureItem(
-        emoji: '📚',
+        icon: Icons.menu_book_rounded,
+        color: const Color(0xFF22C55E),
         title: 'Ta\'limiy kontent',
         desc: 'Video darslar va hikoyalar — yoshga mos',
       ),
       _FeatureItem(
-        emoji: '⏰',
+        icon: Icons.timer_rounded,
+        color: const Color(0xFFF59E0B),
         title: 'Vaqt boshqaruvi',
         desc: 'Ekran vaqtini belgilash va nazorat qilish',
       ),
       _FeatureItem(
-        emoji: '🔒',
+        icon: Icons.lock_rounded,
+        color: const Color(0xFFEF4444),
         title: 'Xavfsizlik',
         desc: 'PIN kod va shifrlash bilan himoyalangan',
       ),
@@ -302,7 +308,7 @@ class _AboutAppPageState extends State<AboutAppPage> {
                     borderRadius: BorderRadius.circular(10.r),
                   ),
                   child: Center(
-                    child: Text(f.emoji, style: TextStyle(fontSize: 18.sp)),
+                    child: Icon(f.icon, color: f.color, size: 18.sp),
                   ),
                 ),
                 SizedBox(width: 12.w),
@@ -543,7 +549,7 @@ class _AboutAppPageState extends State<AboutAppPage> {
           ),
           SizedBox(height: 8.h),
           Text(
-            'Farzandlaringiz uchun ❤️ bilan yaratilgan',
+            'Farzandlaringiz uchun mehr bilan yaratilgan',
             style: TextStyle(
               fontSize: 12.sp,
               color: const Color(0xFF6B7280),
@@ -617,12 +623,14 @@ class _AboutAppPageState extends State<AboutAppPage> {
 }
 
 class _FeatureItem {
-  final String emoji;
+  final IconData icon;
+  final Color color;
   final String title;
   final String desc;
 
   const _FeatureItem({
-    required this.emoji,
+    required this.icon,
+    required this.color,
     required this.title,
     required this.desc,
   });

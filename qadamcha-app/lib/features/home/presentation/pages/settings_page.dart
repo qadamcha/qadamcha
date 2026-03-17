@@ -322,7 +322,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('👑', style: TextStyle(fontSize: 12.sp)),
+                      Icon(Icons.workspace_premium, color: const Color(0xFFF59E0B), size: 14.sp),
                       SizedBox(width: 3.w),
                       Text(
                         'Premium',
@@ -375,7 +375,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '👑 Obuna holati',
+                    'Obuna holati',
                     style: TextStyle(
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w700,
@@ -560,7 +560,7 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
         child: Center(
           child: Text(
-            'Chiqish 🚪',
+            'Chiqish',
             style: TextStyle(
               fontSize: 16.sp,
               fontWeight: FontWeight.w700,

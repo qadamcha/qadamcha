@@ -397,33 +397,7 @@ class _PaymentPageState extends State<PaymentPage>
               ],
             ),
           ),
-          // Security badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: AppColors.success.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: AppColors.success.withValues(alpha: 0.3),
-              ),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.lock_outline, size: 13, color: AppColors.success),
-                SizedBox(width: 4),
-                Text(
-                  'SSL',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.success,
-                    fontFamily: 'Nunito',
-                  ),
-                ),
-              ],
-            ),
-          ),
+
         ],
       ),
     );
@@ -1647,28 +1621,6 @@ class _PaymentPageState extends State<PaymentPage>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.verified_user_outlined,
-            size: 14,
-            color: AppColors.success.withValues(alpha: 0.7),
-          ),
-          const SizedBox(width: 5),
-          Text(
-            '256-bit SSL shifrlangan',
-            style: TextStyle(
-              fontSize: 11,
-              color: AppColors.textSecondary.withValues(alpha: 0.6),
-              fontFamily: 'Nunito',
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            width: 1,
-            height: 12,
-            color: AppColors.border,
-          ),
-          const SizedBox(width: 12),
           Image.asset(
             'assets/icons/payme_logo.png',
             height: 16,

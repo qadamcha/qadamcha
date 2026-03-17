@@ -152,11 +152,10 @@ class _LoginPageState extends State<LoginPage> {
                   color: AppColors.primary.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Center(
-                  child: Text(
-                    '👋',
-                    style: TextStyle(fontSize: 40),
-                  ),
+                child: Icon(
+                  Icons.lock_open_rounded,
+                  size: 40,
+                  color: AppColors.primary,
                 ),
               ),
 

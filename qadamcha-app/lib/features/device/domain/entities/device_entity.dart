@@ -58,7 +58,7 @@ enum DeviceType {
 }
 
 enum DevicePlatform {
-  android('android', 'Android', '🤖'),
+  android('android', 'Android', '📱'),
   ios('ios', 'iOS', '🍎'),
   web('web', 'Web', '🌐');
   

@@ -26,11 +26,11 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
           answer:
               'Qadamcha — bu ota-onalar uchun mo\'ljallangan bolalar nazorati '
               'va ta\'lim ilovasi. Ilova orqali siz:\n\n'
-              '• 📱 Farzandingiz qurilmasini masofadan boshqarasiz\n'
-              '• ⏰ Ekran vaqtini kuzatasiz va cheklaysiz\n'
-              '• 🎨 Bo\'yash o\'yini orqali ijodiy mashq berasiz\n'
-              '• 🤖 Bilimdon AI yordamchisi bilan bola savol-javob qiladi\n'
-              '• 📚 Ta\'limiy video va hikoyalar tomosha qildirarsiz',
+              '• Farzandingiz qurilmasini masofadan boshqarasiz\n'
+              '• Ekran vaqtini kuzatasiz va cheklaysiz\n'
+              '• Bo\'yash o\'yini orqali ijodiy mashq berasiz\n'
+              '• Bilimdon AI yordamchisi bilan bola savol-javob qiladi\n'
+              '• Ta\'limiy video va hikoyalar tomosha qildirarsiz',
         ),
         _FaqItem(
           question: 'Qadamchadan qanday foydalanaman?',
@@ -46,11 +46,11 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
         _FaqItem(
           question: 'Ilova qaysi qurilmalarda ishlaydi?',
           answer:
-              '📱 Android: 5.0 (Lollipop) va undan yuqori\n'
-              '🍎 iOS: 13.0 va undan yuqori\n\n'
+              'Android: 5.0 (Lollipop) va undan yuqori\n'
+              'iOS: 13.0 va undan yuqori\n\n'
               'Ota-ona va bola qurilmalari turli platformalardan '
               'bo\'lishi mumkin (masalan, ota-ona iPhone, bola Samsung).\n\n'
-              '💡 Eng yaxshi natija uchun qurilmalar so\'nggi versiyaga '
+              'Eng yaxshi natija uchun qurilmalar so\'nggi versiyaga '
               'yangilangan bo\'lishi tavsiya etiladi.',
         ),
         _FaqItem(
@@ -76,11 +76,11 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
           question: 'Monitoring qanday ishlaydi?',
           answer:
               'Qadamcha bola qurilmasidagi faoliyatni avtomatik kuzatadi:\n\n'
-              '📊 Kuzatiladigan ma\'lumotlar:\n'
+              'Kuzatiladigan ma\'lumotlar:\n'
               '• Ekran vaqti — kunlik va haftalik statistika\n'
               '• Qaysi ilovalar qancha vaqt ishlatilgani\n'
               '• Ilova foydalanish vaqtlari\n\n'
-              '⏰ Vaqt cheklovlari:\n'
+              'Vaqt cheklovlari:\n'
               '• Kunlik ekran vaqtini belgilash mumkin\n'
               '• Muddat tugaganda bola bildirishnoma oladi',
         ),
@@ -97,9 +97,9 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
           question: 'Monitoring ishlamay qolsa nima qilay?',
           answer:
               'Monitoring to\'xtab qolishining sabablari:\n\n'
-              '• 📡 Bola qurilmasida internet yo\'q\n'
-              '• 🔋 Bola qurilmasi o\'chirilgan\n'
-              '• ⚙️ Qadamcha ilovasi fonda ishlashi cheklangan\n\n'
+              '• Bola qurilmasida internet yo\'q\n'
+              '• Bola qurilmasi o\'chirilgan\n'
+              '• Qadamcha ilovasi fonda ishlashi cheklangan\n\n'
               'Tuzatish:\n'
               '1. Bola qurilmasida internetni tekshiring\n'
               '2. Qadamcha ilovasining \"fonda ishlash\" ruxsatini yoqing\n'
@@ -129,11 +129,11 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
           question: 'Bo\'yash o\'yini qanday ishlaydi?',
           answer:
               'Qadamcha ichida 70+ bo\'yash rasmi mavjud, 5 ta kategoriyada:\n\n'
-              '🐾 Hayvonlar — mushuk, it, fil va boshqalar\n'
-              '🚗 Mashinalar — mashina, samolyot, raketa\n'
-              '🍎 Mevalar — olma, banan, tarvuz\n'
-              '🌿 Tabiat — daraxt, quyosh, kamalak\n'
-              '🥬 Poliz mevalari — pomidor, sabzi, qovoq\n\n'
+              'Hayvonlar — mushuk, it, fil va boshqalar\n'
+              'Mashinalar — mashina, samolyot, raketa\n'
+              'Mevalar — olma, banan, tarvuz\n'
+              'Tabiat — daraxt, quyosh, kamalak\n'
+              'Poliz mevalari — pomidor, sabzi, qovoq\n\n'
               'Bola rasmni tanlab, qalamchalar bilan bo\'yaydi. '
               'Bo\'yalgan rasmlarni saqlash va galereyada ko\'rish mumkin.',
         ),
@@ -151,12 +151,12 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
           answer:
               'Bilimdon AI — bu bolalar uchun maxsus yaratilgan sun\'iy '
               'intellekt yordamchisi.\n\n'
-              '🤖 Imkoniyatlari:\n'
+              'Imkoniyatlari:\n'
               '• Bolaning istalgan savoliga tushunarli javob beradi\n'
               '• Matematika, fan, tabiat haqida o\'rgatadi\n'
               '• Hikoyalar aytib beradi\n'
               '• Bolaning yoshiga mos tilda gaplashadi\n\n'
-              '🛡️ Xavfsizlik:\n'
+              'Xavfsizlik:\n'
               '• Noto\'g\'ri yoki zararli kontentga ruxsat bermaydi\n'
               '• Shaxsiy ma\'lumotlarni so\'ramaydi\n'
               '• Ota-ona chat tarixini ko\'ra oladi',
@@ -197,7 +197,7 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
               'Qurilmalar soni obuna rejangizga bog\'liq.\n\n'
               'Qurilmalar ro\'yxatini va limitini Sozlamalar > '
               'Qurilmalarni boshqarish bo\'limida ko\'rishingiz mumkin.\n\n'
-              '💡 Qo\'shimcha qurilma qo\'shish uchun obunangizni '
+              'Qo\'shimcha qurilma qo\'shish uchun obunangizni '
               'yuqori rejaga o\'tkazishingiz mumkin.',
         ),
         _FaqItem(
@@ -209,7 +209,7 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
               '3. ✅ Ilovani so\'nggi versiyaga yangilang\n'
               '4. ✅ Qurilmani qayta ishga tushiring\n'
               '5. ✅ VPN yoqilgan bo\'lsa, o\'chiring\n\n'
-              '🔄 Qurilma ulashda muammo davom etsa, '
+              'Qurilma ulashda muammo davom etsa, '
               'qurilmani ro\'yxatdan o\'chirib qayta ulang.\n\n'
               'Muammo hal bo\'lmasa — support@qadamcha.uz ga yozing.',
         ),
@@ -236,9 +236,9 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
           question: 'Obuna turlari qanday?',
           answer:
               'Qadamcha quyidagi obuna turlarini taklif etadi:\n\n'
-              '📅 Oylik — 19 000 so\'m/oy\n'
-              '📅 Yillik — 179 000 so\'m/yil (oyiga 14 917 so\'m)\n\n'
-              '💎 Barcha rejalarda:\n'
+              'Oylik — 19 000 so\'m/oy\n'
+              'Yillik — 179 000 so\'m/yil (oyiga 14 917 so\'m)\n\n'
+              'Barcha rejalarda:\n'
               '• To\'liq monitoring\n'
               '• Bo\'yash o\'yini\n'
               '• Bilimdon AI chat\n'
@@ -249,9 +249,9 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
           question: 'To\'lov qanday amalga oshiriladi?',
           answer:
               'To\'lov tizimlari:\n\n'
-              '💳 Payme — karta orqali\n'
-              '💳 Click — karta yoki Click hamyon orqali\n\n'
-              '🔒 Xavfsizlik:\n'
+              'Payme — karta orqali\n'
+              'Click — karta yoki Click hamyon orqali\n\n'
+              'Xavfsizlik:\n'
               '• Karta ma\'lumotlari bizning serverlarimizda saqlanmaydi\n'
               '• To\'lov tizimlari tekshirilgan va litsenziyalangan',
         ),
@@ -263,7 +263,7 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
               '2. \"Obuna holati\" bo\'limini bosing\n'
               '3. \"Obunani bekor qilish\" tugmasini bosing\n'
               '4. Tasdiqlang\n\n'
-              '📌 Muhim:\n'
+              'Muhim:\n'
               '• Bekor qilingan obuna muddati tugaguncha faol qoladi\n'
               '• Qayta obuna bo\'lish istalgan vaqtda mumkin\n'
               '• Ma\'lumotlaringiz 30 kun saqlanadi',
@@ -291,12 +291,12 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
           question: 'Ma\'lumotlarim xavfsizmi?',
           answer:
               'Ha! Biz ko\'p bosqichli himoya tizimidan foydalanamiz:\n\n'
-              '🔐 Texnik himoya:\n'
+              'Texnik himoya:\n'
               '• HTTPS/TLS shifrlangan aloqa\n'
               '• Ma\'lumotlar bazasi shifrlash bilan himoyalangan\n'
               '• JWT token autentifikatsiya\n'
               '• QR-kod bilan xavfsiz qurilma ulash\n\n'
-              '🛡️ Ma\'lumot himoyasi:\n'
+              'Ma\'lumot himoyasi:\n'
               '• Shaxsiy ma\'lumotlar uchinchi tomonlarga sotilmaydi\n'
               '• Bola ma\'lumotlari faqat ota-onaga ko\'rinadi',
         ),
@@ -332,7 +332,7 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
           answer:
               'Yo\'q! Bola ma\'lumotlari faqat BIRIKTIRILGAN ota-onaga '
               'ko\'rinadi.\n\n'
-              '🔒 Himoya qatlamlari:\n'
+              'Himoya qatlamlari:\n'
               '• PIN kod bilan kirish\n'
               '• Telefon raqami + SMS tasdiqlash\n'
               '• Sessiya muddati tugaganda avtomatik chiqish\n'

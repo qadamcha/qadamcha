@@ -266,7 +266,7 @@ class _DeviceCard extends StatelessWidget {
                 ),
                 SizedBox(height: 2.h),
                 Text(
-                  '📅 ${_formatDate(device.linkedAt)}',
+                  '${_formatDate(device.linkedAt)}',
                   style: TextStyle(
                     fontSize: 12.sp,
                     color: AppColors.textSecondary,

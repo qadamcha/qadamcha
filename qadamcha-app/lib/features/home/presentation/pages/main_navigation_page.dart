@@ -90,7 +90,9 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
   @override
   void dispose() {
     _pageController.dispose();
-    _aiChatBloc.close();
+    // AiChatBloc singleton — close qilmaymiz,
+    // chunki pushAndRemoveUntil orqali qayta yaratilganda
+    // yopilgan bloc qaytariladi va eventlar ishlamaydi
     super.dispose();
   }
 

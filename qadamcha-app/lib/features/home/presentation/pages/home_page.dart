@@ -164,7 +164,7 @@ class _DashboardTab extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Salom! 👋',
+                            'Salom!',
                             style: TextStyle(
                               fontSize: 14.sp,
                               color: AppColors.textSecondary,

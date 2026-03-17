@@ -177,12 +177,12 @@ class PrivacyPolicyPage extends StatelessWidget {
         content:
             'Qadamcha — bu ota-onalar uchun mo\'ljallangan bolalar nazorati '
             'va ta\'lim ilovasi. Ilova quyidagi asosiy funksiyalarni taqdim etadi:\n\n'
-            '• 📱 Bola qurilmasini masofadan boshqarish va monitoring\n'
-            '• 🎨 Bo\'yash o\'yini — bolalar uchun ijodiy mashq\n'
-            '• 🤖 Bilimdon AI — sun\'iy intellekt yordamchisi (bolalar uchun)\n'
-            '• 📚 Ta\'limiy kontent — video darslar va hikoyalar\n'
-            '• ⏰ Ekran vaqtini cheklash va boshqarish\n'
-            '• 🔔 Bola faoliyati haqida ota-onaga bildirishnomalar\n\n'
+            '• Bola qurilmasini masofadan boshqarish va monitoring\n'
+            '• Bo\'yash o\'yini — bolalar uchun ijodiy mashq\n'
+            '• Bilimdon AI — sun\'iy intellekt yordamchisi (bolalar uchun)\n'
+            '• Ta\'limiy kontent — video darslar va hikoyalar\n'
+            '• Ekran vaqtini cheklash va boshqarish\n'
+            '• Bola faoliyati haqida ota-onaga bildirishnomalar\n\n'
             'Ushbu maxfiylik siyosati ilovamiz orqali qanday ma\'lumotlar '
             'yig\'ilishi, qanday maqsadda ishlatilishi va qanday himoya '
             'qilinishini batafsil tushuntiradi.',
@@ -195,22 +195,22 @@ class PrivacyPolicyPage extends StatelessWidget {
         title: '2. Yig\'iladigan ma\'lumotlar',
         content:
             'Qadamcha quyidagi ma\'lumotlarni yig\'adi:\n\n'
-            '👤 Shaxsiy ma\'lumotlar:\n'
+            'Shaxsiy ma\'lumotlar:\n'
             '• Telefon raqami — ro\'yxatdan o\'tish va SMS tasdiqlash uchun\n'
             '• Ota-ona ismi — profil yaratish uchun\n'
             '• Bola ismi, tug\'ilgan yili — profil va yoshga mos kontent uchun\n\n'
-            '📱 Qurilma ma\'lumotlari:\n'
+            'Qurilma ma\'lumotlari:\n'
             '• Qurilma modeli va operatsion tizim versiyasi\n'
             '• Unikal qurilma ID — qurilmani bog\'lash uchun\n'
             '• O\'rnatilgan ilovalar ro\'yxati (faqat bola qurilmasida)\n\n'
-            '📊 Foydalanish ma\'lumotlari:\n'
+            'Foydalanish ma\'lumotlari:\n'
             '• Ekran vaqti statistikasi (bola qurilmasida)\n'
             '• Ilova foydalanish davomiyligi\n'
             '• Bo\'yash o\'yini natijalari (saqlangan rasmlar)\n\n'
-            '🤖 AI Chat ma\'lumotlari:\n'
+            'AI Chat ma\'lumotlari:\n'
             '• Bilimdon AI bilan suhbat matni (bolaga mos javob berish uchun)\n'
             '• Chat tarixi ma\'lum muddat saqlanadi\n\n'
-            '❌ Biz yig\'MAYDIGAN ma\'lumotlar:\n'
+            'Biz yig\'MAYDIGAN ma\'lumotlar:\n'
             '• Kredit karta raqamlari (to\'lovlar Payme/Click orqali amalga oshiriladi)\n'
             '• Bola geojoylashuvi (GPS)\n'
             '• Kamera yoki mikrofon yozuvlari\n'
@@ -224,16 +224,16 @@ class PrivacyPolicyPage extends StatelessWidget {
         title: '3. Bolalar maxfiyligini himoya qilish',
         content:
             'Qadamcha bolalar ma\'lumotlariga alohida e\'tibor qaratadi:\n\n'
-            '🔒 Asosiy tamoyillar:\n'
+            'Asosiy tamoyillar:\n'
             '• Bola ma\'lumotlari FAQAT bog\'langan ota-onaga ko\'rinadi\n'
             '• Bola profili hech qanday uchinchi tomonga berilmaydi\n'
             '• Bola AI chat tarixi ota-ona tomonidan ko\'rib chiqilishi mumkin\n'
             '• Bolalar uchun reklama ko\'rsatilmaydi va targetlanmaydi\n'
             '• Bo\'yash o\'yinidagi saqlangan rasmlar faqat mahalliy qurilmada saqlanadi\n\n'
-            '📋 Standartlar:\n'
+            'Standartlar:\n'
             '• O\'zbekiston Respublikasi «Shaxsiy ma\'lumotlar to\'g\'risida»gi qonuni\n'
             '• Bolalar maxfiyligini himoya qilish tamoyillari\n\n'
-            '👨‍👩‍👧 Ota-ona nazorati:\n'
+            'Ota-ona nazorati:\n'
             '• Faqat ota-ona PIN-kod yoki parol orqali sozlamalarni o\'zgartira oladi\n'
             '• Bola ilovaning monitoring sozlamalarini o\'zgartira olmaydi\n'
             '• AI chat filtrlangan — noto\'g\'ri kontentga ruxsat berilmaydi',
@@ -246,16 +246,16 @@ class PrivacyPolicyPage extends StatelessWidget {
         title: '4. Ma\'lumotlar xavfsizligi',
         content:
             'Biz xavfsizlik tizimidan foydalanamiz:\n\n'
-            '🔐 Shifrlash:\n'
+            'Shifrlash:\n'
             '• HTTPS/TLS orqali barcha aloqa shifrlangan\n'
             '• Ma\'lumotlar bazasi shifrlash bilan himoyalangan\n'
             '• JWT tokenlar asosidagi autentifikatsiya\n\n'
-            '🛡️ Kirish nazorati:\n'
+            'Kirish nazorati:\n'
             '• Ota-ona PIN-kodi orqali ilova himoyasi\n'
             '• QR-kod bilan qurilma ulash — xavfsiz pairing\n'
             '• Sessiya muddati tugaganda avtomatik chiqish\n'
             '• Bir paytda faqat bitta qurilmadan kirish imkoniyati\n\n'
-            '🔍 Server himoyasi:\n'
+            'Server himoyasi:\n'
             '• Serverlar xavfsiz bulutli infratuzilmada joylashgan\n'
             '• Ma\'lumotlar zaxira nusxalari avtomatik olinadi',
       ),
@@ -270,16 +270,16 @@ class PrivacyPolicyPage extends StatelessWidget {
             'ULASHMAYMIZ.\n\n'
             'Ma\'lumotlar faqat quyidagi holatlarda uchinchi tomonlarga '
             'berilishi mumkin:\n\n'
-            '• ⚖️ Qonun talab qilganda (sud qarori yoki huquqni muhofaza qilish '
+            '• Qonun talab qilganda (sud qarori yoki huquqni muhofaza qilish '
             'organlari so\'rovi)\n'
-            '• 💳 To\'lov provayderlari (Payme, Click) — faqat tranzaksiya uchun '
+            '• To\'lov provayderlari (Payme, Click) — faqat tranzaksiya uchun '
             'zarur minimal ma\'lumot\n'
-            '• 🤖 AI xizmatlari — Bilimdon AI javoblarini generatsiya qilish uchun '
+            '• AI xizmatlari — Bilimdon AI javoblarini generatsiya qilish uchun '
             '(anonim, shaxsiy ma\'lumotlarsiz)\n'
-            '• 📲 Firebase — push bildirishnomalar yuborish uchun\n'
-            '• 📊 Anonimizatsiya qilingan umumiy statistika — ilovani '
+            '• Firebase — push bildirishnomalar yuborish uchun\n'
+            '• Anonimizatsiya qilingan umumiy statistika — ilovani '
             'yaxshilash maqsadida\n\n'
-            '⚠️ Uchinchi tomon xizmatlariga shaxsiy ma\'lumotlar emas, '
+            'Uchinchi tomon xizmatlariga shaxsiy ma\'lumotlar emas, '
             'faqat texnik identifikatorlar uzatiladi.',
       ),
 
@@ -290,17 +290,17 @@ class PrivacyPolicyPage extends StatelessWidget {
         title: '6. Foydalanuvchi huquqlari',
         content:
             'Siz quyidagi huquqlarga to\'liq egasiz:\n\n'
-            '📋 Ma\'lumotlarni boshqarish:\n'
+            'Ma\'lumotlarni boshqarish:\n'
             '• Profil ma\'lumotlarini istalgan vaqtda ko\'rish va tahrirlash\n'
             '• Bola profilini qo\'shish, o\'zgartirish yoki o\'chirish\n'
             '• AI chat tarixini tozalash\n'
             '• Saqlangan bo\'yash rasmlarini o\'chirish\n\n'
-            '🗑️ Hisobni o\'chirish:\n'
+            'Hisobni o\'chirish:\n'
             '• Hisobingizni istalgan vaqtda to\'liq o\'chirish huquqi\n'
             '• O\'chirish so\'rovidan so\'ng 30 kun ichida barcha ma\'lumotlar '
             'serverlardan butunlay yo\'q qilinadi\n'
             '• Mahalliy qurilmadagi ma\'lumotlar darhol o\'chiriladi\n\n'
-            '🔕 Boshqarish:\n'
+            'Boshqarish:\n'
             '• Bildirishnomalarni istalgan vaqtda o\'chirish\n'
             '• Obunani bekor qilish\n'
             '• Ma\'lumot yig\'ilishiga rozilikni qaytarib olish\n\n'
@@ -313,16 +313,16 @@ class PrivacyPolicyPage extends StatelessWidget {
         color: const Color(0xFF6B7280),
         title: '7. Ma\'lumotlarni saqlash muddatlari',
         content:
-            '📅 Saqlash muddatlari:\n'
+            'Saqlash muddatlari:\n'
             '• Hisob ma\'lumotlari — obuna davomida\n'
             '• Monitoring statistikasi — oxirgi 90 kun\n'
             '• AI chat tarixi — oxirgi 30 kun\n'
             '• Bo\'yash o\'yini rasmlari — foydalanuvchi o\'chirishiga qadar '
             '(faqat mahalliy qurilmada)\n'
             '• To\'lov tarixi — qonun talabiga ko\'ra 3 yil\n\n'
-            '🧹 Avtomatik tozalash:\n'
+            'Avtomatik tozalash:\n'
             '• Hisob o\'chirilganda — 30 kun ichida to\'liq tozalash\n\n'
-            '💾 Mahalliy saqlash:\n'
+            'Mahalliy saqlash:\n'
             '• Bo\'yash rasmlari faqat qurilmada saqlanadi\n'
             '• Kontent (video/hikoya) offline rejim uchun keshlanadi\n'
             '• Kesh ilovani o\'chirganda tozalanadi',
@@ -334,11 +334,11 @@ class PrivacyPolicyPage extends StatelessWidget {
         color: const Color(0xFF0891B2),
         title: '8. Obuna va to\'lovlar',
         content:
-            '💳 To\'lov xavfsizligi:\n'
+            'To\'lov xavfsizligi:\n'
             '• To\'lovlar Payme va Click orqali amalga oshiriladi\n'
             '• Kredit/debet karta raqamlari bizning serverlarimizda '
             'SAQLANMAYDI\n\n'
-            '📄 Obuna shartlari:\n'
+            'Obuna shartlari:\n'
             '• Obuna har oyda avtomatik yangilanadi\n'
             '• Bekor qilish istalgan vaqtda mumkin\n'
             '• Bekor qilinganda joriy davr oxirigacha xizmat davom etadi\n'
@@ -353,13 +353,13 @@ class PrivacyPolicyPage extends StatelessWidget {
         content:
             'Ushbu maxfiylik siyosatiga vaqti-vaqti bilan o\'zgarishlar kiritilishi '
             'mumkin.\n\n'
-            '📢 Xabardor qilish:\n'
+            'Xabardor qilish:\n'
             '• Muhim o\'zgarishlar haqida ilova ichida bildirishnoma yuboriladi\n'
             '• Kichik tuzatishlar ilova yangilanishi bilan kuchga kiradi\n'
             '• O\'zgarishlar tarixi shu sahifada ko\'rsatiladi\n\n'
             'Ilovadan foydalanishni davom ettirish orqali siz yangilangan '
             'siyosatni qabul qilgan hisoblanasiz.\n\n'
-            '📌 Amaldagi versiya: 1.0 (2026-yil, 8-mart)',
+            'Amaldagi versiya: 1.0 (2026-yil, 8-mart)',
       ),
 
       // ═══ 10. HUQUQIY ASOS ═══
@@ -369,7 +369,7 @@ class PrivacyPolicyPage extends StatelessWidget {
         title: '10. Huquqiy asos',
         content:
             'Qadamcha ilovasi quyidagi qonunchilik asosida faoliyat yuritadi:\n\n'
-            '🇺🇿 O\'zbekiston:\n'
+            'O\'zbekiston:\n'
             '• «Shaxsiy ma\'lumotlar to\'g\'risida»gi qonun (2019)\n'
             '• «Axborotlashtirish to\'g\'risida»gi qonun\n'
             '• «Bolalar huquqlarining kafolatlari to\'g\'risida»gi qonun',
@@ -463,7 +463,7 @@ class PrivacyPolicyPage extends StatelessWidget {
           ),
           SizedBox(height: 10.h),
           Text(
-            'Savollaringiz bormi? 💬',
+            'Savollaringiz bormi?',
             style: TextStyle(
               fontSize: 15.sp,
               fontWeight: FontWeight.w800,
@@ -490,7 +490,7 @@ class PrivacyPolicyPage extends StatelessWidget {
               borderRadius: BorderRadius.circular(10.r),
             ),
             child: Text(
-              '📧 support@qadamcha.uz',
+              'support@qadamcha.uz',
               style: TextStyle(
                 fontSize: 14.sp,
                 fontWeight: FontWeight.w700,

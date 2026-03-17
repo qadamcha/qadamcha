@@ -191,7 +191,7 @@ class _ParentHomePageState extends State<ParentHomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Salom, $userName! 👋',
+                'Salom, $userName!',
                 style: TextStyle(
                   fontSize: 13.sp,
                   color: Colors.white.withOpacity(0.8),
